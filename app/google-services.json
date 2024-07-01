@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1047951754429",
+    "project_id": "ask-app-36527",
+    "storage_bucket": "ask-app-36527.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1047951754429:android:93702be7de9b5002c963d4",
+        "android_client_info": {
+          "package_name": "com.ask.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA92CFB9hqNaHNjNTEIO_DUqesDurKLWEI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
