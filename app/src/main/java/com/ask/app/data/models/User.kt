@@ -2,100 +2,161 @@ package com.ask.app.data.models
 
 import androidx.room.Embedded
 import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.ask.app.ANONYMOUS_USER
+import com.ask.app.ID
+import com.ask.app.TABLE_USERS
+import com.ask.app.TABLE_USER_LOCATIONS
+import com.ask.app.TABLE_USER_WIDGETS
+import com.ask.app.USER_ID
+import com.ask.app.WIDGET_ID
+import kotlinx.serialization.Serializable
+import java.util.UUID
 
-@Entity(tableName = "users")
+@Serializable
+@Entity(tableName = TABLE_USERS)
 data class User(
     @PrimaryKey val id: String = "",
     val email: String? = null,
-    val name: String = "Anonymous User",
+    val name: String = ANONYMOUS_USER,
     val bio: String? = null,
     val profilePic: String? = null,
+    val age: Int? = null,
+    val gender: Gender? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
-    @Entity(tableName = "user-search-fields")
-    data class UserSearchFields(
-        @PrimaryKey val id: String = "",
+    @Entity(
+        tableName = TABLE_USER_LOCATIONS,
+        foreignKeys = [
+            ForeignKey(
+                entity = User::class,
+                parentColumns = [ID],
+                childColumns = [USER_ID],
+                onDelete = ForeignKey.CASCADE
+            )
+        ],
+        indices = [Index(value = [USER_ID])]
+    )
+    data class UserLocation(
+        @PrimaryKey val id: String = UUID.randomUUID().toString(),
         val userId: String = "",
-        val age: Int? = null,
-        val gender: Poll.TargetAudience.Gender? = null,
-        val location: Poll.TargetAudience.Location? = null,
+        val country: String? = null,
+        val state: String? = null,
+        val city: String? = null,
+        val createdAt: Long = System.currentTimeMillis(),
+        val updatedAt: Long = System.currentTimeMillis()
+    )
+
+    @Entity(
+        tableName = TABLE_USER_WIDGETS,
+        foreignKeys = [
+            ForeignKey(
+                entity = User::class,
+                parentColumns = [ID],
+                childColumns = [USER_ID],
+                onDelete = ForeignKey.CASCADE
+            ),
+            ForeignKey(
+                entity = Widget::class,
+                parentColumns = [ID],
+                childColumns = [WIDGET_ID],
+                onDelete = ForeignKey.CASCADE
+            )
+        ],
+        indices = [Index(value = [USER_ID]), Index(value = [WIDGET_ID])]
+    )
+    data class UserWidget(
+        @PrimaryKey val id: String = UUID.randomUUID().toString(),
+        val userId: String = "",
+        val widgetId: String = "",
         val createdAt: Long = System.currentTimeMillis(),
         val updatedAt: Long = System.currentTimeMillis()
     )
 }
 
-fun Int?.orEmpty(addPrefixUnderScore: Boolean = true): String {
-    return this?.let {
-        when (addPrefixUnderScore) {
-            true -> "_$it"
-            else -> it.toString()
-        }
-    } ?: ""
-}
-
-data class UserWithSearchFields(
-    @Embedded val user: User,
+data class UserWithLocation(
+    @Embedded
+    val user: User,
     @Relation(
-        entityColumn = "userId",
-        parentColumn = "id",
-        entity = User.UserSearchFields::class
+        parentColumn = ID,
+        entityColumn = USER_ID,
+        entity = User.UserLocation::class
     )
-    val userSearchFields: User.UserSearchFields
+    val userLocation: User.UserLocation,
+//    @Relation(
+//        parentColumn = ID,
+//        entityColumn = USER_ID,
+//        entity = User.UserWidget::class
+//    )
+//    val userWidgets: List<User.UserWidget>
 )
 
-
-fun generateCombinations(
-    location: Poll.TargetAudience.Location?,
-    gender: Poll.TargetAudience.Gender?,
+fun generateCombinationsForUsers(
+    gender: Gender?,
     age: Int?,
-    ageRange: Poll.TargetAudience.AgeRange?
+    location: User.UserLocation,
+    userId: String
 ): List<String> {
-    val combinations = mutableListOf("public")
-
-    val country = location?.country?.lowercase()
-    val state = location?.state?.lowercase()
-    val city = location?.city?.lowercase()
+    val country = location.country?.lowercase()
+    val state = location.state?.lowercase()
+    val city = location.city?.lowercase()
     val genderName = gender?.name?.lowercase()
 
-    // Add single field combinations
-    country?.let { combinations.add(it) }
-    state?.let { combinations.add(it) }
-    city?.let { combinations.add(it) }
-    genderName?.let { combinations.add(it) }
-    age?.let { combinations.add(it.toString()) }
-
-    val ageValues = when (ageRange) {
-        null -> when (age) {
-            null -> listOf()
-            else -> listOf(age)
+    // Generate location-based combinations
+    val locationCombinations = mutableListOf<String>()
+    if (country != null) {
+        if (state != null) {
+            if (city != null) {
+                locationCombinations.add("${country}_${state}_${city}")
+            }
+            locationCombinations.add("${country}_${state}")
         }
-
-        else -> (ageRange.min..ageRange.max).toList()
+        locationCombinations.add(country)
     }
-    ageValues.forEach { combinations.add(it.toString()) }
 
-    val parts = listOfNotNull(
-        country,
-        state,
-        city,
-        genderName
-    )
+    // Generate combinations for each age in the range
+    val ageCombinations = mutableListOf<String>()
+    if (age != null && age > 0) {
+        val ageStr = age.toString()
+        if (locationCombinations.isEmpty()) {
+            ageCombinations.add(ageStr)
+        } else {
+            locationCombinations.forEach { locationCombination ->
+                ageCombinations.add("${locationCombination}_$ageStr")
 
-    // Generate all non-empty subsets of the parts list
-    for (i in 1 until (1 shl parts.size)) {
-        val combination = mutableListOf<String>()
-        for (j in parts.indices) {
-            if ((i and (1 shl j)) != 0) {
-                combination.add(parts[j])
             }
         }
-        combinations.add(combination.joinToString("_"))
-
-        // Add combinations with age values
-        ageValues.forEach { combinations.add((combination + it.toString()).joinToString("_")) }
+    } else {
+        ageCombinations.addAll(locationCombinations)
     }
-    return combinations.distinct()
+
+    // Generate gender-based combinations
+    val genderCombination = mutableListOf<String>()
+    if (genderName != null) {
+        if (ageCombinations.isEmpty()) {
+            genderCombination.add(genderName)
+            genderCombination.add("all")
+        } else {
+            ageCombinations.forEach { locationCombination ->
+                genderCombination.add("${locationCombination}_$genderName")
+                genderCombination.add("${locationCombination}_all")
+            }
+
+        }
+    } else {
+        if (ageCombinations.isEmpty()) {
+            genderCombination.add("all")
+        } else {
+            ageCombinations.forEach { locationCombination ->
+                genderCombination.add("${locationCombination}_all")
+            }
+
+        }
+    }
+    genderCombination.add(userId)
+    return genderCombination
 }

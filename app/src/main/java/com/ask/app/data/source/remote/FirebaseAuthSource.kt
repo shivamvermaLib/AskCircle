@@ -17,7 +17,7 @@ class FirebaseAuthSource @Inject constructor(private val firebaseAuth: FirebaseA
             }
     }
 
-    fun getCurrentUser(): String? {
+    fun getCurrentUserId(): String? {
         return firebaseAuth.currentUser?.uid
     }
 }

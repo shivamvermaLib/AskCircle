@@ -1,7 +1,23 @@
 package com.ask.app.di
 
-import com.ask.app.data.models.Poll
+import com.ask.app.OPTION
+import com.ask.app.OPTIONS
+import com.ask.app.TABLE_COUNTRIES
+import com.ask.app.TABLE_USERS
+import com.ask.app.TABLE_WIDGETS
+import com.ask.app.TABLE_WIDGET_IDS
+import com.ask.app.TARGET_AUDIENCE_AGE_RANGES
+import com.ask.app.TARGET_AUDIENCE_GENDER
+import com.ask.app.TARGET_AUDIENCE_LOCATIONS
+import com.ask.app.USER
+import com.ask.app.USER_LOCATION
+import com.ask.app.VOTES
+import com.ask.app.WIDGET
 import com.ask.app.data.models.User
+import com.ask.app.data.models.UserWithLocation
+import com.ask.app.data.models.Widget
+import com.ask.app.data.models.WidgetId
+import com.ask.app.data.models.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.app.data.source.remote.FirebaseDataSource
 import com.ask.app.data.source.remote.FirebaseStorageSource
 import com.google.firebase.auth.FirebaseAuth
@@ -9,6 +25,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.MutableData
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
@@ -40,172 +57,172 @@ object FirebaseModules {
     }
 
     @Provides
-    @Named("users")
+    @Named(TABLE_USERS)
     fun provideUserStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
-        return firebaseStorage.getReference("users")
+        return firebaseStorage.getReference(TABLE_USERS)
     }
 
     @Provides
-    @Named("polls")
-    fun providePollStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
-        return firebaseStorage.getReference("polls")
+    @Named(TABLE_WIDGETS)
+    fun provideWidgetStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
+        return firebaseStorage.getReference(TABLE_WIDGETS)
     }
 
     @Provides
-    @Named("polls-options")
-    fun providePollOptionStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
-        return firebaseStorage.getReference("polls-options")
+    @Named(TABLE_COUNTRIES)
+    fun provideCountriesStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
+        return firebaseStorage.getReference(TABLE_COUNTRIES)
     }
 
     @Provides
-    @Named("users")
-    fun provideUserStorageSource(@Named("users") storageReference: StorageReference): FirebaseStorageSource {
-        return FirebaseStorageSource(storageReference)
-    }
-
-
-    @Provides
-    @Named("polls")
-    fun providePollStorageSource(@Named("polls") storageReference: StorageReference): FirebaseStorageSource {
+    @Named(TABLE_USERS)
+    fun provideUserStorageSource(@Named(TABLE_USERS) storageReference: StorageReference): FirebaseStorageSource {
         return FirebaseStorageSource(storageReference)
     }
 
     @Provides
-    @Named("poll-options")
-    fun providePollOptionStorageSource(@Named("polls-options") storageReference: StorageReference): FirebaseStorageSource {
+    @Named(TABLE_WIDGETS)
+    fun provideWidgetStorageSource(@Named(TABLE_WIDGETS) storageReference: StorageReference): FirebaseStorageSource {
         return FirebaseStorageSource(storageReference)
     }
 
     @Provides
-    @Named("users")
+    @Named(TABLE_COUNTRIES)
+    fun provideCountriesStorageSource(@Named(TABLE_COUNTRIES) storageReference: StorageReference): FirebaseStorageSource {
+        return FirebaseStorageSource(storageReference)
+    }
+
+    @Provides
+    @Named(TABLE_USERS)
     fun provideUserReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference("users")
+        return firebaseDatabase.getReference(TABLE_USERS)
     }
 
     @Provides
-    @Named("users-search-fields")
-    fun provideUserSearchFieldsReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference("users-search-fields")
+    @Named(TABLE_WIDGETS)
+    fun provideWidgetReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
+        return firebaseDatabase.getReference(TABLE_WIDGETS)
     }
 
     @Provides
-    @Named("polls")
-    fun providePollReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference("polls")
+    @Named(TABLE_WIDGET_IDS)
+    fun provideWidgetIdsReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
+        return firebaseDatabase.getReference(TABLE_WIDGET_IDS)
     }
 
     @Provides
-    @Named("polls-options")
-    fun providePollOptionsReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference("polls-options")
-    }
-
-    @Provides
-    @Named("polls-option-votes")
-    fun providePollOptionVotesReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference("polls-option-votes")
-    }
-
-    @Provides
-    @Named("polls-target-audience")
-    fun providePollTargetOptionsReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference("polls-target-audience")
-    }
-
-    @Provides
-    fun provideUserDataSource(@Named("users") userReference: DatabaseReference): FirebaseDataSource<User> =
-        object : FirebaseDataSource<User>(userReference) {
-            override fun updateIdForItem(t: User, id: String): User {
-                return t.copy(id = id)
+    fun provideUserDataSource(@Named(TABLE_USERS) userReference: DatabaseReference): FirebaseDataSource<UserWithLocation> =
+        object : FirebaseDataSource<UserWithLocation>(userReference) {
+            override fun updateIdForItem(
+                t: UserWithLocation,
+                id: String
+            ): UserWithLocation {
+                return t.copy(user = t.user.copy(id = id))
             }
 
-            override fun getIdForItem(t: User): String {
-                return t.id
+            override fun getIdForItem(t: UserWithLocation): String {
+                return t.user.id
             }
 
-            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): User? {
-                return dataSnapshot.getValue(User::class.java)
+            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): UserWithLocation {
+                return UserWithLocation(
+                    dataSnapshot.child(USER).getValue(User::class.java)!!,
+                    dataSnapshot.child(USER_LOCATION).getValue(User.UserLocation::class.java)!!,
+//                    dataSnapshot.child(USER_WIDGET).children.map { it.getValue(User.UserWidget::class.java)!! }
+                )
+            }
+
+            override fun getItemFromMutableData(mutableData: MutableData): UserWithLocation? {
+                return UserWithLocation(
+                    mutableData.child(USER).getValue(User::class.java)!!,
+                    mutableData.child(USER_LOCATION).getValue(User.UserLocation::class.java)!!,
+//                    dataSnapshot.child(USER_WIDGET).children.map { it.getValue(User.UserWidget::class.java)!! }
+                )
             }
         }
 
     @Provides
-    fun provideUserWithSearchFieldsDataSource(@Named("users-search-fields") userSearchFieldsReference: DatabaseReference): FirebaseDataSource<User.UserSearchFields> =
-        object : FirebaseDataSource<User.UserSearchFields>(userSearchFieldsReference) {
-            override fun updateIdForItem(t: User.UserSearchFields, id: String): User.UserSearchFields {
-                return t.copy(id = id)
+    fun provideWidgetDataSource(@Named(TABLE_WIDGETS) widgetReference: DatabaseReference): FirebaseDataSource<WidgetWithOptionsAndVotesForTargetAudience> =
+        object : FirebaseDataSource<WidgetWithOptionsAndVotesForTargetAudience>(widgetReference) {
+            override fun updateIdForItem(
+                t: WidgetWithOptionsAndVotesForTargetAudience,
+                id: String
+            ): WidgetWithOptionsAndVotesForTargetAudience {
+                return t.copy(widget = t.widget.copy(id = id))
             }
 
-            override fun getIdForItem(t: User.UserSearchFields): String {
-                return t.id
+            override fun getIdForItem(t: WidgetWithOptionsAndVotesForTargetAudience): String {
+                return t.widget.id
             }
 
-            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): User.UserSearchFields? {
-                return dataSnapshot.getValue(User.UserSearchFields::class.java)
-            }
-        }
-
-
-    @Provides
-    fun providePollDataSource(@Named("polls") pollReference: DatabaseReference): FirebaseDataSource<Poll> =
-        object : FirebaseDataSource<Poll>(pollReference) {
-            override fun updateIdForItem(t: Poll, id: String): Poll {
-                return t.copy(id = id)
-            }
-
-            override fun getIdForItem(t: Poll): String {
-                return t.id
-            }
-
-            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): Poll? {
-                return dataSnapshot.getValue(Poll::class.java)
-            }
-        }
-
-    @Provides
-    fun providePollOptionsDataSource(@Named("polls-options") pollOptionReference: DatabaseReference): FirebaseDataSource<Poll.Option> =
-        object : FirebaseDataSource<Poll.Option>(pollOptionReference) {
-            override fun updateIdForItem(t: Poll.Option, id: String): Poll.Option {
-                return t.copy(id = id)
+            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): WidgetWithOptionsAndVotesForTargetAudience? {
+                val widget = dataSnapshot.child(WIDGET).getValue(Widget::class.java)!!
+                return WidgetWithOptionsAndVotesForTargetAudience(
+                    widget,
+                    dataSnapshot.child(OPTIONS).children.map {
+                        WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                            it.child(OPTION).getValue(Widget.Option::class.java)!!,
+                            it.child(VOTES).children.map { vote ->
+                                vote.getValue(Widget.Option.Vote::class.java)!!
+                            }
+                        )
+                    },
+                    dataSnapshot.child(TARGET_AUDIENCE_GENDER)
+                        .getValue(Widget.TargetAudienceGender::class.java)!!,
+                    dataSnapshot.child(TARGET_AUDIENCE_LOCATIONS).children.map {
+                        it.getValue(Widget.TargetAudienceLocation::class.java)!!
+                    },
+                    dataSnapshot.child(TARGET_AUDIENCE_AGE_RANGES)
+                        .getValue(Widget.TargetAudienceAgeRange::class.java)!!,
+                    User(id = widget.creatorId)
+                )
             }
 
-            override fun getIdForItem(t: Poll.Option): String {
-                return t.id
-            }
-
-            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): Poll.Option? {
-                return dataSnapshot.getValue(Poll.Option::class.java)
-            }
-        }
-
-    @Provides
-    fun providePollTargetAudienceDataSource(@Named("polls-target-audience") pollTargetAudienceReference: DatabaseReference): FirebaseDataSource<Poll.TargetAudience> =
-        object : FirebaseDataSource<Poll.TargetAudience>(pollTargetAudienceReference) {
-            override fun updateIdForItem(t: Poll.TargetAudience, id: String): Poll.TargetAudience {
-                return t.copy(id = id)
-            }
-
-            override fun getIdForItem(t: Poll.TargetAudience): String {
-                return t.id
-            }
-
-            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): Poll.TargetAudience? {
-                return dataSnapshot.getValue(Poll.TargetAudience::class.java)
+            override fun getItemFromMutableData(mutableData: MutableData): WidgetWithOptionsAndVotesForTargetAudience? {
+                val widget = mutableData.child(WIDGET).getValue(Widget::class.java) ?: return null
+                return WidgetWithOptionsAndVotesForTargetAudience(
+                    widget,
+                    mutableData.child(OPTIONS).children.map {
+                        WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                            it.child(OPTION).getValue(Widget.Option::class.java)!!,
+                            it.child(VOTES).children.map { vote ->
+                                vote.getValue(Widget.Option.Vote::class.java)!!
+                            }
+                        )
+                    },
+                    mutableData.child(TARGET_AUDIENCE_GENDER)
+                        .getValue(Widget.TargetAudienceGender::class.java)!!,
+                    mutableData.child(TARGET_AUDIENCE_LOCATIONS).children.map {
+                        it.getValue(Widget.TargetAudienceLocation::class.java)!!
+                    },
+                    mutableData.child(TARGET_AUDIENCE_AGE_RANGES)
+                        .getValue(Widget.TargetAudienceAgeRange::class.java)!!,
+                    User(id = widget.creatorId)
+                )
             }
         }
 
     @Provides
-    fun providePollOptionVoteDataSource(@Named("polls-option-votes") pollOptionVotesReference: DatabaseReference): FirebaseDataSource<Poll.Option.Vote> =
-        object : FirebaseDataSource<Poll.Option.Vote>(pollOptionVotesReference) {
-            override fun updateIdForItem(t: Poll.Option.Vote, id: String): Poll.Option.Vote {
+    fun provideCreatedWidgetIdDataSource(@Named(TABLE_WIDGET_IDS) widgetReference: DatabaseReference): FirebaseDataSource<WidgetId> =
+        object : FirebaseDataSource<WidgetId>(widgetReference) {
+            override fun updateIdForItem(
+                t: WidgetId,
+                id: String
+            ): WidgetId {
                 return t.copy(id = id)
             }
 
-            override fun getIdForItem(t: Poll.Option.Vote): String {
+            override fun getIdForItem(t: WidgetId): String {
                 return t.id
             }
 
-            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): Poll.Option.Vote? {
-                return dataSnapshot.getValue(Poll.Option.Vote::class.java)
+            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): WidgetId? {
+                return dataSnapshot.getValue(WidgetId::class.java)
+            }
+
+            override fun getItemFromMutableData(mutableData: MutableData): WidgetId? {
+                return mutableData.getValue(WidgetId::class.java)
             }
         }
+
 }

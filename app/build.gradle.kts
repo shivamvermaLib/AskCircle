@@ -65,7 +65,11 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.compose)
-
+    implementation(libs.androidx.work.runtime.ktx)
+    // Hilt
+    implementation(libs.androidx.hilt.work)
+    kapt(libs.androidx.hilt.compiler)
+    
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
@@ -74,22 +78,23 @@ dependencies {
 
     implementation(libs.androidx.hilt.navigation.compose)
 
-    implementation (libs.androidx.room.ktx)
-    kapt (libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.ui.text.google.fonts)
+    kapt(libs.androidx.room.compiler)
 
     implementation(libs.coil.compose)
     implementation(libs.kotlinx.serialization.json)
 
-    implementation (libs.hilt.android)
-    kapt (libs.hilt.compiler)
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
 
     // For instrumentation tests
-    androidTestImplementation  (libs.hilt.android.testing)
-    kaptAndroidTest (libs.hilt.compiler)
+    androidTestImplementation(libs.hilt.android.testing)
+    kaptAndroidTest(libs.hilt.compiler)
 
     // For local unit tests
-    testImplementation (libs.hilt.android.testing)
-    kaptTest (libs.hilt.compiler)
+    testImplementation(libs.hilt.android.testing)
+    kaptTest(libs.hilt.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

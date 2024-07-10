@@ -27,11 +27,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ask.app.data.models.Poll
-import com.ask.app.data.models.PollWithOptionsAndVotesForTargetAudience
-import com.ask.app.data.models.UserWithSearchFields
-import com.ask.app.data.repository.PollRepository
+import com.ask.app.data.models.Gender
+import com.ask.app.data.models.User
+import com.ask.app.data.models.UserWithLocation
+import com.ask.app.data.models.Widget
+import com.ask.app.data.models.WidgetWithOptionsAndVotesForTargetAudience
+import com.ask.app.data.models.generateCombinationsForUsers
 import com.ask.app.data.repository.UserRepository
+import com.ask.app.data.repository.WidgetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -97,7 +100,7 @@ fun TestAPIProgressViewPreview() {
 
 @HiltViewModel
 class TestAPIViewModel @Inject constructor(
-    private val pollRepository: PollRepository, private val userRepository: UserRepository
+    private val widgetRepository: WidgetRepository, private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val _createUserStateFlow = MutableStateFlow(TestAPIState.CreateUserState())
@@ -124,106 +127,143 @@ class TestAPIViewModel @Inject constructor(
         viewModelScope.launch {
             // Create User
             _createUserStateFlow.value = TestAPIState.CreateUserState(loading = true)
-            var currentUser: UserWithSearchFields? = null
-            try {
-                currentUser = userRepository.getCurrentUser()
-                if (currentUser != null) {
-                    _createUserStateFlow.value =
-                        TestAPIState.CreateUserState(t = currentUser, message = "Current User")
-                } else {
-                    currentUser = userRepository.createUser()
-                    _createUserStateFlow.value =
-                        TestAPIState.CreateUserState(t = currentUser, message = "New User")
-                }
-            } catch (e: Exception) {
-                _createUserStateFlow.value =
-                    TestAPIState.CreateUserState(error = e.message ?: "Something went wrong")
-            }
+            var currentUserWithLocation: UserWithLocation? = null
+//            try {
+            currentUserWithLocation = userRepository.createUser()
+            _createUserStateFlow.value =
+                TestAPIState.CreateUserState(
+                    t = currentUserWithLocation,
+                    message = "New User ${currentUserWithLocation.user.id}"
+                )
+//            } catch (e: Exception) {
+//                _createUserStateFlow.value =
+//                    TestAPIState.CreateUserState(error = e.message ?: "Something went wrong")
+//            }
             // Create User
 
             // Update User
             _updateUserStateFlow.value = TestAPIState.UpdateUserState(loading = true)
-            try {
-                val updatedUser = userRepository.updateUser(
-                    currentUser?.copy(
-                        userSearchFields = currentUser.userSearchFields.copy(
-                            age = Random.nextInt(18, 50),
-                            gender = Poll.TargetAudience.Gender.entries.random(),
-                            location = Poll.TargetAudience.Location(
-                                country = "India"
-                            )
-                        )
-                    ) ?: throw Exception("Current User is null")
-                )
-                _updateUserStateFlow.value = TestAPIState.UpdateUserState(
-                    t = updatedUser,
-                    message = "User Updated successfully"
-                )
-            } catch (e: Exception) {
-                _updateUserStateFlow.value =
-                    TestAPIState.UpdateUserState(error = e.message ?: "Something went wrong")
-            }
+//            try {
+
+            /*val updatedUser = userRepository.updateUser(
+                currentUserWithLocation?.copy(
+                    user = currentUserWithLocation.user.copy(
+                        age = Random.nextInt(18, 90),
+                        gender = Gender.entries.random(),
+                    ),
+                    userLocation = currentUserWithLocation.userLocation.copy(
+                        country = "India"
+                    )
+                ) ?: throw Exception("User not found")
+            )*/
+            /*_updateUserStateFlow.value = TestAPIState.UpdateUserState(
+                t = updatedUser,
+                message = "User Updated successfully"
+            )*/
+//            } catch (e: Exception) {
+//                _updateUserStateFlow.value =
+//                    TestAPIState.UpdateUserState(error = e.message ?: "Something went wrong")
+//            }
             // Update User
 
             // Create Poll
             _createPollStateFlow.value = TestAPIState.CreatePollState(loading = true)
-            var createdPoll: PollWithOptionsAndVotesForTargetAudience? = null
-            try {
-                createdPoll = pollRepository.createPoll(
-                    PollWithOptionsAndVotesForTargetAudience(
-                        poll = Poll(
-                            id = "",
-                            creatorId = currentUser!!.user.id,
-                            title = "Test Title ${Random.nextInt()}",
-                        ), options = List(Random.nextInt(2, 6)) {
-                            val isText = Random.nextBoolean()
-                            PollWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                                option = Poll.Option(
-                                    id = "",
-                                    pollId = "",
-                                    text = when (isText) {
-                                        true -> "Option $it"
-                                        else -> null
-                                    },
-                                    imageUrl = when (isText) {
-                                        false -> "https://dummyimage.com/600x400/000/fff&text=$it"
-                                        else -> null
-                                    }
-                                ), votes = emptyList()
-                            )
+            var createdPoll: WidgetWithOptionsAndVotesForTargetAudience? = null
+//            try {
+            val widget = Widget(
+                creatorId = currentUserWithLocation!!.user.id,
+                title = "Test Title ${Random.nextInt()}",
+            )
+            val options = List(Random.nextInt(2, 6)) {
+                val isText = Random.nextBoolean()
+                WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                    option = Widget.Option(
+                        widgetId = widget.id,
+                        text = when (isText) {
+                            true -> "Option $it"
+                            else -> null
                         },
-                        targetAudience = Poll.TargetAudience(
-                            "",
-                            "",
-                            gender = Poll.TargetAudience.Gender.entries.random(),
-                            ageRange = Poll.TargetAudience.AgeRange(
-                                min = Random.nextInt(18, 50),
-                                max = Random.nextInt(51, 100)
-                            ),
-                            location = Poll.TargetAudience.Location(
-                                country = when (Random.nextBoolean()) {
-                                    true -> "India"
-                                    else -> null
-                                }
-                            )
-                        ),
-                        user = currentUser.user
-                    )
+                        imageUrl = when (isText) {
+                            false -> "https://dummyimage.com/600x400/000/fff&text=$it"
+                            else -> null
+                        }
+                    ), votes = emptyList()
                 )
-                _createPollStateFlow.value = TestAPIState.CreatePollState(
-                    t = createdPoll,
-                    message = "poll created successfully"
-                )
-            } catch (e: Exception) {
-                _createPollStateFlow.value =
-                    TestAPIState.CreatePollState(error = e.message ?: "Something went wrong")
             }
+            val targetAudienceGender = Widget.TargetAudienceGender(
+                gender = Widget.GenderFilter.entries.random(),
+                widgetId = widget.id
+            )
+            val targetAudienceAgeRange = Widget.TargetAudienceAgeRange(
+                widgetId = widget.id,
+                min = when (Random.nextBoolean()) {
+                    true -> Random.nextInt(18, 50)
+                    else -> 0
+                },
+                max = when (Random.nextBoolean()) {
+                    true -> Random.nextInt(51, 100)
+                    else -> 0
+                }
+            )
+            val targetAudienceLocation = listOf(
+                Widget.TargetAudienceLocation(
+                    widgetId = widget.id,
+                    country = when (Random.nextBoolean()) {
+                        true -> "India"
+                        else -> null
+                    }
+                ),
+                Widget.TargetAudienceLocation(
+                    widgetId = widget.id,
+                    country = "India",
+                    state = when (Random.nextBoolean()) {
+                        true -> "Maharashtra"
+                        else -> null
+                    }
+                ),
+                Widget.TargetAudienceLocation(
+                    widgetId = widget.id,
+                    country = "India",
+                    state = "Maharashtra",
+                    city = when (Random.nextBoolean()) {
+                        true -> "Mumbai"
+                        else -> null
+                    }
+                ),
+                Widget.TargetAudienceLocation(
+                    widgetId = widget.id,
+                    country = "India",
+                    state = "Maharashtra",
+                    city = "Mumbai"
+                ),
+                Widget.TargetAudienceLocation(
+                    widgetId = widget.id,
+                    country = "India",
+                    state = "Punjab"
+                )
+            ).shuffled().take(Random.nextInt(0, 4))
+
+            /*createdPoll = widgetRepository.createWidget(
+                WidgetWithOptionsAndVotesForTargetAudience(
+                    widget = widget,
+                    options = options,
+                    targetAudienceGender = targetAudienceGender,
+                    targetAudienceAgeRange = targetAudienceAgeRange,
+                    targetAudienceLocations = targetAudienceLocation,
+                    user = currentUserWithLocation!!.user
+                )
+            )*/
+            _createPollStateFlow.value = TestAPIState.CreatePollState(
+                t = createdPoll,
+                message = "poll created successfully"
+            )
+//            } catch (e: Exception) {
+//                _createPollStateFlow.value =
+//                    TestAPIState.CreatePollState(error = e.message ?: "Something went wrong")
+//            }
             // Create Poll
-            try {
-                pollRepository.refreshPolls(currentUser!!)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
+
+
             // Update Poll
             /*_updatePollStateFlow.value = TestAPIState.UpdatePollState(loading = true)
             var updatedPoll: PollWithOptionsAndVotesForTargetAudience? = null
@@ -294,35 +334,35 @@ sealed class TestAPIState<T>(
     data class CreateUserState(
         override val loading: Boolean = false,
         override val message: String? = null,
-        override val t: UserWithSearchFields? = null,
+        override val t: UserWithLocation? = null,
         override val error: String? = null
-    ) : TestAPIState<UserWithSearchFields>(loading, message, t, error)
+    ) : TestAPIState<UserWithLocation>(loading, message, t, error)
 
     data class UpdateUserState(
         override val loading: Boolean = false,
         override val message: String? = null,
-        override val t: UserWithSearchFields? = null,
+        override val t: UserWithLocation? = null,
         override val error: String? = null
-    ) : TestAPIState<UserWithSearchFields>(loading, message, t, error)
+    ) : TestAPIState<UserWithLocation>(loading, message, t, error)
 
     data class CreatePollState(
         override val loading: Boolean = false,
-        override val t: PollWithOptionsAndVotesForTargetAudience? = null,
+        override val t: WidgetWithOptionsAndVotesForTargetAudience? = null,
         override val error: String? = null,
         override val message: String? = null
-    ) : TestAPIState<PollWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
+    ) : TestAPIState<WidgetWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
 
     data class UpdatePollState(
         override val loading: Boolean = false,
-        override val t: PollWithOptionsAndVotesForTargetAudience? = null,
+        override val t: WidgetWithOptionsAndVotesForTargetAudience? = null,
         override val error: String? = null,
         override val message: String? = null
-    ) : TestAPIState<PollWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
+    ) : TestAPIState<WidgetWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
 
     data class DeletePollState(
         override val loading: Boolean = false,
-        override val t: PollWithOptionsAndVotesForTargetAudience? = null,
+        override val t: WidgetWithOptionsAndVotesForTargetAudience? = null,
         override val error: String? = null,
         override val message: String? = null,
-    ) : TestAPIState<PollWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
+    ) : TestAPIState<WidgetWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
 }
