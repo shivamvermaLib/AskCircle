@@ -29,8 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -38,12 +36,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.ask.app.R
 import com.ask.app.data.models.User
 import com.ask.app.data.models.Widget
 import com.ask.app.data.models.WidgetWithOptionsAndVotesForTargetAudience
+import com.ask.app.ui.screens.utils.AppImage
 import com.ask.app.ui.screens.utils.NonLazyGrid
 
 
@@ -125,13 +122,12 @@ fun WidgetUserView(user: User, startedAt: Long) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current).data(user.profilePic).crossfade(true)
-                .build(),
+        AppImage(
+            url = user.profilePic,
             contentDescription = user.name,
             contentScale = ContentScale.Crop,
-            placeholder = painterResource(id = R.drawable.baseline_account_circle_24),
-            error = painterResource(id = R.drawable.baseline_account_circle_24),
+            placeholder = R.drawable.baseline_account_circle_24,
+            error = R.drawable.baseline_account_circle_24,
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
@@ -336,13 +332,12 @@ fun ImageOption(
             shape = roundedCornerShape,
         )
         .clickable { onImageClick(option.id) }) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current).data(option.imageUrl!!)
-                .crossfade(true).build(),
+        AppImage(
+            url = option.imageUrl!!,
             contentDescription = option.id,
-            contentScale = if(isInput) ContentScale.Inside else ContentScale.Crop,
-            placeholder = painterResource(id = R.drawable.baseline_image_24),
-            error = painterResource(id = R.drawable.baseline_broken_image_24),
+            contentScale = if (isInput) ContentScale.Inside else ContentScale.Crop,
+            placeholder = R.drawable.baseline_image_24,
+            error = R.drawable.baseline_broken_image_24,
             modifier = Modifier
                 .clip(roundedCornerShape)
                 .fillMaxSize()

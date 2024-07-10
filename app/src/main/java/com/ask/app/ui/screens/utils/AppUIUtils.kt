@@ -22,9 +22,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import coil.request.CachePolicy
+import coil.request.ErrorResult
+import coil.request.ImageRequest
+import coil.request.SuccessResult
+import kotlinx.coroutines.Dispatchers
 
 @Composable
 fun SnackBarMessageHandler(
@@ -162,4 +170,44 @@ fun NonLazyGrid(
             }
         }
     }
+}
+
+
+@Composable
+fun AppImage(
+    modifier: Modifier,
+    url: String?,
+    contentDescription: String,
+    contentScale: ContentScale,
+    placeholder: Int,
+    error: Int
+) {
+    val listener = object : ImageRequest.Listener {
+        override fun onError(request: ImageRequest, result: ErrorResult) {
+            super.onError(request, result)
+        }
+
+        override fun onSuccess(request: ImageRequest, result: SuccessResult) {
+            super.onSuccess(request, result)
+        }
+    }
+    val imageRequest = ImageRequest.Builder(LocalContext.current)
+        .data(url)
+        .listener(listener)
+        .dispatcher(Dispatchers.IO)
+        .memoryCacheKey(url)
+        .diskCacheKey(url)
+        .placeholder(placeholder)
+        .error(error)
+        .fallback(placeholder)
+        .diskCachePolicy(CachePolicy.ENABLED)
+        .memoryCachePolicy(CachePolicy.ENABLED)
+        .crossfade(true)
+        .build()
+    AsyncImage(
+        model = imageRequest,
+        contentDescription = contentDescription,
+        contentScale = contentScale,
+        modifier = modifier
+    )
 }
