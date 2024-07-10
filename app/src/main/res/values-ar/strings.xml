@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="edit_image">تعديل الصورة</string>
+    <string name="initializing">جاري التهيئة</string>
+    <string name="loading">جاري التحميل</string>
+    <string name="success">نجاح</string>
+    <string name="error">خطأ</string>
+    <string name="close">إغلاق</string>
+    <string name="title">العنوان</string>
+    <string name="description">الوصف</string>
+    <string name="add_option">إضافة خيار</string>
+    <string name="target_audience">الجمهور المستهدف</string>
+    <string name="create">إنشاء</string>
+    <string name="location">الموقع</string>
+    <string name="select">اختر</string>
+    <string name="age_range">نطاق العمر</string>
+    <string name="gender">الجنس</string>
+    <string name="all">الكل</string>
+    <string name="male">ذكر</string>
+    <string name="female">أنثى</string>
+    <string name="text">نص</string>
+    <string name="options">خيارات</string>
+    <string name="image">صورة</string>
+    <string name="filter">تصفية</string>
+    <string name="name">الاسم</string>
+    <string name="email">البريد الإلكتروني</string>
+    <string name="age">العمر</string>
+    <string name="update">تحديث</string>
+    <string name="create_widget">إنشاء الودجت</string>
+    <string name="creating">جاري الإنشاء…</string>
+    <string name="clear">مسح %1$s</string>
+    <string name="my_widgets">الودجتات الخاصة بي</string>
+    <string name="profile">الملف الشخصي</string>
+
+</resources>

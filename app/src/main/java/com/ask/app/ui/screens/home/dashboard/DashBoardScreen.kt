@@ -22,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.ask.app.R
@@ -45,7 +46,7 @@ fun DashBoardScreen(
                     IconButton(onClick = { showMenu = !showMenu }) {
                         Icon(
                             imageVector = ImageVector.vectorResource(id = R.drawable.baseline_filter_list_24),
-                            contentDescription = "Filter"
+                            contentDescription = stringResource(R.string.filter)
                         )
                     }
                     DropdownMenu(

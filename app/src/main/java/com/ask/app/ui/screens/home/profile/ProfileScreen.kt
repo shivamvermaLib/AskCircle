@@ -41,8 +41,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -52,7 +55,6 @@ import com.ask.app.data.models.Gender
 import com.ask.app.ui.screens.utils.AppOptionTypeSelect
 import com.ask.app.ui.screens.utils.AppTextField
 import com.ask.app.ui.screens.utils.DropDownWithSelect
-
 
 @Composable
 fun ProfileScreen(
@@ -98,7 +100,7 @@ fun ProfileScreen(
                             }, contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = tab.name,
+                            text = stringResource(id = tab.title),
                             textAlign = TextAlign.Center,
                             color = if (selectedTab == tab) Color.White else Color.Black
                         )
@@ -118,22 +120,27 @@ fun ProfileScreen(
                 setAge = setAge,
                 onUpdate = onUpdate
             )
+
             ProfileTab.MyWidgets -> MyWidgetsScreen(uiState = myWidgetsUiState, onOptionClick)
         }
         Spacer(modifier = Modifier.size(100.dp))
     }
 }
 
+@Preview(
+    backgroundColor = 0xFFFFFFFF,
+    showBackground = true
+)
 @Composable
 fun ProfileTabView(
-    profile: ProfileUiState,
-    onImageClick: (String) -> Unit,
-    setName: (String) -> Unit,
-    setEmail: (String) -> Unit,
-    setGender: (Gender) -> Unit,
-    setCountry: (String) -> Unit,
-    setAge: (Int) -> Unit,
-    onUpdate: () -> Unit
+    @PreviewParameter(ProfileTabViewPreviewParameter::class) profile: ProfileUiState,
+    onImageClick: (String) -> Unit = {},
+    setName: (String) -> Unit = {},
+    setEmail: (String) -> Unit = {},
+    setGender: (Gender) -> Unit = {},
+    setCountry: (String) -> Unit = {},
+    setAge: (Int) -> Unit = {},
+    onUpdate: () -> Unit = {}
 ) {
     val singlePhotoPickerLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
@@ -149,6 +156,7 @@ fun ProfileTabView(
         if (profile.profileLoading) {
             CircularProgressIndicator()
         } else {
+            Box(modifier = Modifier.size(20.dp))
             Box(modifier = Modifier) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -168,19 +176,22 @@ fun ProfileTabView(
                         )
                     )
                 }, modifier = Modifier.align(Alignment.TopEnd)) {
-                    Icon(Icons.Outlined.Edit, contentDescription = "Edit Image")
+                    Icon(
+                        Icons.Outlined.Edit,
+                        contentDescription = stringResource(R.string.edit_image)
+                    )
                 }
             }
             Spacer(modifier = Modifier.size(20.dp))
             AppTextField(
-                hint = "Name",
+                hint = stringResource(R.string.name),
                 value = profile.name,
                 onValueChange = setName,
                 isError = profile.nameError.isNotBlank(),
                 errorMessage = profile.nameError
             )
             AppTextField(
-                hint = "Email",
+                hint = stringResource(R.string.email),
                 value = profile.email,
                 onValueChange = setEmail,
                 isError = profile.emailError.isNotBlank(),
@@ -188,24 +199,30 @@ fun ProfileTabView(
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Gender", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    text = stringResource(id = R.string.gender),
+                    style = MaterialTheme.typography.titleMedium
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 AppOptionTypeSelect(
                     selected = profile.gender == Gender.MALE,
                     { setGender(Gender.MALE) },
-                    "Male",
+                    stringResource(id = R.string.male),
                     ImageVector.vectorResource(id = R.drawable.baseline_male_24)
                 )
                 Spacer(modifier = Modifier.size(5.dp))
                 AppOptionTypeSelect(
                     selected = profile.gender == Gender.FEMALE,
                     { setGender(Gender.FEMALE) },
-                    "Female",
+                    stringResource(id = R.string.female),
                     ImageVector.vectorResource(id = R.drawable.baseline_female_24)
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Age", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    text = stringResource(R.string.age),
+                    style = MaterialTheme.typography.titleSmall
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 DropDownWithSelect(list = (16..90).map { it },
                     title = profile.age?.toString() ?: "",
@@ -214,12 +231,15 @@ fun ProfileTabView(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = "Location", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    text = stringResource(id = R.string.location),
+                    style = MaterialTheme.typography.titleSmall
+                )
                 Spacer(modifier = Modifier.weight(1f))
                 DropDownWithSelect(profile.countries,
                     profile.countries.find { it.name == profile.country }?.let {
                         "${it.emoji} ${it.name}"
-                    } ?: "Select",
+                    } ?: stringResource(id = R.string.select),
                     modifier = Modifier.padding(horizontal = 4.dp),
                     itemString = { "${it.emoji} ${it.name}" }) {
                     setCountry(it.name)
@@ -231,20 +251,23 @@ fun ProfileTabView(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = profile.allowUpdate
             ) {
-                Text(text = "Update")
+                Text(text = stringResource(R.string.update))
             }
         }
     }
 }
 
-enum class ProfileTab { Profile, MyWidgets }
+enum class ProfileTab(val title: Int) { Profile(R.string.profile), MyWidgets(R.string.my_widgets) }
 
-class ProfileStatePreviewParameterProvider : PreviewParameterProvider<ProfileUiState> {
+class ProfileTabViewPreviewParameter : PreviewParameterProvider<ProfileUiState> {
     override val values: Sequence<ProfileUiState>
         get() = sequenceOf(
             ProfileUiState(
-                name = "James",
+                name = "Shivam Verma",
+                email = "shivamverma@gmail.com",
+                gender = Gender.MALE,
+                country = "India",
+                age = 22,
             )
         )
 }
-

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="edit_image">编辑图片</string>
+    <string name="initializing">初始化中</string>
+    <string name="loading">加载中</string>
+    <string name="success">成功</string>
+    <string name="error">错误</string>
+    <string name="close">关闭</string>
+    <string name="title">标题</string>
+    <string name="description">描述</string>
+    <string name="add_option">添加选项</string>
+    <string name="target_audience">目标受众</string>
+    <string name="create">创建</string>
+    <string name="location">位置</string>
+    <string name="select">选择</string>
+    <string name="age_range">年龄范围</string>
+    <string name="gender">性别</string>
+    <string name="all">全部</string>
+    <string name="male">男</string>
+    <string name="female">女</string>
+    <string name="text">文本</string>
+    <string name="options">选项</string>
+    <string name="image">图片</string>
+    <string name="filter">过滤</string>
+    <string name="name">姓名</string>
+    <string name="email">电子邮件</string>
+    <string name="age">年龄</string>
+    <string name="update">更新</string>
+    <string name="create_widget">创建小部件</string>
+    <string name="creating">创建中…</string>
+    <string name="clear">清除%1$s</string>
+    <string name="my_widgets">我的小部件</string>
+    <string name="profile">个人资料</string>
+
+</resources>

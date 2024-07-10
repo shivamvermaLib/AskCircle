@@ -30,6 +30,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -262,7 +263,7 @@ fun TextOption(
         if (isInput) {
             Icon(
                 Icons.Rounded.Close,
-                "Clear ${option.text}",
+                stringResource(R.string.clear, option.text?:""),
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onClearIconClick() })
@@ -358,7 +359,7 @@ fun ImageOption(
                 .align(Alignment.BottomEnd)
         ) {
             Text(
-                text = "${optionWithVotes.votesPercent}%", textAlign = TextAlign.Center,
+                text = stringResource(R.string.percent, optionWithVotes.votesPercent), textAlign = TextAlign.Center,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.align(Alignment.Center),
             )

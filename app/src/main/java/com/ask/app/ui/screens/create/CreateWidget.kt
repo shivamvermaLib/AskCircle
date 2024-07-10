@@ -40,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -110,7 +111,7 @@ fun CreateWidgetScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.Rounded.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.close),
                         )
                     }
                 },
@@ -124,14 +125,14 @@ fun CreateWidgetScreen(
                 .verticalScroll(rememberScrollState()),
         ) {
             AppTextField(
-                hint = "Title",
+                hint = stringResource(R.string.title),
                 value = createWidgetUiState.title,
                 onValueChange = setTitle,
                 isError = createWidgetUiState.titleError.isNotBlank(),
                 errorMessage = createWidgetUiState.titleError
             )
             AppTextField(
-                hint = "Description",
+                hint = stringResource(R.string.description),
                 value = createWidgetUiState.desc,
                 onValueChange = setDesc,
                 minLines = 3,
@@ -191,10 +192,10 @@ fun CreateWidgetScreen(
             }
 
             TextButton(onClick = onAddOption, enabled = createWidgetUiState.options.size <= 4) {
-                Text(text = "Add Option")
+                Text(text = stringResource(R.string.add_option))
             }
             Spacer(modifier = Modifier.size(10.dp))
-            Text(text = "Target Audience", style = MaterialTheme.typography.titleMedium)
+            Text(text = stringResource(R.string.target_audience), style = MaterialTheme.typography.titleMedium)
             GenderSelect(createWidgetUiState, onGenderChanged)
             AgeRangeSelect(createWidgetUiState, onMinAgeChanged, onMaxAgeChanged)
             Spacer(modifier = Modifier.size(10.dp))
@@ -205,7 +206,7 @@ fun CreateWidgetScreen(
                 enabled = createWidgetUiState.allowCreate,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(text = "Create")
+                Text(text = stringResource(R.string.create))
             }
         }
     }
@@ -220,7 +221,7 @@ fun LocationSelect(
     onRemoveCountry: (Country) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "Location", style = MaterialTheme.typography.titleSmall)
+        Text(text = stringResource(R.string.location), style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.weight(1f))
     }
     Spacer(modifier = Modifier.size(6.dp))
@@ -253,7 +254,7 @@ fun LocationSelect(
         }
         DropDownWithSelect(
             createWidgetUiState.countries,
-            "Select",
+            stringResource(R.string.select),
             modifier = Modifier.padding(horizontal = 4.dp),
             itemString = { "${it.emoji} ${it.name}" }
         ) {
@@ -269,7 +270,7 @@ fun AgeRangeSelect(
     onMaxAgeChanged: (Int) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "Age Range", style = MaterialTheme.typography.titleSmall)
+        Text(text = stringResource(R.string.age_range), style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.weight(1f))
         DropDownWithSelect(
             list = (16..90).map { it },
@@ -293,26 +294,26 @@ fun GenderSelect(
     onGenderChanged: (Widget.GenderFilter) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "Gender", style = MaterialTheme.typography.titleSmall)
+        Text(text = stringResource(R.string.gender), style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.weight(1f))
         AppOptionTypeSelect(
             selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.ALL,
             { onGenderChanged(Widget.GenderFilter.ALL) },
-            "All",
+            stringResource(R.string.all),
             null
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
             selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.MALE,
             { onGenderChanged(Widget.GenderFilter.MALE) },
-            "Male",
+            stringResource(R.string.male),
             ImageVector.vectorResource(id = R.drawable.baseline_male_24)
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
             selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.FEMALE,
             { onGenderChanged(Widget.GenderFilter.FEMALE) },
-            "Female",
+            stringResource(R.string.female),
             ImageVector.vectorResource(id = R.drawable.baseline_female_24)
         )
     }
@@ -324,19 +325,19 @@ fun OptionTypeSelect(
     onOptionTypeChanged: (CreateWidgetUiState.WidgetOptionType) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "Options", style = MaterialTheme.typography.titleMedium)
+        Text(text = stringResource(R.string.options), style = MaterialTheme.typography.titleMedium)
         Spacer(modifier = Modifier.weight(1f))
         AppOptionTypeSelect(
             selected = createWidgetUiState.optionType == CreateWidgetUiState.WidgetOptionType.Text,
             { onOptionTypeChanged.invoke(CreateWidgetUiState.WidgetOptionType.Text) },
-            "Text",
+            stringResource(R.string.text),
             ImageVector.vectorResource(id = R.drawable.baseline_text_fields_24)
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
             selected = createWidgetUiState.optionType == CreateWidgetUiState.WidgetOptionType.Image,
             { onOptionTypeChanged.invoke(CreateWidgetUiState.WidgetOptionType.Image) },
-            "Image",
+            stringResource(R.string.image),
             ImageVector.vectorResource(id = R.drawable.baseline_image_24)
         )
     }

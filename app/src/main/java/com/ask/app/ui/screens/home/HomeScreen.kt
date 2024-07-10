@@ -28,6 +28,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -37,6 +38,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ask.app.R
 import com.ask.app.ui.screens.home.dashboard.DashBoardScreen
 import com.ask.app.ui.screens.home.dashboard.DashboardViewModel
 import com.ask.app.ui.screens.home.profile.MyWidgetsViewModel
@@ -70,8 +72,8 @@ fun HomeScreen(
     }, floatingActionButton = {
         if (homeUiState.createWidgetStatus != WorkerStatus.Loading) ExtendedFloatingActionButton(
             onClick = onCreateClick,
-            icon = { Icon(Icons.Filled.Add, "Localized description") },
-            text = { Text(text = "Create") },
+            icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
+            text = { Text(text = stringResource(id = R.string.create)) },
         )
     }, bottomBar = {
         val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
@@ -117,7 +119,7 @@ fun HomeScreen(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(text = "Creating...")
+                        Text(text = stringResource(R.string.creating))
                         Spacer(modifier = Modifier.weight(1f))
                         CircularProgressIndicator()
                     }

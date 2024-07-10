@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="edit_image">Editar Imagem</string>
+    <string name="initializing">Inicializando</string>
+    <string name="loading">Carregando</string>
+    <string name="success">Sucesso</string>
+    <string name="error">Erro</string>
+    <string name="close">Fechar</string>
+    <string name="title">Título</string>
+    <string name="description">Descrição</string>
+    <string name="add_option">Adicionar Opção</string>
+    <string name="target_audience">Público Alvo</string>
+    <string name="create">Criar</string>
+    <string name="location">Localização</string>
+    <string name="select">Selecionar</string>
+    <string name="age_range">Faixa Etária</string>
+    <string name="gender">Gênero</string>
+    <string name="all">Todos</string>
+    <string name="male">Masculino</string>
+    <string name="female">Feminino</string>
+    <string name="text">Texto</string>
+    <string name="options">Opções</string>
+    <string name="image">Imagem</string>
+    <string name="filter">Filtro</string>
+    <string name="name">Nome</string>
+    <string name="email">E-mail</string>
+    <string name="age">Idade</string>
+    <string name="update">Atualizar</string>
+    <string name="create_widget">Criar Widget</string>
+    <string name="creating">Criando…</string>
+    <string name="clear">Limpar %1$s</string>
+    <string name="my_widgets">Meus Widgets</string>
+    <string name="profile">Perfil</string>
+
+
+</resources>
