@@ -11,10 +11,8 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -22,7 +20,6 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ask.app.ui.screens.home.dashboard.DashBoardScreen
 import com.ask.app.ui.screens.home.dashboard.DashboardViewModel
@@ -54,7 +52,6 @@ import kotlinx.serialization.Serializable
 
 
 @Preview
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     homeUiState: HomeUiState = HomeUiState(),
@@ -62,18 +59,7 @@ fun HomeScreen(
 ) {
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     val homeNavigationController = rememberNavController()
-    Scaffold(topBar = {
-        TopAppBar(
-            title = {
-                Text(text = "Ask Circle")
-            },
-            actions = {
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icons.Rounded.AccountCircle
-                }
-            },
-        )
-    }, snackbarHost = {
+    Scaffold(snackbarHost = {
         SnackbarHost(
             hostState = snackBarHostState, modifier = Modifier.padding(horizontal = 16.dp)
         ) {
@@ -88,20 +74,24 @@ fun HomeScreen(
             text = { Text(text = "Create") },
         )
     }, bottomBar = {
+        val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
         NavigationBar {
             listOf(HomeTabScreen.Home, HomeTabScreen.Profile).forEach { item ->
-                NavigationBarItem(icon = {
-                    Icon(
-                        when (item) {
-                            HomeTabScreen.Home -> Icons.Filled.Home
-                            HomeTabScreen.Profile -> Icons.Rounded.AccountCircle
-                        },
-                        contentDescription = item.toString()
-                    )
-                },
+                NavigationBarItem(
+                    icon = {
+                        Icon(
+                            when (item) {
+                                HomeTabScreen.Home -> Icons.Filled.Home
+                                HomeTabScreen.Profile -> Icons.Rounded.AccountCircle
+                            },
+                            contentDescription = item.toString()
+                        )
+                    },
                     label = { Text(item.toString()) },
-                    selected = homeNavigationController.currentDestination?.route == item.toString(),
-                    onClick = { homeNavigationController.navigate(item) })
+                    selected = currentRoute == item.javaClass.canonicalName,
+                    onClick = { homeNavigationController.navigate(item) }
+                )
             }
         }
     }) {
@@ -146,9 +136,9 @@ fun HomeNavigation(
         composable<HomeTabScreen.Home> {
             val viewModel = hiltViewModel<DashboardViewModel>()
             val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
-            DashBoardScreen(state) { widgetId, optionId ->
+            DashBoardScreen(state, { widgetId, optionId ->
                 viewModel.vote(widgetId, optionId)
-            }
+            }, viewModel::setFilterType)
         }
         composable<HomeTabScreen.Profile> {
             val context = LocalContext.current
@@ -157,10 +147,8 @@ fun HomeNavigation(
             val profileUiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
             val myWidgetsUiState by myWidgetsViewModel.uiStateFlow.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) {
-                merge(
-                    viewModel.uiStateFlow.mapNotNull { it.error },
-                    myWidgetsViewModel.uiStateFlow.mapNotNull { it.error }
-                ).collect {
+                merge(viewModel.uiStateFlow.mapNotNull { it.error },
+                    myWidgetsViewModel.uiStateFlow.mapNotNull { it.error }).collect {
                     onError(it) {
                         viewModel.setError(null)
                         myWidgetsViewModel.setError(null)
@@ -189,6 +177,7 @@ fun HomeNavigation(
 }
 
 
+@Serializable
 sealed interface HomeTabScreen {
     @Serializable
     data object Home : HomeTabScreen

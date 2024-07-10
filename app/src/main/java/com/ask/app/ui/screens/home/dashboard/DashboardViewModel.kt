@@ -20,16 +20,26 @@ class DashboardViewModel @Inject constructor(
     private val userRepository: UserRepository
 ) : BaseViewModel() {
     private val _widgetsFlow = getWidgetsUseCase()
+    private val _filterTypeFlow = MutableStateFlow(FilterType.Latest)
     private val _errorFlow = MutableStateFlow<String?>(null)
 
     val uiStateFlow =
-        combine(_widgetsFlow, _errorFlow) { widgets, error ->
-            DashboardUiState(widgets, error)
+        combine(_widgetsFlow, _errorFlow, _filterTypeFlow) { widgets, error, filterType ->
+            DashboardUiState(when (filterType) {
+                FilterType.Latest -> widgets
+                FilterType.Trending -> widgets.sortedByDescending { widgetWithOptionsAndVotesForTargetAudience ->
+                    widgetWithOptionsAndVotesForTargetAudience.options.sumOf { it.totalVotes }
+                }
+            }, error)
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             DashboardUiState()
         )
+
+    fun setFilterType(filterType: FilterType) {
+        _filterTypeFlow.value = filterType
+    }
 
     fun vote(widgetId: String, optionId: String) {
         safeApiCall({}, {
@@ -44,3 +54,5 @@ data class DashboardUiState(
     val widgets: List<WidgetWithOptionsAndVotesForTargetAudience> = emptyList(),
     val error: String? = null
 )
+
+enum class FilterType { Latest, Trending }
