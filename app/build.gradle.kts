@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.google.services)
     alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -69,12 +70,13 @@ dependencies {
     // Hilt
     implementation(libs.androidx.hilt.work)
     kapt(libs.androidx.hilt.compiler)
-    
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
     implementation(libs.firebase.database)
     implementation(libs.firebase.storage)
+    implementation(libs.firebase.crashlytics)
 
     implementation(libs.androidx.hilt.navigation.compose)
 
