@@ -1,6 +1,7 @@
 package com.ask.app.ui.screens.create
 
 import androidx.lifecycle.viewModelScope
+import com.ask.app.EMPTY
 import com.ask.app.data.models.Country
 import com.ask.app.data.models.Widget
 import com.ask.app.data.repository.CountryRepository
@@ -14,19 +15,19 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CreateWidgetViewModel @Inject constructor(
-    private val countryRepository: CountryRepository
+    countryRepository: CountryRepository
 ) : BaseViewModel() {
     private val minOptions = 2
     private val maxOptions = 4
-    private val _titleFlow = MutableStateFlow("")
-    private val _titleErrorFlow = MutableStateFlow("")
-    private val _descFlow = MutableStateFlow("")
-    private val _descErrorFlow = MutableStateFlow("")
+    private val _titleFlow = MutableStateFlow(EMPTY)
+    private val _titleErrorFlow = MutableStateFlow(EMPTY)
+    private val _descFlow = MutableStateFlow(EMPTY)
+    private val _descErrorFlow = MutableStateFlow(EMPTY)
     private val _optionType = MutableStateFlow(CreateWidgetUiState.WidgetOptionType.Text)
     private val _options = MutableStateFlow(
         listOf(
-            Widget.Option(text = ""),
-            Widget.Option(text = ""),
+            Widget.Option(text = EMPTY),
+            Widget.Option(text = EMPTY),
         )
     )
     private val _targetAudienceGender = MutableStateFlow(Widget.TargetAudienceGender())
@@ -53,11 +54,12 @@ class CreateWidgetViewModel @Inject constructor(
     fun setOptionType(type: CreateWidgetUiState.WidgetOptionType) {
         when (type) {
             CreateWidgetUiState.WidgetOptionType.Text -> {
-                _options.value = listOf(Widget.Option(text = ""), Widget.Option(text = ""))
+                _options.value = listOf(Widget.Option(text = EMPTY), Widget.Option(text = EMPTY))
             }
 
             CreateWidgetUiState.WidgetOptionType.Image -> {
-                _options.value = listOf(Widget.Option(imageUrl = ""), Widget.Option(imageUrl = ""))
+                _options.value =
+                    listOf(Widget.Option(imageUrl = EMPTY), Widget.Option(imageUrl = EMPTY))
             }
         }
         _optionType.value = type
@@ -68,11 +70,11 @@ class CreateWidgetViewModel @Inject constructor(
         if (_options.value.size in minOptions..<maxOptions) {
             when (optionType) {
                 CreateWidgetUiState.WidgetOptionType.Text -> {
-                    _options.value += Widget.Option(text = "")
+                    _options.value += Widget.Option(text = EMPTY)
                 }
 
                 CreateWidgetUiState.WidgetOptionType.Image -> {
-                    _options.value += Widget.Option(imageUrl = "")
+                    _options.value += Widget.Option(imageUrl = EMPTY)
                 }
             }
         }
@@ -141,7 +143,7 @@ class CreateWidgetViewModel @Inject constructor(
         _targetAudienceLocations,
         _countriesFlow,
     ) { title, titleError, desc, descError, optionType, options, gender, ageRange, locations, countries ->
-        val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size >= 2
+        val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size in 2..4
             && ((optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all { !it.text.isNullOrBlank() }) || (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() }))
         CreateWidgetUiState(
             title,
@@ -151,10 +153,10 @@ class CreateWidgetViewModel @Inject constructor(
             optionType,
             options,
             gender,
-            ageRange,
             locations,
             countries,
             allowCreate,
+            targetAudienceAgeRange = ageRange,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
 }

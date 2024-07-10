@@ -1,5 +1,6 @@
 package com.ask.app.data.repository
 
+import com.ask.app.DOT
 import com.ask.app.TABLE_USERS
 import com.ask.app.data.models.Gender
 import com.ask.app.data.models.User
@@ -31,7 +32,6 @@ class UserRepository @Inject constructor(
                 UserWithLocation(
                     user = User(id = id),
                     userLocation = User.UserLocation(userId = id),
-//                    userWidgets = emptyList()
                 )
             ).also {
                 userDao.insertAll(listOf(it.user), listOf(it.userLocation))
@@ -64,7 +64,7 @@ class UserRepository @Inject constructor(
                         gender = gender ?: userDetails.user.gender,
                         profilePic = when (profileByteArray != null && profilePicExtension != null) {
                             true -> userStorageSource.upload(
-                                "${userDetails.user.id}.${profilePicExtension}",
+                                "${userDetails.user.id}$DOT${profilePicExtension}",
                                 profileByteArray
                             )
 
@@ -98,7 +98,7 @@ class UserRepository @Inject constructor(
             }
         }
 
-    suspend fun getCurrentUser(refresh: Boolean = false): UserWithLocation =
+    private suspend fun getCurrentUser(refresh: Boolean = false): UserWithLocation =
         getCurrentUserOptional(refresh) ?: throw Exception("Current User not found")
 
     fun getCurrentUserId() =
@@ -130,81 +130,5 @@ class UserRepository @Inject constructor(
         userDataSource.deleteItemById(id)
             .also { userDao.deleteUser(user) }
     }
-
-    /* suspend fun publishWidgetsToUsers(createdPollWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience) =
-         withContext(dispatcher) {
-             val pollId = createdPollWithOptionsAndVotesForTargetAudience.widget.id
-             val list = userDataSource.findWithQuery(
-                 getQuery = { ref ->
-                     if (createdPollWithOptionsAndVotesForTargetAudience.targetAudienceGender.gender != Widget.GenderFilter.ALL) {
-                         ref.orderByChild("user/gender")
-                             .equalTo(createdPollWithOptionsAndVotesForTargetAudience.targetAudienceGender.gender.name)
-                     } else if (createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.min != 0) {
-                         ref.orderByChild("user/age")
-                             .startAt(createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.min.toDouble())
-                     } else if (createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.max != 0) {
-                         ref.orderByChild("user/age")
-                             .endAt(createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.max.toDouble())
-                     } else {
-                         ref.orderByChild("user/createdAt")
-                             .endAt(System.currentTimeMillis().toDouble())
-                     }
-                 },
-                 getPaginatedQuery = { ref ->
-                     if (createdPollWithOptionsAndVotesForTargetAudience.targetAudienceGender.gender != Widget.GenderFilter.ALL) {
-                         ref.orderByChild("user/gender")
-                     } else if (createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.min != 0) {
-                         ref.orderByChild("user/age")
-                     } else if (createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.max != 0) {
-                         ref.orderByChild("user/age")
-                     } else {
-                         ref.orderByChild("user/createdAt")
-                     }
-                 }
-             )
-             val filteredList = list.filter {
-                 if (it.user.age != null &&
-                     (createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.min != 0 && createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.max != 0)
-                 ) {
-                     it.user.age in createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.min..createdPollWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange.max
-                 } else {
-                     true
-                 }
-             }.filter { userWithLocation ->
-                 if (createdPollWithOptionsAndVotesForTargetAudience.targetAudienceLocations.isNotEmpty()) {
-                     userWithLocation.userLocation.let { userLocation ->
-                         var locationList =
-                             createdPollWithOptionsAndVotesForTargetAudience.targetAudienceLocations
-                         userLocation.country?.let { country ->
-                             locationList = locationList.filter { it.country == country }
-                         }
-                         userLocation.state?.let { state ->
-                             locationList = locationList.filter { it.state == state }
-                         }
-                         userLocation.city?.let { city ->
-                             locationList = locationList.filter { it.city == city }
-                         }
-                         locationList.isNotEmpty()
-                     }
-                 } else {
-                     true
-                 }
-             }.map {
-                 println("User Found: ${it.user.id}")
-                 //TODO: send notification
-                 val userWidget = User.UserWidget(
-                     userId = it.user.id,
-                     widgetId = pollId
-                 )
-                 async {
-                     userDataSource.updateItem(
-                         it.copy(
-                             userWidgets = it.userWidgets + userWidget
-                         )
-                     )
-                 }
-             }
-             filteredList.awaitAll()
-         }*/
 
 }

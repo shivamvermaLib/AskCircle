@@ -13,6 +13,8 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.ask.app.CREATE_WIDGET
+import com.ask.app.WIDGET
 import com.ask.app.ui.screens.SplashScreen
 import com.ask.app.ui.screens.SplashUIState
 import com.ask.app.ui.screens.SplashViewModel
@@ -32,7 +34,7 @@ fun AskNavigation() {
     val navController = rememberNavController()
     val context = LocalContext.current
     val workManager = WorkManager.getInstance(context)
-    val workerFlow = workManager.getWorkInfosByTagFlow("create_widget")
+    val workerFlow = workManager.getWorkInfosByTagFlow(CREATE_WIDGET)
 
     NavHost(navController = navController, startDestination = Splash) {
         composable<Splash> {
@@ -80,16 +82,16 @@ fun AskNavigation() {
                 {
                     val workData = Data.Builder().apply {
                         putString(
-                            "widget",
+                            WIDGET,
                             Json.encodeToString(uiState.toWidgetWithOptionsAndVotesForTargetAudience())
                         )
                     }
                     val workRequest = OneTimeWorkRequestBuilder<CreateWidgetWorker>()
                         .setInputData(workData.build())
-                        .addTag("create_widget")
+                        .addTag(CREATE_WIDGET)
                         .build()
                     workManager.enqueueUniqueWork(
-                        "create_widget",
+                        CREATE_WIDGET,
                         ExistingWorkPolicy.APPEND_OR_REPLACE,
                         workRequest
                     )

@@ -32,3 +32,18 @@ const val TARGET_AUDIENCE_AGE_RANGES = "targetAudienceAgeRange"
 
 const val ANONYMOUS_USER = "Anonymous User"
 const val USER_ID = "userId"
+const val SYNC_WIDGET_WORK_NAME = "syncWidgetsWithUserDetails"
+const val EMPTY = ""
+const val ALL = "all"
+const val UNDERSCORE = "_"
+const val COUNTRY_JSON = "countries.json"
+const val DOT = "."
+const val HTTP = "http://"
+const val HTTPS = "https://"
+const val FIREBASE = "firebase"
+const val SLASH = "/"
+
+const val MIN_AGE_RANGE = 16
+const val MAX_AGE_RANGE = 90
+const val STATUS = "status"
+const val CREATE_WIDGET = "create_widget"

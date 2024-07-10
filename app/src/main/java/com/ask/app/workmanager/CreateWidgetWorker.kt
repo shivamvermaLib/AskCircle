@@ -5,6 +5,8 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.ask.app.STATUS
+import com.ask.app.WIDGET
 import com.ask.app.data.models.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.app.domain.CreateWidgetUseCase
 import com.ask.app.ui.screens.utils.getByteArray
@@ -23,8 +25,8 @@ class CreateWidgetWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         return try {
             println("status:progress")
-            setProgress(workDataOf("status" to WorkerStatus.Loading.name))
-            val widgetString = inputData.getString("widget")
+            setProgress(workDataOf(STATUS to WorkerStatus.Loading.name))
+            val widgetString = inputData.getString(WIDGET)
             widgetString?.let { Json.decodeFromString<WidgetWithOptionsAndVotesForTargetAudience>(it) }
                 ?.let { widgetWithOptionsAndVotesForTargetAudience ->
                     createWidgetUseCase(widgetWithOptionsAndVotesForTargetAudience, {
@@ -35,11 +37,11 @@ class CreateWidgetWorker @AssistedInject constructor(
                     )
                 }
             println("status:success")
-            setProgress(workDataOf("status" to WorkerStatus.Success.name))
-            Result.success(workDataOf("status" to WorkerStatus.Success.name))
+            setProgress(workDataOf(STATUS to WorkerStatus.Success.name))
+            Result.success(workDataOf(STATUS to WorkerStatus.Success.name))
         } catch (e: Exception) {
             println("status:failed")
-            setProgress(workDataOf("status" to WorkerStatus.Failed.name))
+            setProgress(workDataOf(STATUS to WorkerStatus.Failed.name))
             e.printStackTrace()
             Result.failure()
         }

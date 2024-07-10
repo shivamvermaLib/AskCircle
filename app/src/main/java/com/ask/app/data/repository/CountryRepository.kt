@@ -1,5 +1,6 @@
 package com.ask.app.data.repository
 
+import com.ask.app.COUNTRY_JSON
 import com.ask.app.TABLE_COUNTRIES
 import com.ask.app.data.models.Country
 import com.ask.app.data.source.local.CountryDao
@@ -19,7 +20,7 @@ class CountryRepository @Inject constructor(
 
     suspend fun syncCountries() = withContext(dispatcher) {
         if (countryDao.hasCountries().not()) {
-            val countriesString = countryStorageSource.download("countries.json")
+            val countriesString = countryStorageSource.download(COUNTRY_JSON)
             val countries =
                 Json { ignoreUnknownKeys = true }.decodeFromString<List<Country>>(countriesString)
             countryDao.insertAll(countries)

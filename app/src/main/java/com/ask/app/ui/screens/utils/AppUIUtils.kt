@@ -32,6 +32,7 @@ import coil.request.CachePolicy
 import coil.request.ErrorResult
 import coil.request.ImageRequest
 import coil.request.SuccessResult
+import com.ask.app.EMPTY
 import kotlinx.coroutines.Dispatchers
 
 @Composable
@@ -80,7 +81,7 @@ fun AppTextField(
     value: String,
     onValueChange: (String) -> Unit,
     isError: Boolean = false,
-    errorMessage: String = "",
+    errorMessage: String = EMPTY,
     maxLines: Int = 1,
     minLines: Int = 1
 ) {
@@ -93,7 +94,7 @@ fun AppTextField(
         maxLines = maxLines,
         minLines = minLines,
         supportingText = {
-            Text(if (isError) errorMessage else "", Modifier.clearAndSetSemantics {})
+            Text(if (isError) errorMessage else EMPTY, Modifier.clearAndSetSemantics {})
         },
     )
 }

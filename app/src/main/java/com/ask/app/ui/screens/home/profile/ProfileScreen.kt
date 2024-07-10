@@ -220,7 +220,7 @@ fun ProfileTabView(
                     style = MaterialTheme.typography.titleSmall
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                DropDownWithSelect(list = (16..90).map { it },
+                DropDownWithSelect(list = (profile.minAgeRange..profile.maxAgeRange).map { it },
                     title = profile.age?.toString() ?: "",
                     onItemSelect = setAge,
                     itemString = { it.toString() })

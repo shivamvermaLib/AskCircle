@@ -2,6 +2,7 @@ package com.ask.app.ui.screens.home
 
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
+import com.ask.app.STATUS
 import com.ask.app.ui.screens.utils.BaseViewModel
 import com.ask.app.workmanager.WorkerStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,7 +28,7 @@ class HomeViewModel @Inject constructor() : BaseViewModel() {
         viewModelScope.launch {
             workerFlow.collect { workInfos ->
                 val list = workInfos.filter { it.state != WorkInfo.State.SUCCEEDED }
-                    .mapNotNull { it.progress.getString("status") }.map { WorkerStatus.valueOf(it) }
+                    .mapNotNull { it.progress.getString(STATUS) }.map { WorkerStatus.valueOf(it) }
                 _workerStatusFlow.value =
                     if (list.any { it == WorkerStatus.Loading }) WorkerStatus.Loading else WorkerStatus.Success
             }

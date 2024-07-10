@@ -60,7 +60,6 @@ abstract class FirebaseDataSource<T>(private val databaseReference: DatabaseRefe
         val newT =
             updateIdForItem(t, ref.key ?: throw Exception("Firebase Unable to create new Id"))
         setValue(ref, newT, cont)
-        println("Item added ID:${ref.key}")
     }
 
     override suspend fun updateItem(t: T): T = suspendCoroutine { cont ->

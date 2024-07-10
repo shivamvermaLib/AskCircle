@@ -32,7 +32,7 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
         val myWork = PeriodicWorkRequestBuilder<SyncWidgetWorker>(1, TimeUnit.HOURS)
             .build()
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "syncWidgetsWithUserDetails",
+            SYNC_WIDGET_WORK_NAME,
             ExistingPeriodicWorkPolicy.UPDATE,
             myWork
         )

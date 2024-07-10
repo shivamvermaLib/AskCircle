@@ -40,7 +40,7 @@ fun DashBoardScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Ask Circle")
+                    Text(text = stringResource(id = R.string.app_name))
                 },
                 actions = {
                     IconButton(onClick = { showMenu = !showMenu }) {

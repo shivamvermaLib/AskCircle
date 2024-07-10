@@ -1,6 +1,7 @@
 package com.ask.app.ui.screens.home.profile
 
 import androidx.lifecycle.viewModelScope
+import com.ask.app.EMPTY
 import com.ask.app.checkIfUrl
 import com.ask.app.data.models.Gender
 import com.ask.app.data.repository.CountryRepository
@@ -29,11 +30,11 @@ class ProfileViewModel @Inject constructor(
         }
     private val _countriesFlow = countryRepository.getCountries()
 
-    private val _userNameFlow = MutableStateFlow("")
-    private val _userEmailFlow = MutableStateFlow("")
+    private val _userNameFlow = MutableStateFlow(EMPTY)
+    private val _userEmailFlow = MutableStateFlow(EMPTY)
     private val _userGenderFlow = MutableStateFlow<Gender?>(null)
     private val _userAgeFlow = MutableStateFlow<Int?>(null)
-    private val _userLocationCountryFlow = MutableStateFlow("")
+    private val _userLocationCountryFlow = MutableStateFlow(EMPTY)
     private val _userPicFlow = MutableStateFlow<String?>(null)
     private val _profileLoadingFlow = MutableStateFlow(false)
 
@@ -50,9 +51,9 @@ class ProfileViewModel @Inject constructor(
         _profileLoadingFlow,
         _errorFlow
     ) { countries, name, email, gender, age, country, profilePic, profileLoading, error ->
-        val nameError = if (name.isBlank()) "Name is required" else ""
+        val nameError = if (name.isBlank()) "Name is required" else EMPTY
         val emailError =
-            if (email.isNotBlank() && isValidEmail(email).not()) "Email is not valid" else ""
+            if (email.isNotBlank() && isValidEmail(email).not()) "Email is not valid" else EMPTY
         val allowUpdate = nameError.isBlank() && emailError.isBlank()
         ProfileUiState(
             name = name,
@@ -79,9 +80,9 @@ class ProfileViewModel @Inject constructor(
                 _userNameFlow.value = it.user.name
                 _userGenderFlow.value = it.user.gender
                 _userAgeFlow.value = it.user.age
-                _userLocationCountryFlow.value = it.userLocation.country ?: ""
+                _userLocationCountryFlow.value = it.userLocation.country ?: EMPTY
                 _userPicFlow.value = it.user.profilePic
-                _userEmailFlow.value = it.user.email ?: ""
+                _userEmailFlow.value = it.user.email ?: EMPTY
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.ask.app.data.repository
 
+import com.ask.app.DOT
 import com.ask.app.TABLE_WIDGETS
 import com.ask.app.checkIfUrl
 import com.ask.app.data.models.User
@@ -60,7 +61,7 @@ class WidgetRepository @Inject constructor(
                             imageUrl = when (it.option.imageUrl != null && it.option.imageUrl.checkIfUrl()
                                 .not()) {
                                 true -> pollOptionStorageSource.upload(
-                                    "${it.option.id}.${getExtension(it.option.imageUrl)}",
+                                    "${it.option.id}$DOT${getExtension(it.option.imageUrl)}",
                                     getByteArray(it.option.imageUrl)
                                 )
 
@@ -107,7 +108,7 @@ class WidgetRepository @Inject constructor(
         withContext(dispatcher) {
             widgetWithOptionsAndVotesForTargetAudience.options.forEach { optionWithVotes ->
                 optionWithVotes.option.imageUrl?.let {
-                    if (it.checkIfUrl() && it.contains("firebase")) {
+                    if (it.checkIfUrl()) {
                         pollOptionStorageSource.delete(it.fileNameWithExtension())
                     }
                 }

@@ -285,14 +285,14 @@ fun AgeRangeSelect(
         Text(text = stringResource(R.string.age_range), style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.weight(1f))
         DropDownWithSelect(
-            list = (16..90).map { it },
+            list = (createWidgetUiState.minAge..createWidgetUiState.maxAge).map { it },
             title = createWidgetUiState.targetAudienceAgeRange.min.toString(),
             onItemSelect = onMinAgeChanged,
             itemString = { it.toString() }
         )
         Spacer(modifier = Modifier.size(6.dp))
         DropDownWithSelect(
-            list = (16..90).map { it },
+            list = (createWidgetUiState.minAge..createWidgetUiState.maxAge).map { it },
             title = createWidgetUiState.targetAudienceAgeRange.max.toString(),
             onItemSelect = onMaxAgeChanged,
             itemString = { it.toString() }
@@ -372,7 +372,6 @@ class CreateWidgetStatePreviewParameterProvider : PreviewParameterProvider<Creat
                 )
             ),
             Widget.TargetAudienceGender(gender = Widget.GenderFilter.MALE),
-            Widget.TargetAudienceAgeRange(min = 45, max = 66),
             listOf(Widget.TargetAudienceLocation()),
             listOf(
                 Country(name = "India", emoji = ""),
@@ -382,7 +381,8 @@ class CreateWidgetStatePreviewParameterProvider : PreviewParameterProvider<Creat
                 Country(name = "USA", emoji = ""),
                 Country(name = "Brazil", emoji = ""),
                 Country(name = "Nepal", emoji = "")
-            )
+            ),
+            targetAudienceAgeRange = Widget.TargetAudienceAgeRange(min = 45, max = 66),
         ),
         CreateWidgetUiState(
             "widget title",
@@ -398,9 +398,9 @@ class CreateWidgetStatePreviewParameterProvider : PreviewParameterProvider<Creat
                 )
             ),
             Widget.TargetAudienceGender(gender = Widget.GenderFilter.MALE),
-            Widget.TargetAudienceAgeRange(min = 45, max = 66),
-            listOf(Widget.TargetAudienceLocation()),
-            listOf(
+            targetAudienceAgeRange = Widget.TargetAudienceAgeRange(min = 45, max = 66),
+            targetAudienceLocations = listOf(Widget.TargetAudienceLocation()),
+            countries = listOf(
                 Country(name = "India", emoji = ""),
                 Country(name = "Australia", emoji = ""),
                 Country(name = "Nepal", emoji = "")

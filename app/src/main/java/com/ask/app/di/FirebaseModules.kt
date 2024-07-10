@@ -128,15 +128,14 @@ object FirebaseModules {
                 return UserWithLocation(
                     dataSnapshot.child(USER).getValue(User::class.java)!!,
                     dataSnapshot.child(USER_LOCATION).getValue(User.UserLocation::class.java)!!,
-//                    dataSnapshot.child(USER_WIDGET).children.map { it.getValue(User.UserWidget::class.java)!! }
                 )
             }
 
             override fun getItemFromMutableData(mutableData: MutableData): UserWithLocation? {
+                val user = mutableData.child(USER).getValue(User::class.java) ?: return null
                 return UserWithLocation(
-                    mutableData.child(USER).getValue(User::class.java)!!,
+                    user,
                     mutableData.child(USER_LOCATION).getValue(User.UserLocation::class.java)!!,
-//                    dataSnapshot.child(USER_WIDGET).children.map { it.getValue(User.UserWidget::class.java)!! }
                 )
             }
         }

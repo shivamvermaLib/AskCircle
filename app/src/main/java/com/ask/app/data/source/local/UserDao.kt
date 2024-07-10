@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Upsert
 import com.ask.app.data.models.User
 import com.ask.app.data.models.UserWithLocation
 import kotlinx.coroutines.flow.Flow
@@ -16,16 +17,16 @@ interface UserDao {
     @Query("SELECT * FROM users")
     fun getAllUsers(): Flow<List<User>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertAll(
         users: List<User>,
         userLocations: List<User.UserLocation>
     )
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertUser(user: User)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Upsert
     suspend fun insertUserWidgets(userWidgets: List<User.UserWidget>)
 
     @Delete
