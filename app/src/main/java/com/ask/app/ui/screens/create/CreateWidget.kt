@@ -74,7 +74,8 @@ fun CreateWidgetScreen(
     onSelectCountry: (Country) -> Unit = {},
     onRemoveCountry: (Country) -> Unit = {},
     onCreateClick: () -> Unit = {},
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onRemoveOption: (Int) -> Unit = {}
 ) {
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     var imagePickerIndex by remember { mutableIntStateOf(-1) }
@@ -156,7 +157,9 @@ fun CreateWidgetScreen(
                             votes = emptyList()
                         ),
                         didUserVoted = false,
-                        totalOptions = createWidgetUiState.options.size
+                        totalOptions = createWidgetUiState.options.size,
+                        isInput = true,
+                        onDeleteIconClick = onRemoveOption
                     ) {
                         imagePickerIndex = index
                         singlePhotoPickerLauncher.launch(
@@ -173,29 +176,38 @@ fun CreateWidgetScreen(
                     )
                 ) {
                     createWidgetUiState.options.forEachIndexed { index, option ->
-                        TextOption(index = index,
-                            widgetOption = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                                option = option,
-                                votes = emptyList()
-                            ),
-                            didUserVoted = false,
-                            isInput = true,
-                            onValueChange = {
-                                onOptionChanged(index, option.copy(text = it))
-                            },
-                            onClearIconClick = {
-                                onOptionChanged(index, option.copy(text = ""))
-                            }
-                        )
+                        Row {
+                            TextOption(
+                                index = index,
+                                widgetOption = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                                    option = option,
+                                    votes = emptyList()
+                                ),
+                                didUserVoted = false,
+                                isInput = true,
+                                onValueChange = {
+                                    onOptionChanged(index, option.copy(text = it))
+                                },
+                                onClearIconClick = {
+                                    onOptionChanged(index, option.copy(text = ""))
+                                },
+                                onDeleteIconClick = {
+                                    onRemoveOption(index)
+                                }
+                            )
+                        }
                     }
                 }
             }
 
-            TextButton(onClick = onAddOption, enabled = createWidgetUiState.options.size <= 4) {
+            TextButton(onClick = onAddOption, enabled = createWidgetUiState.options.size < 4) {
                 Text(text = stringResource(R.string.add_option))
             }
             Spacer(modifier = Modifier.size(10.dp))
-            Text(text = stringResource(R.string.target_audience), style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = stringResource(R.string.target_audience),
+                style = MaterialTheme.typography.titleMedium
+            )
             GenderSelect(createWidgetUiState, onGenderChanged)
             AgeRangeSelect(createWidgetUiState, onMinAgeChanged, onMaxAgeChanged)
             Spacer(modifier = Modifier.size(10.dp))

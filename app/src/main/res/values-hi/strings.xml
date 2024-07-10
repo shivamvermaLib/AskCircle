@@ -31,5 +31,5 @@
     <string name="clear">साफ़ करें %1$s</string>
     <string name="my_widgets">मेरे विजेट्स</string>
     <string name="profile">प्रोफ़ाइल</string>
-
+    <string name="delete">हटाएं %1$s</string>
 </resources>

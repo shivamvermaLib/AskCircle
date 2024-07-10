@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -174,7 +175,7 @@ fun WidgetView(
                 index = index,
                 totalOptions = widget.options.size,
                 optionWithVotes = widgetOption,
-                didUserVoted = widgetOption.didUserVoted
+                didUserVoted = widgetOption.didUserVoted,
             ) {
                 onOptionClick(widget.widget.id, it)
             }
@@ -204,7 +205,8 @@ fun TextOption(
     isInput: Boolean = false,
     onValueChange: (String) -> Unit = {},
     onClearIconClick: () -> Unit = {},
-    onOptionClick: (String) -> Unit = {}
+    onOptionClick: (String) -> Unit = {},
+    onDeleteIconClick: (Int) -> Unit = {}
 ) {
     val (option, _) = widgetOption
     Row(
@@ -263,10 +265,17 @@ fun TextOption(
         if (isInput) {
             Icon(
                 Icons.Rounded.Close,
-                stringResource(R.string.clear, option.text?:""),
+                stringResource(R.string.clear, option.text ?: ""),
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onClearIconClick() })
+            Icon(
+                Icons.Rounded.Delete,
+                stringResource(R.string.delete, option.text ?: ""),
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable { onDeleteIconClick(index) }
+            )
         }
         Spacer(modifier = Modifier.size(5.dp))
     }
@@ -278,7 +287,9 @@ fun ImageOption(
     totalOptions: Int,
     optionWithVotes: WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
     didUserVoted: Boolean,
-    onImageClick: (String) -> Unit
+    isInput: Boolean = false,
+    onDeleteIconClick: (Int) -> Unit = {},
+    onImageClick: (String) -> Unit,
 ) {
     val (option, _) = optionWithVotes
     val roundedCornerShape = RoundedCornerShape(
@@ -313,7 +324,7 @@ fun ImageOption(
     )
     Box(modifier = Modifier
         .fillMaxWidth()
-        .height(120.dp)
+        .height(140.dp)
         .background(
             color = MaterialTheme.colorScheme.let {
                 if (didUserVoted) {
@@ -329,7 +340,7 @@ fun ImageOption(
             model = ImageRequest.Builder(LocalContext.current).data(option.imageUrl!!)
                 .crossfade(true).build(),
             contentDescription = option.id,
-            contentScale = ContentScale.Crop,
+            contentScale = if(isInput) ContentScale.Inside else ContentScale.Crop,
             placeholder = painterResource(id = R.drawable.baseline_image_24),
             error = painterResource(id = R.drawable.baseline_broken_image_24),
             modifier = Modifier
@@ -351,18 +362,33 @@ fun ImageOption(
                 modifier = Modifier.align(Alignment.Center),
             )
         }
-
-
-        Box(
-            modifier = Modifier
-                .padding(bottom = 6.dp, end = 6.dp)
-                .align(Alignment.BottomEnd)
-        ) {
-            Text(
-                text = stringResource(R.string.percent, optionWithVotes.votesPercent), textAlign = TextAlign.Center,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.align(Alignment.Center),
-            )
+        if (isInput) {
+            Box(
+                modifier = Modifier
+                    .padding(bottom = 6.dp, end = 6.dp)
+                    .align(Alignment.BottomEnd)
+            ) {
+                Icon(
+                    Icons.Rounded.Delete,
+                    stringResource(R.string.delete, option.text ?: ""),
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clickable { onDeleteIconClick(index) }
+                )
+            }
         }
+        if (optionWithVotes.votesPercent.isNotBlank())
+            Box(
+                modifier = Modifier
+                    .padding(bottom = 6.dp, end = 6.dp)
+                    .align(Alignment.BottomEnd)
+            ) {
+                Text(
+                    text = "${optionWithVotes.votesPercent}%",
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.align(Alignment.Center),
+                )
+            }
     }
 }

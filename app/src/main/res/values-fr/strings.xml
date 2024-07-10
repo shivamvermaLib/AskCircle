@@ -31,4 +31,5 @@
     <string name="clear">Effacer %1$s</string>
     <string name="my_widgets">Mes widgets</string>
     <string name="profile">Profil</string>
+    <string name="delete">Supprimer %1$s</string>
 </resources>

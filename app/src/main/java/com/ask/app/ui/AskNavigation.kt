@@ -97,7 +97,8 @@ fun AskNavigation() {
                 },
                 {
                     navController.popBackStack()
-                }
+                },
+                onRemoveOption = viewModel::removeOption
             )
         }
     }

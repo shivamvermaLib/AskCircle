@@ -16,7 +16,8 @@ import javax.inject.Inject
 class CreateWidgetViewModel @Inject constructor(
     private val countryRepository: CountryRepository
 ) : BaseViewModel() {
-
+    private val minOptions = 2
+    private val maxOptions = 4
     private val _titleFlow = MutableStateFlow("")
     private val _titleErrorFlow = MutableStateFlow("")
     private val _descFlow = MutableStateFlow("")
@@ -64,13 +65,15 @@ class CreateWidgetViewModel @Inject constructor(
 
     fun addOption() {
         val optionType = _optionType.value
-        when (optionType) {
-            CreateWidgetUiState.WidgetOptionType.Text -> {
-                _options.value += Widget.Option(text = "")
-            }
+        if (_options.value.size in minOptions..<maxOptions) {
+            when (optionType) {
+                CreateWidgetUiState.WidgetOptionType.Text -> {
+                    _options.value += Widget.Option(text = "")
+                }
 
-            CreateWidgetUiState.WidgetOptionType.Image -> {
-                _options.value += Widget.Option(imageUrl = "")
+                CreateWidgetUiState.WidgetOptionType.Image -> {
+                    _options.value += Widget.Option(imageUrl = "")
+                }
             }
         }
     }
@@ -82,9 +85,11 @@ class CreateWidgetViewModel @Inject constructor(
     }
 
     fun removeOption(index: Int) {
-        _options.value = _options.value.toMutableList().apply {
-            removeAt(index)
-        }.toList()
+        if (_options.value.size in (minOptions + 1)..maxOptions) {
+            _options.value = _options.value.toMutableList().apply {
+                removeAt(index)
+            }.toList()
+        }
     }
 
     fun setGender(genderFilter: Widget.GenderFilter) {

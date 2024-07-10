@@ -31,4 +31,5 @@
     <string name="clear">%1$sをクリア</string>
     <string name="my_widgets">マイウィジェット</string>
     <string name="profile">プロフィール</string>
+    <string name="delete">%1$s を削除</string>
 </resources>
