@@ -93,12 +93,14 @@ class AnalyticsLogger @Inject constructor(
         age: Int?,
         location: String?,
         hasProfilePic: Boolean,
+        hasEmail: Boolean,
     ) {
         firebaseAnalytics.logEvent(UPDATE_PROFILE, Bundle().apply {
             putString(GENDER_FILTER, gender?.name)
             age?.let { putInt(MIN_AGE, it) }
             putString(LOCATIONS, location)
             putBoolean(HAS_PROFILE_PIC, hasProfilePic)
+            putBoolean(HAS_EMAIL, hasEmail)
         })
     }
 
@@ -107,12 +109,14 @@ class AnalyticsLogger @Inject constructor(
         age: Int?,
         location: String?,
         hasProfilePic: Boolean,
+        hasEmail: Boolean,
     ) {
         firebaseAnalytics.logEvent(UPDATED_PROFILE, Bundle().apply {
             putString(GENDER_FILTER, gender?.name)
             age?.let { putInt(MIN_AGE, it) }
             putString(LOCATIONS, location)
             putBoolean(HAS_PROFILE_PIC, hasProfilePic)
+            putBoolean(HAS_EMAIL, hasEmail)
         })
     }
 
@@ -147,6 +151,7 @@ class AnalyticsLogger @Inject constructor(
         const val UPDATED_PROFILE = "profile_updated"
         const val SYNC_USERS_AND_WIDGETS = "sync_users_and_widgets"
         const val HAS_PROFILE_PIC = "has_profile_pic"
+        const val HAS_EMAIL = "has_email"
         const val SYNC_USERS_AND_WIDGETS_DURATION = "sync_users_and_widgets_duration"
     }
 }

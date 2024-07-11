@@ -1,5 +1,6 @@
 package com.ask.app.domain
 
+import com.ask.app.analytics.AnalyticsLogger
 import com.ask.app.data.models.generateCombinationsForUsers
 import com.ask.app.data.repository.CountryRepository
 import com.ask.app.data.repository.UserRepository
@@ -10,10 +11,12 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
     private val userRepository: UserRepository,
     private val widgetRepository: WidgetRepository,
     private val countryRepository: CountryRepository,
+    private val analyticsLogger: AnalyticsLogger
 ) {
 
     suspend operator fun invoke(checkUser: Boolean = false) {
         if (checkUser && userRepository.getCurrentUserOptional() != null) return
+        val time = System.currentTimeMillis()
         userRepository.createUser().let { userWithLocation ->
             generateCombinationsForUsers(
                 userWithLocation.user.gender,
@@ -27,5 +30,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                 countryRepository.syncCountries()
             }
         }
+        val duration = System.currentTimeMillis() - time
+        analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
     }
 }

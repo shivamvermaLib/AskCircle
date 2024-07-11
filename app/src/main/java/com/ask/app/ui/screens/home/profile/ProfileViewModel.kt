@@ -125,7 +125,8 @@ class ProfileViewModel @Inject constructor(
                 profile.gender,
                 profile.age,
                 profile.country,
-                profile.profilePic.isNullOrBlank().not()
+                profile.profilePic.isNullOrBlank().not(),
+                profile.email.isNotBlank()
             )
         }, {
             val extension = profile.profilePic?.let { path ->
@@ -147,7 +148,8 @@ class ProfileViewModel @Inject constructor(
                 profile.gender,
                 profile.age,
                 profile.country,
-                profile.profilePic.isNullOrBlank().not()
+                profile.profilePic.isNullOrBlank().not(),
+                profile.email.isNotBlank()
             )
         }, {
             _profileLoadingFlow.value = false
