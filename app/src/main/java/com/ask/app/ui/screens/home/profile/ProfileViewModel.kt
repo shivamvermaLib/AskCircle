@@ -5,6 +5,7 @@ import com.ask.app.EMPTY
 import com.ask.app.checkIfUrl
 import com.ask.app.data.models.Gender
 import com.ask.app.data.repository.CountryRepository
+import com.ask.app.data.repository.RemoteConfigRepository
 import com.ask.app.data.repository.UserRepository
 import com.ask.app.ui.screens.utils.BaseViewModel
 import com.ask.app.utils.combine
@@ -20,7 +21,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    countryRepository: CountryRepository
+    countryRepository: CountryRepository,
+    remoteConfigRepository: RemoteConfigRepository
 ) : BaseViewModel() {
 
     private val _currentUserFlow = userRepository.getCurrentUserLive()
@@ -67,7 +69,9 @@ class ProfileViewModel @Inject constructor(
             countries = countries,
             allowUpdate = allowUpdate,
             profileLoading = profileLoading,
-            error = error
+            error = error,
+            minAgeRange = remoteConfigRepository.getAgeRangeMin().toInt(),
+            maxAgeRange = remoteConfigRepository.getAgeRangeMax().toInt()
         )
     }.catch {
         it.printStackTrace()

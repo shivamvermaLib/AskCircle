@@ -5,6 +5,7 @@ import com.ask.app.EMPTY
 import com.ask.app.data.models.Country
 import com.ask.app.data.models.Widget
 import com.ask.app.data.repository.CountryRepository
+import com.ask.app.data.repository.RemoteConfigRepository
 import com.ask.app.ui.screens.utils.BaseViewModel
 import com.ask.app.utils.combine
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,10 +16,11 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CreateWidgetViewModel @Inject constructor(
-    countryRepository: CountryRepository
+    countryRepository: CountryRepository,
+    remoteConfigRepository: RemoteConfigRepository
 ) : BaseViewModel() {
     private val minOptions = 2
-    private val maxOptions = 4
+    private val maxOptions = remoteConfigRepository.getMaxOptionSize()
     private val _titleFlow = MutableStateFlow(EMPTY)
     private val _titleErrorFlow = MutableStateFlow(EMPTY)
     private val _descFlow = MutableStateFlow(EMPTY)
@@ -157,6 +159,8 @@ class CreateWidgetViewModel @Inject constructor(
             countries,
             allowCreate,
             targetAudienceAgeRange = ageRange,
+            minAge = remoteConfigRepository.getAgeRangeMin().toInt(),
+            maxAge = remoteConfigRepository.getAgeRangeMax().toInt()
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
 }

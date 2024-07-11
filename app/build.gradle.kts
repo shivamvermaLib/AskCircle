@@ -77,6 +77,7 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.firebase.storage)
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.config)
 
     implementation(libs.androidx.hilt.navigation.compose)
 

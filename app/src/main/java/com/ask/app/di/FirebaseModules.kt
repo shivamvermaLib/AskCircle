@@ -28,6 +28,9 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfig
+import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
@@ -36,80 +39,105 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Named
+import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object FirebaseModules {
 
+    @Singleton
+    @Provides
+    fun provideRemoteConfig() : FirebaseRemoteConfig {
+        return Firebase.remoteConfig.apply {
+            val configSettings = remoteConfigSettings {
+                minimumFetchIntervalInSeconds = 3600
+            }
+            setConfigSettingsAsync(configSettings)
+        }
+    }
+
+    @Singleton
     @Provides
     fun provideFirebaseAuth(): FirebaseAuth {
         return Firebase.auth
     }
 
+    @Singleton
     @Provides
     fun provideFirebaseDatabase(): FirebaseDatabase {
         return Firebase.database
     }
 
+    @Singleton
     @Provides
     fun provideFirebaseStorage(): FirebaseStorage {
         return Firebase.storage
     }
 
+    @Singleton
     @Provides
     @Named(TABLE_USERS)
     fun provideUserStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
         return firebaseStorage.getReference(TABLE_USERS)
     }
 
+    @Singleton
     @Provides
     @Named(TABLE_WIDGETS)
     fun provideWidgetStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
         return firebaseStorage.getReference(TABLE_WIDGETS)
     }
 
+    @Singleton
     @Provides
     @Named(TABLE_COUNTRIES)
     fun provideCountriesStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
         return firebaseStorage.getReference(TABLE_COUNTRIES)
     }
 
+    @Singleton
     @Provides
     @Named(TABLE_USERS)
     fun provideUserStorageSource(@Named(TABLE_USERS) storageReference: StorageReference): FirebaseStorageSource {
         return FirebaseStorageSource(storageReference)
     }
 
+    @Singleton
     @Provides
     @Named(TABLE_WIDGETS)
     fun provideWidgetStorageSource(@Named(TABLE_WIDGETS) storageReference: StorageReference): FirebaseStorageSource {
         return FirebaseStorageSource(storageReference)
     }
 
+    @Singleton
     @Provides
     @Named(TABLE_COUNTRIES)
     fun provideCountriesStorageSource(@Named(TABLE_COUNTRIES) storageReference: StorageReference): FirebaseStorageSource {
         return FirebaseStorageSource(storageReference)
     }
 
+    @Singleton
     @Provides
     @Named(TABLE_USERS)
     fun provideUserReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
         return firebaseDatabase.getReference(TABLE_USERS)
     }
 
+    @Singleton
     @Provides
     @Named(TABLE_WIDGETS)
     fun provideWidgetReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
         return firebaseDatabase.getReference(TABLE_WIDGETS)
     }
 
+    @Singleton
     @Provides
     @Named(TABLE_WIDGET_IDS)
     fun provideWidgetIdsReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
         return firebaseDatabase.getReference(TABLE_WIDGET_IDS)
     }
 
+    @Singleton
     @Provides
     fun provideUserDataSource(@Named(TABLE_USERS) userReference: DatabaseReference): FirebaseDataSource<UserWithLocation> =
         object : FirebaseDataSource<UserWithLocation>(userReference) {
@@ -140,6 +168,7 @@ object FirebaseModules {
             }
         }
 
+    @Singleton
     @Provides
     fun provideWidgetDataSource(@Named(TABLE_WIDGETS) widgetReference: DatabaseReference): FirebaseDataSource<WidgetWithOptionsAndVotesForTargetAudience> =
         object : FirebaseDataSource<WidgetWithOptionsAndVotesForTargetAudience>(widgetReference) {
@@ -201,6 +230,7 @@ object FirebaseModules {
             }
         }
 
+    @Singleton
     @Provides
     fun provideCreatedWidgetIdDataSource(@Named(TABLE_WIDGET_IDS) widgetReference: DatabaseReference): FirebaseDataSource<WidgetId> =
         object : FirebaseDataSource<WidgetId>(widgetReference) {

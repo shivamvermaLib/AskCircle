@@ -11,8 +11,12 @@ import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.util.DebugLogger
+import com.ask.app.data.repository.RemoteConfigRepository
 import com.ask.app.workmanager.SyncWidgetWorker
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
@@ -22,6 +26,11 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
 
+    @Inject
+    lateinit var remoteConfigRepository: RemoteConfigRepository
+
+    private val scope = CoroutineScope(Dispatchers.Main)
+
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
             .setWorkerFactory(workerFactory)
@@ -29,13 +38,16 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
 
     override fun onCreate() {
         super.onCreate()
-        val myWork = PeriodicWorkRequestBuilder<SyncWidgetWorker>(1, TimeUnit.HOURS)
-            .build()
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            SYNC_WIDGET_WORK_NAME,
-            ExistingPeriodicWorkPolicy.UPDATE,
-            myWork
-        )
+        scope.launch {
+            remoteConfigRepository.fetchInit()
+            val myWork = PeriodicWorkRequestBuilder<SyncWidgetWorker>(remoteConfigRepository.getSyncTimeInMinutes(), TimeUnit.MINUTES)
+                .build()
+            WorkManager.getInstance(this@AskApplication).enqueueUniquePeriodicWork(
+                SYNC_WIDGET_WORK_NAME,
+                ExistingPeriodicWorkPolicy.UPDATE,
+                myWork
+            )
+        }
     }
 
     override fun newImageLoader(): ImageLoader {
