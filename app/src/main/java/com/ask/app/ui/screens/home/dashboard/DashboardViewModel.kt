@@ -1,6 +1,7 @@
 package com.ask.app.ui.screens.home.dashboard
 
 import androidx.lifecycle.viewModelScope
+import com.ask.app.analytics.AnalyticsLogger
 import com.ask.app.data.models.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.app.data.repository.UserRepository
 import com.ask.app.data.repository.WidgetRepository
@@ -17,8 +18,9 @@ import javax.inject.Inject
 class DashboardViewModel @Inject constructor(
     private val widgetRepository: WidgetRepository,
     getWidgetsUseCase: GetWidgetsUseCase,
-    private val userRepository: UserRepository
-) : BaseViewModel() {
+    private val userRepository: UserRepository,
+    private val analyticsLogger: AnalyticsLogger
+) : BaseViewModel(analyticsLogger) {
     private val _widgetsFlow = getWidgetsUseCase()
     private val _filterTypeFlow = MutableStateFlow(FilterType.Latest)
     private val _errorFlow = MutableStateFlow<String?>(null)
@@ -39,11 +41,27 @@ class DashboardViewModel @Inject constructor(
 
     fun setFilterType(filterType: FilterType) {
         _filterTypeFlow.value = filterType
+        analyticsLogger.widgetFilterTypeEvent(filterType)
     }
 
-    fun vote(widgetId: String, optionId: String) {
-        safeApiCall({}, {
+    fun vote(widgetId: String, optionId: String, screenName: String) {
+        safeApiCall({
+            analyticsLogger.voteWidgetEvent(
+                widgetId,
+                optionId,
+                userRepository.getCurrentUserId(),
+                screenName
+            )
+        }, {
             widgetRepository.vote(widgetId, optionId, userRepository.getCurrentUserId())
+                .also {
+                    analyticsLogger.votedWidgetEvent(
+                        widgetId,
+                        optionId,
+                        userRepository.getCurrentUserId(),
+                        screenName
+                    )
+                }
         }, {
             _errorFlow.value = it
         })

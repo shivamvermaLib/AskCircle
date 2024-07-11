@@ -11,7 +11,7 @@ import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import coil.util.DebugLogger
-import com.ask.app.data.repository.RemoteConfigRepository
+import com.ask.app.remote.config.RemoteConfigRepository
 import com.ask.app.workmanager.SyncWidgetWorker
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope

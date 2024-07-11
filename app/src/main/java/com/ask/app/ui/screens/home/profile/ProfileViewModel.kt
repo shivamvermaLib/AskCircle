@@ -2,11 +2,12 @@ package com.ask.app.ui.screens.home.profile
 
 import androidx.lifecycle.viewModelScope
 import com.ask.app.EMPTY
+import com.ask.app.analytics.AnalyticsLogger
 import com.ask.app.checkIfUrl
 import com.ask.app.data.models.Gender
 import com.ask.app.data.repository.CountryRepository
-import com.ask.app.data.repository.RemoteConfigRepository
 import com.ask.app.data.repository.UserRepository
+import com.ask.app.remote.config.RemoteConfigRepository
 import com.ask.app.ui.screens.utils.BaseViewModel
 import com.ask.app.utils.combine
 import com.ask.app.utils.isValidEmail
@@ -22,8 +23,9 @@ import javax.inject.Inject
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
     countryRepository: CountryRepository,
-    remoteConfigRepository: RemoteConfigRepository
-) : BaseViewModel() {
+    remoteConfigRepository: RemoteConfigRepository,
+    private val analyticsLogger: AnalyticsLogger
+) : BaseViewModel(analyticsLogger) {
 
     private val _currentUserFlow = userRepository.getCurrentUserLive()
         .catch {
@@ -119,6 +121,12 @@ class ProfileViewModel @Inject constructor(
         val profile = uiStateFlow.value
         safeApiCall({
             _profileLoadingFlow.value = true
+            analyticsLogger.updateProfileEvent(
+                profile.gender,
+                profile.age,
+                profile.country,
+                profile.profilePic.isNullOrBlank().not()
+            )
         }, {
             val extension = profile.profilePic?.let { path ->
                 path.takeIf { it.isNotBlank() && it.checkIfUrl().not() }
@@ -135,6 +143,12 @@ class ProfileViewModel @Inject constructor(
                     ?.let { path -> getBytes(path) },
             )
             _profileLoadingFlow.value = false
+            analyticsLogger.profileUpdatedEvent(
+                profile.gender,
+                profile.age,
+                profile.country,
+                profile.profilePic.isNullOrBlank().not()
+            )
         }, {
             _profileLoadingFlow.value = false
             _errorFlow.value = it

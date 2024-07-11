@@ -1,4 +1,4 @@
-package com.ask.app.data.repository
+package com.ask.app.remote.config
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import javax.inject.Inject
@@ -8,7 +8,7 @@ import kotlin.coroutines.suspendCoroutine
 
 class RemoteConfigRepository @Inject constructor(private val remoteConfig: FirebaseRemoteConfig) {
 
-    suspend fun fetchInit() = suspendCoroutine { cont ->
+    suspend fun fetchInit(): Boolean = suspendCoroutine { cont ->
         remoteConfig.fetchAndActivate()
             .addOnSuccessListener { cont.resume(it) }
             .addOnFailureListener { cont.resumeWithException(it) }

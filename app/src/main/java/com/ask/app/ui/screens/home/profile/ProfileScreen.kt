@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +65,8 @@ fun ProfileScreen(
     setAge: (Int) -> Unit = {},
     onUpdate: () -> Unit = {},
     onImageClick: (String) -> Unit = {},
-    onOptionClick: (String, String) -> Unit = { _, _ -> }
+    onOptionClick: (String, String) -> Unit = { _, _ -> },
+    onScreenOpen: (String) -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf(ProfileTab.Profile) }
     Column(
@@ -106,6 +108,9 @@ fun ProfileScreen(
             }
         }
         Spacer(modifier = Modifier.size(16.dp))
+        LaunchedEffect(selectedTab) {
+            onScreenOpen(selectedTab.name)
+        }
         when (selectedTab) {
             ProfileTab.Profile -> ProfileTabView(
                 profile = profile,

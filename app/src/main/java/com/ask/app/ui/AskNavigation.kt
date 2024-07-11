@@ -49,6 +49,7 @@ fun AskNavigation() {
                     }
                 }
                 viewModel.init()
+                viewModel.screenOpenEvent(it.destination.route)
             }
             SplashScreen(uiState)
         }
@@ -57,6 +58,7 @@ fun AskNavigation() {
             val homeViewModel = hiltViewModel<HomeViewModel>()
             LaunchedEffect(workerFlow) {
                 homeViewModel.setWorkerFlow(workerFlow)
+                homeViewModel.screenOpenEvent(it.destination.route)
             }
             val uiState by homeViewModel.uiStateFlow.collectAsStateWithLifecycle()
             HomeScreen(uiState) {
@@ -66,7 +68,9 @@ fun AskNavigation() {
         composable<Create> {
             val viewModel = hiltViewModel<CreateWidgetViewModel>()
             val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
-
+            LaunchedEffect(Unit) {
+                viewModel.screenOpenEvent(it.destination.route)
+            }
             CreateWidgetScreen(
                 uiState,
                 viewModel::setTitle,

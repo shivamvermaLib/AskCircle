@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import com.ask.app.R
+import com.ask.app.analytics.AnalyticsLogger
 import com.ask.app.domain.SyncUsersAndWidgetsUseCase
 import com.ask.app.ui.screens.utils.BaseViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -88,8 +89,10 @@ sealed interface SplashUIState {
 }
 
 @HiltViewModel
-class SplashViewModel @Inject constructor(private val syncUsersAndWidgetsUseCase: SyncUsersAndWidgetsUseCase) :
-    BaseViewModel() {
+class SplashViewModel @Inject constructor(
+    private val syncUsersAndWidgetsUseCase: SyncUsersAndWidgetsUseCase,
+    analyticsLogger: AnalyticsLogger
+) : BaseViewModel(analyticsLogger) {
 
     private val _uiStateFlow = MutableStateFlow<SplashUIState>(SplashUIState.Init)
     val uiStateFlow = _uiStateFlow.asStateFlow()
@@ -104,5 +107,6 @@ class SplashViewModel @Inject constructor(private val syncUsersAndWidgetsUseCase
             _uiStateFlow.value = SplashUIState.Error(it)
         })
     }
+
 }
 

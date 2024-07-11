@@ -3,6 +3,7 @@ package com.ask.app.ui.screens.home
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
 import com.ask.app.STATUS
+import com.ask.app.analytics.AnalyticsLogger
 import com.ask.app.ui.screens.utils.BaseViewModel
 import com.ask.app.workmanager.WorkerStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,7 +16,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class HomeViewModel @Inject constructor() : BaseViewModel() {
+class HomeViewModel @Inject constructor(analyticsLogger: AnalyticsLogger) :
+    BaseViewModel(analyticsLogger) {
 
     private val _workerStatusFlow = MutableStateFlow(WorkerStatus.None)
     private val _errorFlow = MutableStateFlow<String?>(null)

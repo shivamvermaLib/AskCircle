@@ -138,8 +138,11 @@ fun HomeNavigation(
         composable<HomeTabScreen.Home> {
             val viewModel = hiltViewModel<DashboardViewModel>()
             val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) {
+                viewModel.screenOpenEvent(it.destination.route)
+            }
             DashBoardScreen(state, { widgetId, optionId ->
-                viewModel.vote(widgetId, optionId)
+                viewModel.vote(widgetId, optionId, it.destination.route ?: "Dashboard")
             }, viewModel::setFilterType)
         }
         composable<HomeTabScreen.Profile> {
@@ -149,13 +152,16 @@ fun HomeNavigation(
             val profileUiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
             val myWidgetsUiState by myWidgetsViewModel.uiStateFlow.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) {
-                merge(viewModel.uiStateFlow.mapNotNull { it.error },
-                    myWidgetsViewModel.uiStateFlow.mapNotNull { it.error }).collect {
-                    onError(it) {
-                        viewModel.setError(null)
-                        myWidgetsViewModel.setError(null)
+                launch {
+                    merge(viewModel.uiStateFlow.mapNotNull { it.error },
+                        myWidgetsViewModel.uiStateFlow.mapNotNull { it.error }).collect {
+                        onError(it) {
+                            viewModel.setError(null)
+                            myWidgetsViewModel.setError(null)
+                        }
                     }
                 }
+                viewModel.screenOpenEvent(it.destination.route)
             }
             ProfileScreen(
                 profileUiState,
@@ -172,7 +178,13 @@ fun HomeNavigation(
                         context.getByteArray(it)
                     })
                 },
-                viewModel::onImageClick
+                viewModel::onImageClick,
+                onOptionClick = { widgetId, optionId ->
+                    myWidgetsViewModel.vote(widgetId, optionId, it.destination.route ?: "Profile")
+                },
+                onScreenOpen = {
+                    viewModel.screenOpenEvent(it)
+                }
             )
         }
     }

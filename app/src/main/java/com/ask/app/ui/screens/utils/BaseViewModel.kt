@@ -2,9 +2,10 @@ package com.ask.app.ui.screens.utils
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ask.app.analytics.AnalyticsLogger
 import kotlinx.coroutines.launch
 
-open class BaseViewModel : ViewModel() {
+open class BaseViewModel(private val analyticsLogger: AnalyticsLogger) : ViewModel() {
     fun <T> safeApiCall(onInit: () -> Unit, api: suspend () -> T, onError: (String) -> Unit) {
         viewModelScope.launch {
             onInit()
@@ -16,4 +17,9 @@ open class BaseViewModel : ViewModel() {
             }
         }
     }
+
+    fun screenOpenEvent(name: String?) {
+        analyticsLogger.screenOpenEvent(name ?: "No Screen Name")
+    }
+
 }

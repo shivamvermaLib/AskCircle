@@ -14,8 +14,8 @@ class CreateWidgetUseCase @Inject constructor(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
         getExtension: (String) -> String,
         getByteArray: (String) -> ByteArray
-    ) {
-        widgetRepository.createWidget(
+    ): WidgetWithOptionsAndVotesForTargetAudience {
+        return widgetRepository.createWidget(
             widgetWithOptionsAndVotesForTargetAudience.copy(
                 widget = widgetWithOptionsAndVotesForTargetAudience.widget.copy(
                     creatorId = userRepository.getCurrentUserId()

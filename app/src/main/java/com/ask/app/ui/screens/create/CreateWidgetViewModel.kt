@@ -2,10 +2,11 @@ package com.ask.app.ui.screens.create
 
 import androidx.lifecycle.viewModelScope
 import com.ask.app.EMPTY
+import com.ask.app.analytics.AnalyticsLogger
 import com.ask.app.data.models.Country
 import com.ask.app.data.models.Widget
 import com.ask.app.data.repository.CountryRepository
-import com.ask.app.data.repository.RemoteConfigRepository
+import com.ask.app.remote.config.RemoteConfigRepository
 import com.ask.app.ui.screens.utils.BaseViewModel
 import com.ask.app.utils.combine
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,8 +18,9 @@ import javax.inject.Inject
 @HiltViewModel
 class CreateWidgetViewModel @Inject constructor(
     countryRepository: CountryRepository,
-    remoteConfigRepository: RemoteConfigRepository
-) : BaseViewModel() {
+    remoteConfigRepository: RemoteConfigRepository,
+    private val analyticsLogger: AnalyticsLogger
+) : BaseViewModel(analyticsLogger) {
     private val minOptions = 2
     private val maxOptions = remoteConfigRepository.getMaxOptionSize()
     private val _titleFlow = MutableStateFlow(EMPTY)
@@ -131,7 +133,6 @@ class CreateWidgetViewModel @Inject constructor(
             removeIf { it.country == country.name }
         }.toList()
     }
-
 
     val uiStateFlow = combine(
         _titleFlow,
