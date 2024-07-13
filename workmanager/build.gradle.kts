@@ -47,6 +47,7 @@ dependencies {
     implementation(project(":data:widget"))
     implementation(project(":domain:widget"))
     implementation(project(":domain:common"))
+    implementation(project(":feature:common"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

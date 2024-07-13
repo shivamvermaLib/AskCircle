@@ -24,11 +24,9 @@ class WidgetRepository @Inject constructor(
     @Named("IO") private val dispatcher: CoroutineDispatcher
 ) {
 
-    fun getUserWidgets(userId: String) = widgetDao.getUserWidgets(userId)
-        .flowOn(dispatcher)
+    fun getUserWidgets(userId: String) = widgetDao.getUserWidgets(userId).flowOn(dispatcher)
 
-    fun getWidgets() = widgetDao.getWidgets()
-        .flowOn(dispatcher)
+    fun getWidgets() = widgetDao.getWidgets().flowOn(dispatcher)
 
     suspend fun createWidget(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
@@ -127,7 +125,8 @@ class WidgetRepository @Inject constructor(
 
     suspend fun syncWidgetsFromServer(
         searchCombinations: List<String>,
-        fetchUserDetails: suspend (String) -> User
+        fetchUserDetails: suspend (String) -> User,
+        preloadImages: (List<String>) -> Unit
     ) = withContext(dispatcher) {
         val widgetIds = searchCombinations.map {
             async {
@@ -149,53 +148,54 @@ class WidgetRepository @Inject constructor(
                     )
                 )
             }
+            preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.mapNotNull { it.option.imageUrl } }
+                .flatten())
+            widgetDao.insertWidgets(
+                widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
+                widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceGender },
+                widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceAgeRange },
+                widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceLocations }
+                    .flatten(),
+                widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.map { it.option } }
+                    .flatten(),
+                widgetWithOptionsAndVotesForTargetAudiences.map { it ->
+                    it.options.map { it.votes }.flatten()
+                }.flatten()
+            )
         }
-
-        widgetDao.insertWidgets(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
-            widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceGender },
-            widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceAgeRange },
-            widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceLocations }
-                .flatten(),
-            widgetWithOptionsAndVotesForTargetAudiences.map { widgetWithOptionsAndVotesForTargetAudience -> widgetWithOptionsAndVotesForTargetAudience.options.map { it.option } }
-                .flatten(),
-            widgetWithOptionsAndVotesForTargetAudiences.map { widgetWithOptionsAndVotesForTargetAudience ->
-                widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }.flatten()
-            }.flatten()
-        )
     }
 
-    suspend fun vote(widgetId: String, optionId: String, userId: String) = withContext(dispatcher) {
-        widgetDataSource.updateItemFromTransaction(widgetId) { widgetWithOptionsAndVotesForTargetAudience ->
-            widgetWithOptionsAndVotesForTargetAudience.copy(
-                options = widgetWithOptionsAndVotesForTargetAudience.options
-                    .map { optionWithVotes ->
-                        val (option, votes) = optionWithVotes
-                        val mutableVotes = votes.toMutableList()
-                        if (mutableVotes.removeIf { it.userId == userId }) {
-                            optionWithVotes.copy(votes = mutableVotes)
-                        } else if (option.id == optionId) {
-                            optionWithVotes.copy(
-                                votes = votes + Widget.Option.Vote(
-                                    userId = userId, optionId = optionId
-                                )
+    suspend fun vote(widgetId: String, optionId: String, userId: String) =
+        withContext(dispatcher) {
+            widgetDataSource.updateItemFromTransaction(widgetId) { widgetWithOptionsAndVotesForTargetAudience ->
+                widgetWithOptionsAndVotesForTargetAudience.copy(options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
+                    val (option, votes) = optionWithVotes
+                    val mutableVotes = votes.toMutableList()
+                    if (mutableVotes.removeIf { it.userId == userId }) {
+                        optionWithVotes.copy(votes = mutableVotes)
+                    } else if (option.id == optionId) {
+                        optionWithVotes.copy(
+                            votes = votes + Widget.Option.Vote(
+                                userId = userId, optionId = optionId
                             )
-                        } else {
-                            optionWithVotes
-                        }
-                    })
+                        )
+                    } else {
+                        optionWithVotes
+                    }
+                })
+            }
+        }.also { widgetWithOptionsAndVotesForTargetAudience ->
+            widgetDao.insertWidget(
+                widgetWithOptionsAndVotesForTargetAudience.widget,
+                widgetWithOptionsAndVotesForTargetAudience.targetAudienceGender,
+                widgetWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange,
+                widgetWithOptionsAndVotesForTargetAudience.targetAudienceLocations,
+                widgetWithOptionsAndVotesForTargetAudience.options.map { it.option },
+                widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }.flatten()
+            )
+        }.also {
+            widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
+                updatedTime.copy(voteTime = System.currentTimeMillis())
+            }
         }
-    }.also { widgetWithOptionsAndVotesForTargetAudience ->
-        widgetDao.insertWidget(
-            widgetWithOptionsAndVotesForTargetAudience.widget,
-            widgetWithOptionsAndVotesForTargetAudience.targetAudienceGender,
-            widgetWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange,
-            widgetWithOptionsAndVotesForTargetAudience.targetAudienceLocations,
-            widgetWithOptionsAndVotesForTargetAudience.options.map { it.option },
-            widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }.flatten()
-        )
-    }.also {
-        widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
-            updatedTime.copy(voteTime = System.currentTimeMillis())
-        }
-    }
 }

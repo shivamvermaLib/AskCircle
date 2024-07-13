@@ -115,7 +115,7 @@ fun WidgetUserView(user: com.ask.user.User, startedAt: Long) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        com.ask.common.AppImage(
+        AppImage(
             url = user.profilePic,
             contentDescription = user.name,
             contentScale = ContentScale.Crop,
@@ -325,7 +325,7 @@ fun ImageOption(
             shape = roundedCornerShape,
         )
         .clickable { onImageClick(option.id) }) {
-        com.ask.common.AppImage(
+        AppImage(
             url = option.imageUrl!!,
             contentDescription = option.id,
             contentScale = if (isInput) ContentScale.Inside else ContentScale.Crop,
