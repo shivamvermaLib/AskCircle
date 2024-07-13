@@ -5,11 +5,13 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,6 +34,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,6 +50,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.ask.app.R
@@ -58,10 +64,11 @@ import com.ask.app.ui.screens.utils.AppTextField
 import com.ask.app.ui.screens.utils.DropDownWithSelect
 import com.ask.app.ui.screens.utils.NonLazyGrid
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 fun CreateWidgetScreen(
+    sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     @PreviewParameter(CreateWidgetStatePreviewParameterProvider::class) createWidgetUiState: CreateWidgetUiState,
     setTitle: (String) -> Unit = {},
     setDesc: (String) -> Unit = {},
@@ -79,151 +86,158 @@ fun CreateWidgetScreen(
 ) {
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     var imagePickerIndex by remember { mutableIntStateOf(-1) }
-    val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri ->
-            if (imagePickerIndex > -1) {
-                uri?.let {
-                    onOptionChanged(
-                        imagePickerIndex,
-                        createWidgetUiState.options[imagePickerIndex].copy(imageUrl = it.toString())
-                    )
-                }
-            }
-        }
-    )
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackBarHostState,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            ) {
-                Snackbar {
-                    Text(it.visuals.message)
-                }
-            }
-        },
-        topBar = {
-            MediumTopAppBar(
-                title = {
-                    Text(text = "Create")
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.Rounded.Close,
-                            contentDescription = stringResource(R.string.close),
+    val singlePhotoPickerLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
+            onResult = { uri ->
+                if (imagePickerIndex > -1) {
+                    uri?.let {
+                        onOptionChanged(
+                            imagePickerIndex,
+                            createWidgetUiState.options[imagePickerIndex].copy(imageUrl = it.toString())
                         )
                     }
-                },
-            )
+                }
+            })
+    Scaffold(snackbarHost = {
+        SnackbarHost(
+            hostState = snackBarHostState, modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Snackbar {
+                Text(it.visuals.message)
+            }
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
+    }, topBar = {
+        MediumTopAppBar(
+            title = {
+                Text(text = "Create")
+            },
+            navigationIcon = {
+                IconButton(onClick = onBackClick) {
+                    Icon(
+                        imageVector = Icons.Rounded.Close,
+                        contentDescription = stringResource(R.string.close),
+                    )
+                }
+            },
+        )
+    }) { padding ->
+        println("width = [${sizeClass.widthSizeClass}]")
+        val modifier = if (sizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
+            Modifier
                 .padding(padding)
                 .padding(all = 16.dp)
-                .verticalScroll(rememberScrollState()),
-        ) {
-            AppTextField(
-                hint = stringResource(R.string.title),
-                value = createWidgetUiState.title,
-                onValueChange = setTitle,
-                isError = createWidgetUiState.titleError.isNotBlank(),
-                errorMessage = createWidgetUiState.titleError
-            )
-            AppTextField(
-                hint = stringResource(R.string.description),
-                value = createWidgetUiState.desc,
-                onValueChange = setDesc,
-                minLines = 3,
-                maxLines = 8,
-            )
-            OptionTypeSelect(createWidgetUiState, onOptionTypeChanged)
-            Spacer(modifier = Modifier.size(5.dp))
-            when (createWidgetUiState.optionType) {
-                CreateWidgetUiState.WidgetOptionType.Image -> NonLazyGrid(
-                    modifier = Modifier,
-                    rowModifier = Modifier,
-                    spacing = 6.dp,
-                    columns = 2,
-                    itemCount = createWidgetUiState.options.size
-                ) { index ->
-                    val option = createWidgetUiState.options[index]
-                    ImageOption(
-                        index = index,
-                        optionWithVotes = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                            option = option,
-                            votes = emptyList()
-                        ),
-                        didUserVoted = false,
-                        totalOptions = createWidgetUiState.options.size,
-                        isInput = true,
-                        onDeleteIconClick = onRemoveOption
-                    ) {
-                        imagePickerIndex = index
-                        singlePhotoPickerLauncher.launch(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly
-                            )
-                        )
+        } else {
+            Modifier
+                .fillMaxWidth(
+                    when (sizeClass.widthSizeClass) {
+                        WindowWidthSizeClass.Medium -> 0.8f
+                        WindowWidthSizeClass.Expanded -> 0.6f
+                        else -> 1f
                     }
-                }
-
-                CreateWidgetUiState.WidgetOptionType.Text -> Column(
-                    verticalArrangement = Arrangement.spacedBy(
-                        6.dp
-                    )
-                ) {
-                    createWidgetUiState.options.forEachIndexed { index, option ->
-                        Row {
-                            TextOption(
-                                index = index,
-                                widgetOption = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                                    option = option,
-                                    votes = emptyList()
-                                ),
-                                didUserVoted = false,
-                                isInput = true,
-                                onValueChange = {
-                                    onOptionChanged(index, option.copy(text = it))
-                                },
-                                onClearIconClick = {
-                                    onOptionChanged(index, option.copy(text = ""))
-                                },
-                                onDeleteIconClick = {
-                                    onRemoveOption(index)
-                                }
+                )
+                .padding(padding)
+        }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+                modifier = modifier.verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                AppTextField(
+                    hint = stringResource(R.string.title),
+                    value = createWidgetUiState.title,
+                    onValueChange = setTitle,
+                    isError = createWidgetUiState.titleError.isNotBlank(),
+                    errorMessage = createWidgetUiState.titleError
+                )
+                AppTextField(
+                    hint = stringResource(R.string.description),
+                    value = createWidgetUiState.desc,
+                    onValueChange = setDesc,
+                    minLines = 3,
+                    maxLines = 8,
+                )
+                OptionTypeSelect(createWidgetUiState, onOptionTypeChanged)
+                Spacer(modifier = Modifier.size(5.dp))
+                when (createWidgetUiState.optionType) {
+                    CreateWidgetUiState.WidgetOptionType.Image -> NonLazyGrid(
+                        modifier = Modifier,
+                        rowModifier = Modifier,
+                        spacing = 6.dp,
+                        columns = 2,
+                        itemCount = createWidgetUiState.options.size
+                    ) { index ->
+                        val option = createWidgetUiState.options[index]
+                        ImageOption(
+                            index = index,
+                            optionWithVotes = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                                option = option, votes = emptyList()
+                            ),
+                            didUserVoted = false,
+                            totalOptions = createWidgetUiState.options.size,
+                            isInput = true,
+                            onDeleteIconClick = onRemoveOption
+                        ) {
+                            imagePickerIndex = index
+                            singlePhotoPickerLauncher.launch(
+                                PickVisualMediaRequest(
+                                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                                )
                             )
                         }
                     }
-                }
-            }
 
-            TextButton(onClick = onAddOption, enabled = createWidgetUiState.options.size < 4) {
-                Text(text = stringResource(R.string.add_option))
-            }
-            Spacer(modifier = Modifier.size(10.dp))
-            Text(
-                text = stringResource(R.string.target_audience),
-                style = MaterialTheme.typography.titleMedium
-            )
-            GenderSelect(createWidgetUiState, onGenderChanged)
-            AgeRangeSelect(createWidgetUiState, onMinAgeChanged, onMaxAgeChanged)
-            Spacer(modifier = Modifier.size(10.dp))
-            LocationSelect(createWidgetUiState, onSelectCountry, onRemoveCountry)
-            Spacer(modifier = Modifier.size(20.dp))
-            Button(
-                onCreateClick,
-                enabled = createWidgetUiState.allowCreate,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = stringResource(R.string.create))
+                    CreateWidgetUiState.WidgetOptionType.Text -> Column(
+                        verticalArrangement = Arrangement.spacedBy(
+                            6.dp
+                        )
+                    ) {
+                        createWidgetUiState.options.forEachIndexed { index, option ->
+                            Row {
+                                TextOption(index = index,
+                                    widgetOption = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                                        option = option, votes = emptyList()
+                                    ),
+                                    didUserVoted = false,
+                                    isInput = true,
+                                    onValueChange = {
+                                        onOptionChanged(index, option.copy(text = it))
+                                    },
+                                    onClearIconClick = {
+                                        onOptionChanged(index, option.copy(text = ""))
+                                    },
+                                    onDeleteIconClick = {
+                                        onRemoveOption(index)
+                                    })
+                            }
+                        }
+                    }
+                }
+
+                TextButton(onClick = onAddOption, enabled = createWidgetUiState.options.size < 4) {
+                    Text(text = stringResource(R.string.add_option))
+                }
+                Spacer(modifier = Modifier.size(10.dp))
+                Text(
+                    text = stringResource(R.string.target_audience),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                GenderSelect(createWidgetUiState, onGenderChanged)
+                AgeRangeSelect(createWidgetUiState, onMinAgeChanged, onMaxAgeChanged)
+                Spacer(modifier = Modifier.size(10.dp))
+                LocationSelect(createWidgetUiState, onSelectCountry, onRemoveCountry)
+                Spacer(modifier = Modifier.size(20.dp))
+                Button(
+                    onCreateClick,
+                    enabled = createWidgetUiState.allowCreate,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = stringResource(R.string.create))
+                }
             }
         }
     }
-
 }
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -255,21 +269,17 @@ fun LocationSelect(
                 label = { Text("${it.emoji} ${it.name}") },
                 selected = true,
                 trailingIcon = {
-                    Icon(
-                        imageVector = Icons.Rounded.Close,
+                    Icon(imageVector = Icons.Rounded.Close,
                         contentDescription = it.name,
                         modifier = Modifier
                             .size(FilterChipDefaults.IconSize)
-                            .clickable { onRemoveCountry(it) }
-                    )
+                            .clickable { onRemoveCountry(it) })
                 })
         }
-        DropDownWithSelect(
-            createWidgetUiState.countries,
+        DropDownWithSelect(createWidgetUiState.countries,
             stringResource(R.string.select),
             modifier = Modifier.padding(horizontal = 4.dp),
-            itemString = { "${it.emoji} ${it.name}" }
-        ) {
+            itemString = { "${it.emoji} ${it.name}" }) {
             onSelectCountry(it)
         }
     }
@@ -284,26 +294,21 @@ fun AgeRangeSelect(
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(text = stringResource(R.string.age_range), style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.weight(1f))
-        DropDownWithSelect(
-            list = (createWidgetUiState.minAge..createWidgetUiState.maxAge).map { it },
+        DropDownWithSelect(list = (createWidgetUiState.minAge..createWidgetUiState.maxAge).map { it },
             title = createWidgetUiState.targetAudienceAgeRange.min.toString(),
             onItemSelect = onMinAgeChanged,
-            itemString = { it.toString() }
-        )
+            itemString = { it.toString() })
         Spacer(modifier = Modifier.size(6.dp))
-        DropDownWithSelect(
-            list = (createWidgetUiState.minAge..createWidgetUiState.maxAge).map { it },
+        DropDownWithSelect(list = (createWidgetUiState.minAge..createWidgetUiState.maxAge).map { it },
             title = createWidgetUiState.targetAudienceAgeRange.max.toString(),
             onItemSelect = onMaxAgeChanged,
-            itemString = { it.toString() }
-        )
+            itemString = { it.toString() })
     }
 }
 
 @Composable
 fun GenderSelect(
-    createWidgetUiState: CreateWidgetUiState,
-    onGenderChanged: (Widget.GenderFilter) -> Unit
+    createWidgetUiState: CreateWidgetUiState, onGenderChanged: (Widget.GenderFilter) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(text = stringResource(R.string.gender), style = MaterialTheme.typography.titleSmall)
@@ -383,8 +388,7 @@ class CreateWidgetStatePreviewParameterProvider : PreviewParameterProvider<Creat
                 Country(name = "Nepal", emoji = "")
             ),
             targetAudienceAgeRange = Widget.TargetAudienceAgeRange(min = 45, max = 66),
-        ),
-        CreateWidgetUiState(
+        ), CreateWidgetUiState(
             "widget title",
             "widget title error",
             "desc",
