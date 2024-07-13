@@ -32,6 +32,9 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -45,6 +48,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import com.ask.app.R
@@ -58,10 +62,11 @@ import com.ask.app.ui.screens.utils.AppTextField
 import com.ask.app.ui.screens.utils.DropDownWithSelect
 import com.ask.app.ui.screens.utils.NonLazyGrid
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 fun CreateWidgetScreen(
+    sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     @PreviewParameter(CreateWidgetStatePreviewParameterProvider::class) createWidgetUiState: CreateWidgetUiState,
     setTitle: (String) -> Unit = {},
     setDesc: (String) -> Unit = {},
@@ -119,10 +124,23 @@ fun CreateWidgetScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
+        val modifier = if (sizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
+            Modifier
                 .padding(padding)
                 .padding(all = 16.dp)
+        } else {
+            Modifier
+                .padding(padding)
+                .padding(
+                    horizontal = when (sizeClass.widthSizeClass) {
+                        WindowWidthSizeClass.Medium -> 30.dp
+                        WindowWidthSizeClass.Expanded -> 60.dp
+                        else -> 16.dp
+                    },
+                )
+        }
+        Column(
+            modifier = modifier
                 .verticalScroll(rememberScrollState()),
         ) {
             AppTextField(
@@ -222,8 +240,8 @@ fun CreateWidgetScreen(
             }
         }
     }
-
 }
+
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

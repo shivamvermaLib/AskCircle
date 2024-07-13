@@ -1,9 +1,12 @@
 package com.ask.app.ui
 
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.DpSize
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
@@ -29,8 +32,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun AskNavigation() {
+fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero)) {
     val navController = rememberNavController()
     val context = LocalContext.current
     val workManager = WorkManager.getInstance(context)
@@ -61,7 +65,7 @@ fun AskNavigation() {
                 homeViewModel.screenOpenEvent(it.destination.route)
             }
             val uiState by homeViewModel.uiStateFlow.collectAsStateWithLifecycle()
-            HomeScreen(uiState) {
+            HomeScreen(uiState, sizeClass) {
                 navController.navigate(Create)
             }
         }
@@ -72,6 +76,7 @@ fun AskNavigation() {
                 viewModel.screenOpenEvent(it.destination.route)
             }
             CreateWidgetScreen(
+                sizeClass,
                 uiState,
                 viewModel::setTitle,
                 viewModel::setDesc,

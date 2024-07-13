@@ -32,4 +32,5 @@
     <string name="my_widgets">الودجتات الخاصة بي</string>
     <string name="profile">الملف الشخصي</string>
     <string name="delete">حذف %1$s</string>
+    <string name="no_widgets">No Widgets</string>
 </resources>

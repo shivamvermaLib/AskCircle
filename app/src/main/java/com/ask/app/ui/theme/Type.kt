@@ -26,6 +26,13 @@ val displayFontFamily = FontFamily(
     )
 )
 
+val labelFontFamily = FontFamily(
+    Font(
+        googleFont = GoogleFont("Readex Pro"),
+        fontProvider = provider,
+    )
+)
+
 // Default Material 3 typography values
 val baseline = Typography()
 
@@ -42,8 +49,8 @@ val Typography = Typography(
     bodyLarge = baseline.bodyLarge.copy(fontFamily = bodyFontFamily),
     bodyMedium = baseline.bodyMedium.copy(fontFamily = bodyFontFamily),
     bodySmall = baseline.bodySmall.copy(fontFamily = bodyFontFamily),
-    labelLarge = baseline.labelLarge.copy(fontFamily = bodyFontFamily),
-    labelMedium = baseline.labelMedium.copy(fontFamily = bodyFontFamily),
-    labelSmall = baseline.labelSmall.copy(fontFamily = bodyFontFamily),
+    labelLarge = baseline.labelLarge.copy(fontFamily = labelFontFamily),
+    labelMedium = baseline.labelMedium.copy(fontFamily = labelFontFamily),
+    labelSmall = baseline.labelSmall.copy(fontFamily = labelFontFamily),
 )
 

@@ -32,4 +32,5 @@
     <string name="my_widgets">मेरे विजेट्स</string>
     <string name="profile">प्रोफ़ाइल</string>
     <string name="delete">हटाएं %1$s</string>
+    <string name="no_widgets">No Widgets</string>
 </resources>

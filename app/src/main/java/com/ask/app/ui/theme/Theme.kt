@@ -266,8 +266,8 @@ fun ASKTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }*/
 
-        darkTheme -> mediumContrastDarkColorScheme
-        else -> mediumContrastLightColorScheme
+        darkTheme -> darkScheme
+        else -> lightScheme
     }
 
     MaterialTheme(

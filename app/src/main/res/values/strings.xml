@@ -33,4 +33,5 @@
     <string name="my_widgets">My Widgets</string>
     <string name="profile">Profile</string>
     <string name="delete">Delete %1$s</string>
+    <string name="no_widgets">No Widgets</string>
 </resources>
