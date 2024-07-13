@@ -68,6 +68,8 @@ dependencies {
     implementation(libs.androidx.material3.window.size)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.ui.text.google.fonts)
+
     // Hilt
     implementation(libs.androidx.hilt.work)
     kapt(libs.androidx.hilt.compiler)
@@ -83,7 +85,6 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
     implementation(libs.androidx.room.ktx)
-    implementation(libs.androidx.ui.text.google.fonts)
     kapt(libs.androidx.room.compiler)
 
     implementation(libs.coil.compose)
@@ -99,6 +100,20 @@ dependencies {
     // For local unit tests
     testImplementation(libs.hilt.android.testing)
     kaptTest(libs.hilt.compiler)
+
+    implementation(project(":data:widget"))
+    implementation(project(":data:country"))
+    implementation(project(":data:core"))
+    implementation(project(":data:user"))
+    implementation(project(":data:analytics"))
+    implementation(project(":domain:user"))
+    implementation(project(":domain:widget"))
+    implementation(project(":feature:splash"))
+    implementation(project(":feature:common"))
+    implementation(project(":feature:home"))
+    implementation(project(":feature:create"))
+    implementation(project(":domain:common"))
+    implementation(project(":workmanager"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -3,21 +3,14 @@ package com.ask.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
-import coil.util.DebugLogger
-import com.ask.app.remote.config.RemoteConfigRepository
-import com.ask.app.workmanager.SyncWidgetWorker
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -27,7 +20,7 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
     lateinit var workerFactory: HiltWorkerFactory
 
     @Inject
-    lateinit var remoteConfigRepository: RemoteConfigRepository
+    lateinit var remoteConfigRepository: com.ask.core.RemoteConfigRepository
 
     private val scope = CoroutineScope(Dispatchers.Main)
 
@@ -40,13 +33,6 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
         super.onCreate()
         scope.launch {
             remoteConfigRepository.fetchInit()
-            val myWork = PeriodicWorkRequestBuilder<SyncWidgetWorker>(remoteConfigRepository.getSyncTimeInMinutes(), TimeUnit.MINUTES)
-                .build()
-            WorkManager.getInstance(this@AskApplication).enqueueUniquePeriodicWork(
-                SYNC_WIDGET_WORK_NAME,
-                ExistingPeriodicWorkPolicy.UPDATE,
-                myWork
-            )
         }
     }
 
@@ -63,7 +49,7 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
                     .maxSizeBytes(10 * 1024 * 1024)
                     .build()
             }
-            .logger(DebugLogger())
+//            .logger(DebugLogger())
             .respectCacheHeaders(false)
             .build()
     }

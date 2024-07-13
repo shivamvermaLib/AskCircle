@@ -21,4 +21,16 @@ dependencyResolutionManagement {
 
 rootProject.name = "AskCircle"
 include(":app")
- 
+include(":data:user")
+include(":data:widget")
+include(":data:core")
+include(":data:country")
+include(":feature:home")
+include(":feature:create")
+include(":feature:common")
+include(":data:analytics")
+include(":domain:user")
+include(":domain:widget")
+include(":workmanager")
+include(":domain:common")
+include(":feature:splash")

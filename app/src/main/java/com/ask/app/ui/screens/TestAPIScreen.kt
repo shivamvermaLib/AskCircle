@@ -27,14 +27,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ask.app.data.models.Gender
-import com.ask.app.data.models.User
-import com.ask.app.data.models.UserWithLocation
-import com.ask.app.data.models.Widget
-import com.ask.app.data.models.WidgetWithOptionsAndVotesForTargetAudience
-import com.ask.app.data.models.generateCombinationsForUsers
-import com.ask.app.data.repository.UserRepository
-import com.ask.app.data.repository.WidgetRepository
+import com.ask.user.UserWithLocation
+import com.ask.widget.Widget
+import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
+import com.ask.user.UserRepository
+import com.ask.widget.WidgetRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -100,7 +97,7 @@ fun TestAPIProgressViewPreview() {
 
 @HiltViewModel
 class TestAPIViewModel @Inject constructor(
-    private val widgetRepository: WidgetRepository, private val userRepository: UserRepository
+    private val widgetRepository: com.ask.widget.WidgetRepository, private val userRepository: com.ask.user.UserRepository
 ) : ViewModel() {
 
     private val _createUserStateFlow = MutableStateFlow(TestAPIState.CreateUserState())
@@ -127,7 +124,7 @@ class TestAPIViewModel @Inject constructor(
         viewModelScope.launch {
             // Create User
             _createUserStateFlow.value = TestAPIState.CreateUserState(loading = true)
-            var currentUserWithLocation: UserWithLocation? = null
+            var currentUserWithLocation: com.ask.user.UserWithLocation? = null
 //            try {
             currentUserWithLocation = userRepository.createUser()
             _createUserStateFlow.value =
@@ -168,16 +165,16 @@ class TestAPIViewModel @Inject constructor(
 
             // Create Poll
             _createPollStateFlow.value = TestAPIState.CreatePollState(loading = true)
-            var createdPoll: WidgetWithOptionsAndVotesForTargetAudience? = null
+            var createdPoll: com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience? = null
 //            try {
-            val widget = Widget(
+            val widget = com.ask.widget.Widget(
                 creatorId = currentUserWithLocation!!.user.id,
                 title = "Test Title ${Random.nextInt()}",
             )
             val options = List(Random.nextInt(2, 6)) {
                 val isText = Random.nextBoolean()
-                WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                    option = Widget.Option(
+                com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                    option = com.ask.widget.Widget.Option(
                         widgetId = widget.id,
                         text = when (isText) {
                             true -> "Option $it"
@@ -190,11 +187,11 @@ class TestAPIViewModel @Inject constructor(
                     ), votes = emptyList()
                 )
             }
-            val targetAudienceGender = Widget.TargetAudienceGender(
-                gender = Widget.GenderFilter.entries.random(),
+            val targetAudienceGender = com.ask.widget.Widget.TargetAudienceGender(
+                gender = com.ask.widget.Widget.GenderFilter.entries.random(),
                 widgetId = widget.id
             )
-            val targetAudienceAgeRange = Widget.TargetAudienceAgeRange(
+            val targetAudienceAgeRange = com.ask.widget.Widget.TargetAudienceAgeRange(
                 widgetId = widget.id,
                 min = when (Random.nextBoolean()) {
                     true -> Random.nextInt(18, 50)
@@ -206,14 +203,14 @@ class TestAPIViewModel @Inject constructor(
                 }
             )
             val targetAudienceLocation = listOf(
-                Widget.TargetAudienceLocation(
+                com.ask.widget.Widget.TargetAudienceLocation(
                     widgetId = widget.id,
                     country = when (Random.nextBoolean()) {
                         true -> "India"
                         else -> null
                     }
                 ),
-                Widget.TargetAudienceLocation(
+                com.ask.widget.Widget.TargetAudienceLocation(
                     widgetId = widget.id,
                     country = "India",
                     state = when (Random.nextBoolean()) {
@@ -221,7 +218,7 @@ class TestAPIViewModel @Inject constructor(
                         else -> null
                     }
                 ),
-                Widget.TargetAudienceLocation(
+                com.ask.widget.Widget.TargetAudienceLocation(
                     widgetId = widget.id,
                     country = "India",
                     state = "Maharashtra",
@@ -230,13 +227,13 @@ class TestAPIViewModel @Inject constructor(
                         else -> null
                     }
                 ),
-                Widget.TargetAudienceLocation(
+                com.ask.widget.Widget.TargetAudienceLocation(
                     widgetId = widget.id,
                     country = "India",
                     state = "Maharashtra",
                     city = "Mumbai"
                 ),
-                Widget.TargetAudienceLocation(
+                com.ask.widget.Widget.TargetAudienceLocation(
                     widgetId = widget.id,
                     country = "India",
                     state = "Punjab"
@@ -334,35 +331,35 @@ sealed class TestAPIState<T>(
     data class CreateUserState(
         override val loading: Boolean = false,
         override val message: String? = null,
-        override val t: UserWithLocation? = null,
+        override val t: com.ask.user.UserWithLocation? = null,
         override val error: String? = null
-    ) : TestAPIState<UserWithLocation>(loading, message, t, error)
+    ) : TestAPIState<com.ask.user.UserWithLocation>(loading, message, t, error)
 
     data class UpdateUserState(
         override val loading: Boolean = false,
         override val message: String? = null,
-        override val t: UserWithLocation? = null,
+        override val t: com.ask.user.UserWithLocation? = null,
         override val error: String? = null
-    ) : TestAPIState<UserWithLocation>(loading, message, t, error)
+    ) : TestAPIState<com.ask.user.UserWithLocation>(loading, message, t, error)
 
     data class CreatePollState(
         override val loading: Boolean = false,
-        override val t: WidgetWithOptionsAndVotesForTargetAudience? = null,
+        override val t: com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience? = null,
         override val error: String? = null,
         override val message: String? = null
-    ) : TestAPIState<WidgetWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
+    ) : TestAPIState<com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
 
     data class UpdatePollState(
         override val loading: Boolean = false,
-        override val t: WidgetWithOptionsAndVotesForTargetAudience? = null,
+        override val t: com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience? = null,
         override val error: String? = null,
         override val message: String? = null
-    ) : TestAPIState<WidgetWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
+    ) : TestAPIState<com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
 
     data class DeletePollState(
         override val loading: Boolean = false,
-        override val t: WidgetWithOptionsAndVotesForTargetAudience? = null,
+        override val t: com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience? = null,
         override val error: String? = null,
         override val message: String? = null,
-    ) : TestAPIState<WidgetWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
+    ) : TestAPIState<com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience>(loading, message, t, error)
 }
