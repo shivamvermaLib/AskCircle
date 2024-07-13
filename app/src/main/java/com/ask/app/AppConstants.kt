@@ -8,6 +8,7 @@ const val TABLE_TARGET_AUDIENCE_GENDERS = "target-audience-genders"
 const val TABLE_TARGET_AUDIENCE_AGE_RANGES = "target-audience-age-ranges"
 const val TABLE_WIDGET_IDS = "widget-ids"
 const val TABLE_COUNTRIES = "countries"
+const val TABLE_UPDATED_TIME = "updated_time"
 
 const val ID = "id"
 const val WIDGET_ID = "widgetId"

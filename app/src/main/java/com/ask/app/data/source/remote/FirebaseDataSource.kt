@@ -232,3 +232,47 @@ abstract class FirebaseDataSource<T>(private val databaseReference: DatabaseRefe
             }
     }
 }
+
+abstract class FirebaseOneDataSource<T>(private val databaseReference: DatabaseReference) {
+    abstract fun getItemFromMutableData(mutableData: MutableData): T?
+    abstract fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): T?
+    suspend fun getItem(): T = suspendCoroutine<T> { cont ->
+        databaseReference.get().addOnFailureListener {
+            cont.resumeWithException(it)
+        }.addOnSuccessListener {
+            if (it.exists()) {
+                cont.resume(
+                    getItemFromDataSnapshot(it) ?: throw Exception("Item not found")
+                )
+            } else {
+                cont.resumeWithException(Throwable("Item not found"))
+            }
+        }
+    }
+
+    suspend fun updateItemFromTransaction(updateItem: (T) -> T): T =
+        suspendCoroutine { cont ->
+            databaseReference.runTransaction(object : Transaction.Handler {
+                override fun doTransaction(currentData: MutableData): Transaction.Result {
+                    val item = getItemFromMutableData(currentData) ?: return Transaction.success(
+                        currentData
+                    )
+                    val updatedItem = updateItem(item)
+                    currentData.value = updatedItem
+                    return Transaction.success(currentData)
+                }
+
+                override fun onComplete(
+                    error: DatabaseError?,
+                    committed: Boolean,
+                    currentData: DataSnapshot?
+                ) {
+                    if (error != null) {
+                        cont.resumeWithException(error.toException())
+                    } else {
+                        cont.resume(getItemFromDataSnapshot(currentData ?: return) ?: return)
+                    }
+                }
+            })
+        }
+}

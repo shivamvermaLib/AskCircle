@@ -3,6 +3,7 @@ package com.ask.app.di
 import com.ask.app.OPTION
 import com.ask.app.OPTIONS
 import com.ask.app.TABLE_COUNTRIES
+import com.ask.app.TABLE_UPDATED_TIME
 import com.ask.app.TABLE_USERS
 import com.ask.app.TABLE_WIDGETS
 import com.ask.app.TABLE_WIDGET_IDS
@@ -13,12 +14,14 @@ import com.ask.app.USER
 import com.ask.app.USER_LOCATION
 import com.ask.app.VOTES
 import com.ask.app.WIDGET
+import com.ask.app.data.models.UpdatedTime
 import com.ask.app.data.models.User
 import com.ask.app.data.models.UserWithLocation
 import com.ask.app.data.models.Widget
 import com.ask.app.data.models.WidgetId
 import com.ask.app.data.models.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.app.data.source.remote.FirebaseDataSource
+import com.ask.app.data.source.remote.FirebaseOneDataSource
 import com.ask.app.data.source.remote.FirebaseStorageSource
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
@@ -140,10 +143,18 @@ object FirebaseModules {
 
     @Singleton
     @Provides
+    @Named(TABLE_UPDATED_TIME)
+    fun provideUpdatedTimeReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
+        return firebaseDatabase.getReference(TABLE_UPDATED_TIME)
+    }
+
+    @Singleton
+    @Provides
     @Named(TABLE_WIDGET_IDS)
     fun provideWidgetIdsReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
         return firebaseDatabase.getReference(TABLE_WIDGET_IDS)
     }
+
 
     @Singleton
     @Provides
@@ -262,4 +273,17 @@ object FirebaseModules {
             }
         }
 
+    @Singleton
+    @Provides
+    fun provideUpdatedTimeDataOneSource(@Named(TABLE_UPDATED_TIME) databaseReference: DatabaseReference): FirebaseOneDataSource<UpdatedTime> =
+        object : FirebaseOneDataSource<UpdatedTime>(databaseReference) {
+            override fun getItemFromMutableData(mutableData: MutableData): UpdatedTime? {
+                return mutableData.getValue(UpdatedTime::class.java)
+            }
+
+            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): UpdatedTime? {
+                return dataSnapshot.getValue(UpdatedTime::class.java)
+            }
+
+        }
 }

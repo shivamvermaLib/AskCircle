@@ -3,13 +3,16 @@ package com.ask.app.data.repository
 import com.ask.app.DOT
 import com.ask.app.TABLE_WIDGETS
 import com.ask.app.checkIfUrl
+import com.ask.app.data.models.UpdatedTime
 import com.ask.app.data.models.User
 import com.ask.app.data.models.Widget
 import com.ask.app.data.models.WidgetId
 import com.ask.app.data.models.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.app.data.models.generateCombinationsForWidget
+import com.ask.app.data.models.isUpdateRequired
 import com.ask.app.data.source.local.WidgetDao
 import com.ask.app.data.source.remote.FirebaseDataSource
+import com.ask.app.data.source.remote.FirebaseOneDataSource
 import com.ask.app.data.source.remote.FirebaseStorageSource
 import com.ask.app.fileNameWithExtension
 import kotlinx.coroutines.CoroutineDispatcher
@@ -23,6 +26,7 @@ import javax.inject.Named
 class WidgetRepository @Inject constructor(
     private val widgetDataSource: FirebaseDataSource<WidgetWithOptionsAndVotesForTargetAudience>,
     private val widgetIdDataSource: FirebaseDataSource<WidgetId>,
+    private val widgetUpdateTimeOneDataSource: FirebaseOneDataSource<UpdatedTime>,
     private val widgetDao: WidgetDao,
     @Named(TABLE_WIDGETS) private val pollOptionStorageSource: FirebaseStorageSource,
     @Named("IO") private val dispatcher: CoroutineDispatcher
@@ -101,6 +105,10 @@ class WidgetRepository @Inject constructor(
             }.awaitAll()
         }
 
+        widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
+            updatedTime.copy(widgetTime = System.currentTimeMillis())
+        }
+
         widgetDao.getWidgetById(pollId) ?: throw Exception("Unable to get created Poll from Local")
     }
 
@@ -115,11 +123,20 @@ class WidgetRepository @Inject constructor(
             }
             widgetDataSource.deleteItem(widgetWithOptionsAndVotesForTargetAudience)
             widgetDao.deleteWidget(widgetWithOptionsAndVotesForTargetAudience.widget)
+            widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
+                updatedTime.copy(widgetTime = System.currentTimeMillis())
+            }
         }
 
     suspend fun syncWidgetsFromServer(
-        searchCombinations: List<String>, fetchUserDetails: suspend (String) -> User
+        lastUpdatedTime: UpdatedTime,
+        searchCombinations: List<String>,
+        fetchUserDetails: suspend (String) -> User
     ) = withContext(dispatcher) {
+        val updatedTime = widgetUpdateTimeOneDataSource.getItem()
+        if (isUpdateRequired(updatedTime, lastUpdatedTime).not()) {
+            return@withContext
+        }
         val widgetIds = searchCombinations.map {
             async {
                 widgetIdDataSource.getItemOrNull(it)
@@ -183,5 +200,9 @@ class WidgetRepository @Inject constructor(
             widgetWithOptionsAndVotesForTargetAudience.options.map { it.option },
             widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }.flatten()
         )
+    }.also {
+        widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
+            updatedTime.copy(voteTime = System.currentTimeMillis())
+        }
     }
 }
