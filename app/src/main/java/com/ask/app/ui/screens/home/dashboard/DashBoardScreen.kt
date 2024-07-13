@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -85,15 +86,22 @@ fun DashBoardScreen(
             )
         },
     ) {
-        val widthClass = sizeClass.widthSizeClass
+        var widthClass = sizeClass.widthSizeClass
         val heightClass = sizeClass.heightSizeClass
-        println("width>$widthClass, height>$heightClass")
+        val context = LocalContext.current
+        val displayMetrics = context.resources.displayMetrics
+        //Width And Height Of Screen
+        val width = displayMetrics.widthPixels / displayMetrics.density
+        if (width in 840f..850f) {
+            widthClass = WindowWidthSizeClass.Medium
+        }
         if (widthClass == WindowWidthSizeClass.Compact) {
             DashboardList(it, uiState, onOptionClick)
         } else {
             val columnCount =
-                if (widthClass == WindowWidthSizeClass.Medium || heightClass == WindowHeightSizeClass.Medium) 2
-                else if (widthClass == WindowWidthSizeClass.Expanded || heightClass == WindowHeightSizeClass.Expanded) 3
+                if (widthClass == WindowWidthSizeClass.Expanded && heightClass == WindowHeightSizeClass.Medium) 3
+                else if (widthClass == WindowWidthSizeClass.Medium && heightClass == WindowHeightSizeClass.Expanded) 2
+                else if (widthClass == WindowWidthSizeClass.Expanded && heightClass == WindowHeightSizeClass.Expanded) 3
                 else 2
 
             DashboardGrid(it, uiState, columnCount, onOptionClick)
@@ -128,8 +136,8 @@ fun DashboardGrid(
     columnCount: Int,
     onOptionClick: (String, String) -> Unit
 ) {
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(columnCount), modifier = Modifier
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(columnCount), modifier = Modifier
             .fillMaxSize()
             .padding(it)
     ) {
