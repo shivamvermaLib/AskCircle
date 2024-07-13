@@ -3,11 +3,13 @@ package com.ask.app.data.repository
 import com.ask.app.DOT
 import com.ask.app.TABLE_USERS
 import com.ask.app.data.models.Gender
+import com.ask.app.data.models.UpdatedTime
 import com.ask.app.data.models.User
 import com.ask.app.data.models.UserWithLocation
 import com.ask.app.data.source.local.UserDao
 import com.ask.app.data.source.remote.FirebaseAuthSource
 import com.ask.app.data.source.remote.FirebaseDataSource
+import com.ask.app.data.source.remote.FirebaseOneDataSource
 import com.ask.app.data.source.remote.FirebaseStorageSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +21,7 @@ import javax.inject.Named
 class UserRepository @Inject constructor(
     private val firebaseAuthSource: FirebaseAuthSource,
     private val userDataSource: FirebaseDataSource<UserWithLocation>,
+    private val widgetUpdateTimeOneDataSource: FirebaseOneDataSource<UpdatedTime>,
     private val userDao: UserDao,
     @Named(TABLE_USERS) private val userStorageSource: FirebaseStorageSource,
     @Named("IO") private val dispatcher: CoroutineDispatcher
@@ -35,6 +38,10 @@ class UserRepository @Inject constructor(
                 )
             ).also {
                 userDao.insertAll(listOf(it.user), listOf(it.userLocation))
+            }.also {
+                widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
+                    updatedTime.copy(profileTime = System.currentTimeMillis())
+                }
             }
         }
         user
@@ -78,6 +85,10 @@ class UserRepository @Inject constructor(
                 )
             ).also {
                 userDao.insertAll(listOf(it.user), listOf(it.userLocation))
+            }.also {
+                widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
+                    updatedTime.copy(profileTime = System.currentTimeMillis())
+                }
             }
         }
 
@@ -129,6 +140,11 @@ class UserRepository @Inject constructor(
         val user = userDao.getUserById(id) ?: throw Exception("user not found")
         userDataSource.deleteItemById(id)
             .also { userDao.deleteUser(user) }
+            .also {
+                widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
+                    updatedTime.copy(profileTime = System.currentTimeMillis())
+                }
+            }
     }
 
 }
