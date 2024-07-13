@@ -2,15 +2,15 @@ package com.ask.app
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.ask.app.data.models.Country
-import com.ask.app.data.models.User
-import com.ask.app.data.models.Widget
-import com.ask.app.data.source.local.CountryDao
-import com.ask.app.data.source.local.UserDao
-import com.ask.app.data.source.local.WidgetDao
+import com.ask.country.Country
+import com.ask.country.CountryDao
+import com.ask.user.User
+import com.ask.user.UserDao
+import com.ask.widget.Widget
+import com.ask.widget.WidgetDao
 
 @Database(
-    entities = [User::class, User.UserLocation::class, User.UserWidget::class, Widget::class, Widget.Option::class, Widget.TargetAudienceGender::class, Widget.TargetAudienceLocation::class, Widget.TargetAudienceAgeRange::class, Widget.Option.Vote::class, Country::class],
+    entities = [User::class, User.UserLocation::class, Widget::class, Widget.Option::class, Widget.TargetAudienceGender::class, Widget.TargetAudienceLocation::class, Widget.TargetAudienceAgeRange::class, Widget.Option.Vote::class, Country::class],
     version = 1
 )
 //@TypeConverters(PollConverters::class)

@@ -4,9 +4,9 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.ask.app.AskAppDatabase
-import com.ask.app.data.source.local.CountryDao
-import com.ask.app.data.source.local.UserDao
-import com.ask.app.data.source.local.WidgetDao
+import com.ask.country.CountryDao
+import com.ask.user.UserDao
+import com.ask.widget.WidgetDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Ask Circle</string>
+    <string name="filter">Filter</string>
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="age">Age</string>
+    <string name="update">Update</string>
+    <string name="edit_image">Edit Image</string>
+    <string name="my_widgets">My Widgets</string>
+    <string name="profile">Profile</string>
+    <string name="create_widget">Create Widget</string>
+    <string name="creating">Creating…</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="gender">Gender</string>
+    <string name="select">Select</string>
+    <string name="location">Location</string>
+    <string name="clear">Clear %1$s</string>
+    <string name="delete">Delete %1$s</string>
+    <string name="no_widgets">No Widgets</string>
+    <string name="create">Create</string>
+
+</resources>

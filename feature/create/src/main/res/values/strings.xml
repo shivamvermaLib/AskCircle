@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="age_range">Age Range</string>
+    <string name="all">All</string>
+    <string name="text">Text</string>
+    <string name="options">Options</string>
+    <string name="image">Image</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="add_option">Add Option</string>
+    <string name="target_audience">Target Audience</string>
+
+    <string name="close">Close</string>
+
+</resources>
