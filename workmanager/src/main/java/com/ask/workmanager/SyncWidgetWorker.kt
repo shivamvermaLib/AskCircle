@@ -10,6 +10,7 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import com.ask.common.preLoadImages
 import com.ask.widget.SyncUsersAndWidgetsUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
@@ -25,7 +26,9 @@ class SyncWidgetWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         return try {
             setProgress(workDataOf(STATUS to WorkerStatus.Loading.name))
-            syncWidgetUseCase.invoke()
+            syncWidgetUseCase.invoke {
+                applicationContext.preLoadImages(it)
+            }
             setProgress(workDataOf(STATUS to WorkerStatus.Success.name))
             Result.success()
         } catch (e: Exception) {

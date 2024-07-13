@@ -1,7 +1,39 @@
 package com.ask.common
 
+import android.content.Context
+import coil.imageLoader
+import coil.request.CachePolicy
+import coil.request.ErrorResult
+import coil.request.ImageRequest
+import coil.request.SuccessResult
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 
+
+fun Context.preLoadImages(urls: List<String>) {
+    urls.forEach { url ->
+        val listener = object : ImageRequest.Listener {
+            override fun onError(request: ImageRequest, result: ErrorResult) {
+                super.onError(request, result)
+            }
+
+            override fun onSuccess(request: ImageRequest, result: SuccessResult) {
+                super.onSuccess(request, result)
+            }
+        }
+        val imageRequest = ImageRequest.Builder(applicationContext)
+            .data(url)
+            .listener(listener)
+            .dispatcher(Dispatchers.IO)
+            .memoryCacheKey(url)
+            .diskCacheKey(url)
+            .diskCachePolicy(CachePolicy.ENABLED)
+            .memoryCachePolicy(CachePolicy.ENABLED)
+            .crossfade(true)
+            .build()
+        applicationContext.imageLoader.enqueue(imageRequest)
+    }
+}
 
 fun <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R> combine(
     flow: Flow<T1>,

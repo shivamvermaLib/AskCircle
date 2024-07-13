@@ -16,7 +16,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
     private val sharedPreference: AppSharedPreference
 ) {
 
-    suspend operator fun invoke() {
+    suspend operator fun invoke(preloadImages: (List<String>) -> Unit) {
         if (widgetRepository.doesSyncRequired(sharedPreference.getUpdatedTime())) {
             val time = System.currentTimeMillis()
             userRepository.createUser().let { userWithLocation ->
@@ -25,12 +25,19 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     userWithLocation.user.age,
                     userWithLocation.userLocation,
                     userWithLocation.user.id
-                ).let {
+                ).let { list ->
                     widgetRepository.syncWidgetsFromServer(
-                        it
-                    ) { userId ->
-                        userRepository.getUser(userId)!!
-                    }
+                        list,
+                        { userId ->
+                            userRepository.getUser(userId)
+                                .also {
+                                    if (it.profilePic.isNullOrBlank().not()) {
+                                        preloadImages(listOf(it.profilePic!!))
+                                    }
+                                }
+                        },
+                        preloadImages
+                    )
                     countryRepository.syncCountries()
                 }
             }

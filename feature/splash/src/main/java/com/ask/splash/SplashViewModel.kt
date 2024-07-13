@@ -20,11 +20,11 @@ class SplashViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow<SplashUIState>(SplashUIState.Init)
     val uiStateFlow = _uiStateFlow.asStateFlow()
 
-    init {
+    fun init(preloadImages: (List<String>) -> Unit) {
         safeApiCall({
             _uiStateFlow.value = SplashUIState.Loading
         }, {
-            syncUsersAndWidgetsUseCase.invoke()
+            syncUsersAndWidgetsUseCase.invoke(preloadImages)
             _uiStateFlow.value = SplashUIState.Success(
                 remoteConfigRepository.getSyncTimeInMinutes()
             )

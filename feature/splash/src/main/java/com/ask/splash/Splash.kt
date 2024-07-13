@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ask.common.preLoadImages
 import com.ask.workmanager.SyncWidgetWorker
 import kotlinx.coroutines.launch
 
@@ -40,6 +41,9 @@ fun SplashScreen(route: String, navigateToHome: () -> Unit) {
                     navigateToHome()
                 }
             }
+        }
+        viewModel.init {
+            context.preLoadImages(it)
         }
         viewModel.screenOpenEvent(route)
     }
