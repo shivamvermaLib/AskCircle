@@ -7,9 +7,12 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
+import com.ask.common.ConnectionState
+import com.ask.common.observeConnectivityAsFlow
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,10 +32,17 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
             .setWorkerFactory(workerFactory)
             .build()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
         scope.launch {
-            remoteConfigRepository.fetchInit()
+            launch {
+                applicationContext.observeConnectivityAsFlow().collect {
+                    if (it == ConnectionState.Available) {
+                        remoteConfigRepository.fetchInit()
+                    }
+                }
+            }
         }
     }
 

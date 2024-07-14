@@ -17,6 +17,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -41,6 +42,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ask.common.connectivityState
 import com.ask.common.getByteArray
 import com.ask.common.getExtension
 import com.ask.common.preLoadImages
@@ -51,6 +53,7 @@ import com.ask.home.profile.ProfileScreen
 import com.ask.home.profile.ProfileViewModel
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
@@ -73,7 +76,7 @@ fun HomeScreen(
     HomeScreen(uiState, sizeClass, navigateToCreate)
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalCoroutinesApi::class)
 @Preview
 @Composable
 private fun HomeScreen(
@@ -81,12 +84,22 @@ private fun HomeScreen(
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     onCreateClick: () -> Unit = {},
 ) {
+    val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     val homeNavigationController = rememberNavController()
+    LaunchedEffect(isConnected) {
+        if (!isConnected) {
+            snackBarHostState.showSnackbar(
+                message = "No Internet Connection",
+                duration = SnackbarDuration.Indefinite
+            )
+        }
+    }
     Scaffold(
         snackbarHost = {
             SnackbarHost(
-                hostState = snackBarHostState, modifier = Modifier.padding(horizontal = 16.dp)
+                hostState = snackBarHostState,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
             ) {
                 Snackbar {
                     Text(it.visuals.message)
@@ -213,7 +226,7 @@ fun HomeNavigation(
                     }, {
                         context.getByteArray(it)
                     }, {
-                        context.preLoadImages( listOf(it))
+                        context.preLoadImages(listOf(it))
                     })
                 },
                 viewModel::onImageClick,

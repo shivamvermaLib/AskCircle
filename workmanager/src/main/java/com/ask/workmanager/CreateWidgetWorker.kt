@@ -2,9 +2,11 @@ package com.ask.workmanager
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -99,10 +101,17 @@ class CreateWidgetWorker @AssistedInject constructor(
                     Json.encodeToString(widgetWithOptionsAndVotesForTargetAudience)
                 )
             }
+            val constraints: Constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresBatteryNotLow(true)
+//                .setRequiresStorageNotLow(true)
+                .build()
             val workRequest =
-                OneTimeWorkRequestBuilder<CreateWidgetWorker>().setInputData(
-                    workData.build()
-                ).addTag(CREATE_WIDGET).build()
+                OneTimeWorkRequestBuilder<CreateWidgetWorker>()
+                    .setConstraints(constraints)
+                    .setInputData(workData.build())
+                    .addTag(CREATE_WIDGET)
+                    .build()
             workManager.enqueueUniqueWork(
                 CREATE_WIDGET, ExistingWorkPolicy.APPEND_OR_REPLACE, workRequest
             )

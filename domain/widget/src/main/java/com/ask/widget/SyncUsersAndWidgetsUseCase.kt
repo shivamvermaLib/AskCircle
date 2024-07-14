@@ -16,7 +16,16 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
     private val sharedPreference: AppSharedPreference
 ) {
 
-    suspend operator fun invoke(preloadImages: suspend (List<String>) -> Unit) {
+    suspend operator fun invoke(
+        isConnected: Boolean = true,
+        preloadImages: suspend (List<String>) -> Unit
+    ) {
+        if (!isConnected) {
+            if (userRepository.getCurrentUserOptional() == null) {
+                throw Exception("User not signed in")
+            }
+            return
+        }
         if (widgetRepository.doesSyncRequired(sharedPreference.getUpdatedTime())) {
             val time = System.currentTimeMillis()
             userRepository.createUser().let { userWithLocation ->

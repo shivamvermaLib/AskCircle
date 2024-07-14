@@ -30,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -57,15 +58,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.work.WorkManager
 import com.ask.common.AppOptionTypeSelect
 import com.ask.common.AppTextField
 import com.ask.common.DropDownWithSelect
 import com.ask.common.ImageOption
 import com.ask.common.NonLazyGrid
 import com.ask.common.TextOption
+import com.ask.common.connectivityState
 import com.ask.country.Country
 import com.ask.workmanager.CreateWidgetWorker
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 
 @Composable
@@ -107,7 +109,10 @@ fun CreateWidgetScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class,
+    ExperimentalCoroutinesApi::class
+)
 @Preview
 @Composable
 private fun CreateWidgetScreen(
@@ -127,6 +132,7 @@ private fun CreateWidgetScreen(
     onBackClick: () -> Unit = {},
     onRemoveOption: (Int) -> Unit = {}
 ) {
+    val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     var imagePickerIndex by remember { mutableIntStateOf(-1) }
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
@@ -141,6 +147,14 @@ private fun CreateWidgetScreen(
                 }
             }
         })
+    LaunchedEffect(isConnected) {
+        if (!isConnected) {
+            snackBarHostState.showSnackbar(
+                message = "No Internet Connection",
+                duration = SnackbarDuration.Indefinite
+            )
+        }
+    }
     Scaffold(snackbarHost = {
         SnackbarHost(
             hostState = snackBarHostState, modifier = Modifier.padding(horizontal = 16.dp)
@@ -259,7 +273,8 @@ private fun CreateWidgetScreen(
                 TextButton(
                     modifier = Modifier.align(Alignment.Start),
                     onClick = onAddOption,
-                    enabled = createWidgetUiState.options.size < 4) {
+                    enabled = createWidgetUiState.options.size < 4
+                ) {
                     Text(text = stringResource(R.string.add_option))
                 }
                 Spacer(modifier = Modifier.size(10.dp))
@@ -275,11 +290,12 @@ private fun CreateWidgetScreen(
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
                     onCreateClick,
-                    enabled = createWidgetUiState.allowCreate,
+                    enabled = createWidgetUiState.allowCreate && isConnected,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(text = stringResource(com.ask.common.R.string.create))
                 }
+                Spacer(modifier = Modifier.size(100.dp))
             }
         }
     }

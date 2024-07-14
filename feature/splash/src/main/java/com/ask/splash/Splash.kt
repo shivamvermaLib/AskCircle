@@ -23,16 +23,20 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ask.common.connectivityState
 import com.ask.common.preLoadImages
 import com.ask.workmanager.SyncWidgetWorker
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun SplashScreen(route: String, navigateToHome: () -> Unit) {
     val viewModel = hiltViewModel<SplashViewModel>()
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val isConnected by connectivityState()
     LaunchedEffect(Unit) {
         launch {
             viewModel.uiStateFlow.collect {
@@ -42,7 +46,8 @@ fun SplashScreen(route: String, navigateToHome: () -> Unit) {
                 }
             }
         }
-        viewModel.init {
+
+        viewModel.init(isConnected) {
             context.preLoadImages(it)
         }
         viewModel.screenOpenEvent(route)

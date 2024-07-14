@@ -2,9 +2,11 @@ package com.ask.workmanager
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
+import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -16,6 +18,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
 import java.util.concurrent.TimeUnit
+
 
 @HiltWorker
 class SyncWidgetWorker @AssistedInject constructor(
@@ -41,10 +44,16 @@ class SyncWidgetWorker @AssistedInject constructor(
     companion object {
         fun sendRequest(context: Context, syncTimeInMinutes: Long) {
             val workManager = WorkManager.getInstance(context)
+            val constraints: Constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .setRequiresBatteryNotLow(true)
+//                .setRequiresStorageNotLow(true)
+                .build()
             val myWork = PeriodicWorkRequestBuilder<SyncWidgetWorker>(
-                syncTimeInMinutes,
-                TimeUnit.MINUTES
-            ).build()
+                syncTimeInMinutes, TimeUnit.MINUTES
+            ).setConstraints(constraints)
+                .addTag(SYNC_WIDGET_WORK)
+                .build()
             workManager.enqueueUniquePeriodicWork(
                 SYNC_WIDGET_WORK,
                 ExistingPeriodicWorkPolicy.UPDATE,

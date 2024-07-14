@@ -55,8 +55,10 @@ import com.ask.common.AppImage
 import com.ask.common.AppOptionTypeSelect
 import com.ask.common.AppTextField
 import com.ask.common.DropDownWithSelect
+import com.ask.common.connectivityState
 import com.ask.home.R
 import com.ask.user.Gender
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -161,6 +163,7 @@ fun ProfileScreen(
     }
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Preview(
     backgroundColor = 0xFFFFFFFF,
     showBackground = true
@@ -177,6 +180,7 @@ fun ProfileTabView(
     setAge: (Int) -> Unit = {},
     onUpdate: () -> Unit = {}
 ) {
+    val isConnected by connectivityState()
     val singlePhotoPickerLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
             onResult = { uri ->
@@ -285,11 +289,11 @@ fun ProfileTabView(
             ElevatedButton(
                 onClick = onUpdate,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = profile.allowUpdate
+                enabled = profile.allowUpdate && isConnected
             ) {
                 Text(text = stringResource(R.string.update))
             }
-            Spacer(modifier = Modifier.size(60.dp))
+            Spacer(modifier = Modifier.size(100.dp))
         }
     }
 }

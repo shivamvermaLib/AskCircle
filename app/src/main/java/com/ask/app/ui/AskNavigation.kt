@@ -17,8 +17,6 @@ import kotlinx.serialization.Serializable
 @Composable
 fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero)) {
     val navController = rememberNavController()
-
-
     NavHost(navController = navController, startDestination = SplashScreen) {
         composable<SplashScreen> {
             SplashScreen(it.destination.route ?: "Splash") {

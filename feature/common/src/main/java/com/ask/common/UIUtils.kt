@@ -34,6 +34,7 @@ import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.ask.core.EMPTY
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @Composable
 fun SnackBarMessageHandler(
@@ -174,6 +175,7 @@ fun NonLazyGrid(
 }
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Composable
 fun AppImage(
     modifier: Modifier,
@@ -183,6 +185,7 @@ fun AppImage(
     placeholder: Int,
     error: Int
 ) {
+    val isConnected by connectivityState()
     val listener = object : ImageRequest.Listener {
         override fun onError(request: ImageRequest, result: ErrorResult) {
             super.onError(request, result)
@@ -203,13 +206,13 @@ fun AppImage(
         .fallback(placeholder)
         .diskCachePolicy(CachePolicy.ENABLED)
         .memoryCachePolicy(CachePolicy.ENABLED)
-        .crossfade(true)
+        .crossfade(isConnected)
         .build()
     AsyncImage(
         model = imageRequest,
         contentDescription = contentDescription,
         contentScale = contentScale,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
