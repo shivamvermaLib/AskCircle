@@ -13,6 +13,7 @@ import androidx.work.workDataOf
 import com.ask.analytics.AnalyticsLogger
 import com.ask.common.getByteArray
 import com.ask.common.getExtension
+import com.ask.common.preLoadImages
 import com.ask.widget.CreateWidgetUseCase
 import com.ask.widget.WIDGET
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
@@ -65,18 +66,18 @@ class CreateWidgetWorker @AssistedInject constructor(
                 Json.decodeFromString<WidgetWithOptionsAndVotesForTargetAudience>(
                     it
                 )
-            }
-                ?.let { widgetWithOptionsAndVotesForTargetAudience ->
-                    createWidgetEvent(widgetWithOptionsAndVotesForTargetAudience)
-                    createWidgetUseCase(widgetWithOptionsAndVotesForTargetAudience, {
-                        applicationContext.getExtension(it)!!
-                    }, {
-                        applicationContext.getByteArray(it)!!
-                    }
-                    ).let {
-                        createdWidgetEvent(it)
-                    }
+            }?.let { widgetWithOptionsAndVotesForTargetAudience ->
+                createWidgetEvent(widgetWithOptionsAndVotesForTargetAudience)
+                createWidgetUseCase.invoke(widgetWithOptionsAndVotesForTargetAudience, {
+                    applicationContext.getExtension(it)!!
+                }, {
+                    applicationContext.getByteArray(it)!!
                 }
+                ).let { it ->
+                    applicationContext.preLoadImages(it.options.mapNotNull { it.option.imageUrl })
+                    createdWidgetEvent(it)
+                }
+            }
             setProgress(workDataOf(STATUS to WorkerStatus.Success.name))
             Result.success(workDataOf(STATUS to WorkerStatus.Success.name))
         } catch (e: Exception) {

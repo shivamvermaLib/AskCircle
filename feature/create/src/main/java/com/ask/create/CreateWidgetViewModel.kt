@@ -19,7 +19,7 @@ import javax.inject.Inject
 class CreateWidgetViewModel @Inject constructor(
     countryRepository: CountryRepository,
     remoteConfigRepository: RemoteConfigRepository,
-    private val analyticsLogger: AnalyticsLogger
+    analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
     private val minOptions = 2
     private val maxOptions = remoteConfigRepository.getMaxOptionSize()

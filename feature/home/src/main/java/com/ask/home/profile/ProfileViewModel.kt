@@ -115,7 +115,11 @@ class ProfileViewModel @Inject constructor(
         _errorFlow.value = error
     }
 
-    fun onUpdate(getExtension: (String) -> String?, getBytes: (String) -> ByteArray?) {
+    fun onUpdate(
+        getExtension: (String) -> String?,
+        getBytes: (String) -> ByteArray?,
+        preloadImage: (String) -> Unit
+    ) {
         val profile = uiStateFlow.value
         safeApiCall({
             _profileLoadingFlow.value = true
@@ -140,7 +144,9 @@ class ProfileViewModel @Inject constructor(
                 profilePicExtension = extension,
                 profileByteArray = profile.profilePic?.takeIf { it.checkIfUrl().not() }
                     ?.let { path -> getBytes(path) },
-            )
+            ).also {
+                it.user.profilePic?.let { it1 -> preloadImage(it1) }
+            }
             _profileLoadingFlow.value = false
             analyticsLogger.profileUpdatedEvent(
                 profile.gender,

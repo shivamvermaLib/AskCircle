@@ -41,15 +41,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.work.WorkManager
 import com.ask.common.getByteArray
 import com.ask.common.getExtension
+import com.ask.common.preLoadImages
 import com.ask.home.dashboard.DashBoardScreen
 import com.ask.home.dashboard.DashboardViewModel
 import com.ask.home.profile.MyWidgetsViewModel
 import com.ask.home.profile.ProfileScreen
 import com.ask.home.profile.ProfileViewModel
-import com.ask.workmanager.CREATE_WIDGET
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
 import kotlinx.coroutines.flow.mapNotNull
@@ -213,6 +212,8 @@ fun HomeNavigation(
                         context.getExtension(it)
                     }, {
                         context.getByteArray(it)
+                    }, {
+                        context.preLoadImages(listOf(it))
                     })
                 },
                 viewModel::onImageClick,
