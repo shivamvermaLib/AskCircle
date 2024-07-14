@@ -118,7 +118,7 @@ class ProfileViewModel @Inject constructor(
     fun onUpdate(
         getExtension: (String) -> String?,
         getBytes: (String) -> ByteArray?,
-        preloadImage: (String) -> Unit
+        preloadImage: suspend (String) -> Unit
     ) {
         val profile = uiStateFlow.value
         safeApiCall({

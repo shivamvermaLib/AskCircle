@@ -20,7 +20,7 @@ class SplashViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow<SplashUIState>(SplashUIState.Init)
     val uiStateFlow = _uiStateFlow.asStateFlow()
 
-    fun init(preloadImages: (List<String>) -> Unit) {
+    fun init(preloadImages: suspend (List<String>) -> Unit) {
         safeApiCall({
             _uiStateFlow.value = SplashUIState.Loading
         }, {

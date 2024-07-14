@@ -126,7 +126,7 @@ class WidgetRepository @Inject constructor(
     suspend fun syncWidgetsFromServer(
         searchCombinations: List<String>,
         fetchUserDetails: suspend (String) -> User,
-        preloadImages: (List<String>) -> Unit
+        preloadImages: suspend (List<String>) -> Unit
     ) = withContext(dispatcher) {
         val widgetIds = searchCombinations.map {
             async {

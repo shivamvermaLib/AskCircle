@@ -213,7 +213,7 @@ fun HomeNavigation(
                     }, {
                         context.getByteArray(it)
                     }, {
-                        context.preLoadImages(listOf(it))
+                        context.preLoadImages( listOf(it))
                     })
                 },
                 viewModel::onImageClick,

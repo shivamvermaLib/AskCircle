@@ -3,35 +3,22 @@ package com.ask.common
 import android.content.Context
 import coil.imageLoader
 import coil.request.CachePolicy
-import coil.request.ErrorResult
 import coil.request.ImageRequest
-import coil.request.SuccessResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 
 
-fun Context.preLoadImages(urls: List<String>) {
-    urls.forEach { url ->
-        val listener = object : ImageRequest.Listener {
-            override fun onError(request: ImageRequest, result: ErrorResult) {
-                super.onError(request, result)
-            }
-
-            override fun onSuccess(request: ImageRequest, result: SuccessResult) {
-                super.onSuccess(request, result)
-            }
-        }
-        val imageRequest = ImageRequest.Builder(applicationContext)
+suspend fun Context.preLoadImages(urls: List<String>) {
+    urls.map { url ->
+        val imageRequest = ImageRequest.Builder(this)
             .data(url)
-            .listener(listener)
             .dispatcher(Dispatchers.IO)
             .memoryCacheKey(url)
             .diskCacheKey(url)
             .diskCachePolicy(CachePolicy.ENABLED)
             .memoryCachePolicy(CachePolicy.ENABLED)
-            .crossfade(true)
             .build()
-        applicationContext.imageLoader.enqueue(imageRequest)
+        imageLoader.execute(imageRequest)
     }
 }
 
