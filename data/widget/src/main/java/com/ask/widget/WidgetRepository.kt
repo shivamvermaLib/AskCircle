@@ -2,6 +2,9 @@ package com.ask.widget
 
 
 import com.ask.core.DOT
+import com.ask.core.FirebaseDataSource
+import com.ask.core.FirebaseOneDataSource
+import com.ask.core.FirebaseStorageSource
 import com.ask.core.UpdatedTime
 import com.ask.core.checkIfUrl
 import com.ask.core.fileNameWithExtension
@@ -16,11 +19,11 @@ import javax.inject.Inject
 import javax.inject.Named
 
 class WidgetRepository @Inject constructor(
-    private val widgetDataSource: com.ask.core.FirebaseDataSource<WidgetWithOptionsAndVotesForTargetAudience>,
-    private val widgetIdDataSource: com.ask.core.FirebaseDataSource<WidgetId>,
-    private val widgetUpdateTimeOneDataSource: com.ask.core.FirebaseOneDataSource<com.ask.core.UpdatedTime>,
+    private val widgetDataSource: FirebaseDataSource<WidgetWithOptionsAndVotesForTargetAudience>,
+    private val widgetIdDataSource: FirebaseDataSource<WidgetId>,
+    private val widgetUpdateTimeOneDataSource: FirebaseOneDataSource<UpdatedTime>,
     private val widgetDao: WidgetDao,
-    @Named(TABLE_WIDGETS) private val pollOptionStorageSource: com.ask.core.FirebaseStorageSource,
+    @Named(TABLE_WIDGETS) private val pollOptionStorageSource: FirebaseStorageSource,
     @Named("IO") private val dispatcher: CoroutineDispatcher
 ) {
 
@@ -126,7 +129,9 @@ class WidgetRepository @Inject constructor(
     }
 
     suspend fun syncWidgetsFromServer(
-        searchCombinations: List<String>,
+        currentUserId: String,
+        lastUpdatedTime: UpdatedTime,
+        searchCombinations: Set<String>,
         fetchUserDetails: suspend (String) -> User,
         preloadImages: suspend (List<String>) -> Unit
     ) = withContext(dispatcher) {
@@ -150,21 +155,22 @@ class WidgetRepository @Inject constructor(
                     )
                 )
             }
-            preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.mapNotNull { it.option.imageUrl } }
-                .flatten())
-            widgetDao.insertWidgets(
-                widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
-                widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceGender },
-                widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceAgeRange },
-                widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceLocations }
-                    .flatten(),
-                widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.map { it.option } }
-                    .flatten(),
-                widgetWithOptionsAndVotesForTargetAudiences.map { it ->
-                    it.options.map { it.votes }.flatten()
-                }.flatten()
-            )
         }
+        preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.mapNotNull { it.option.imageUrl } }
+            .flatten())
+        widgetDao.insertWidgets(
+            widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
+            widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceGender },
+            widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceAgeRange },
+            widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceLocations }
+                .flatten(),
+            widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.map { it.option } }
+                .flatten(),
+            widgetWithOptionsAndVotesForTargetAudiences.map { it ->
+                it.options.map { it.votes }.flatten()
+            }.flatten()
+        )
+        return@withContext widgetWithOptionsAndVotesForTargetAudiences.any { it.widget.creatorId != currentUserId && it.widget.createdAt > lastUpdatedTime.widgetTime && lastUpdatedTime.widgetTime > 0 }
     }
 
     suspend fun vote(widgetId: String, optionId: String, userId: String) =

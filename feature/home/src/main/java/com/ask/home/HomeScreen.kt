@@ -1,5 +1,9 @@
 package com.ask.home
 
+import android.Manifest
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,8 +30,10 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,19 +49,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.ask.common.connectivityState
-import com.ask.common.getByteArray
-import com.ask.common.getExtension
-import com.ask.common.preLoadImages
-import com.ask.home.dashboard.DashBoardScreen
-import com.ask.home.dashboard.DashboardViewModel
-import com.ask.home.profile.MyWidgetsViewModel
+import com.ask.home.dashboard.DashboardScreen
 import com.ask.home.profile.ProfileScreen
-import com.ask.home.profile.ProfileViewModel
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -72,6 +70,20 @@ fun HomeScreen(
         homeViewModel.setWorkerFlow(workerFlow)
         homeViewModel.screenOpenEvent(route)
     }
+    var permissionGranted by remember { mutableStateOf(false) }
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        permissionGranted = isGranted
+    }
+    LaunchedEffect(permissionGranted) {
+        if (!permissionGranted) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+    }
+
     val uiState by homeViewModel.uiStateFlow.collectAsStateWithLifecycle()
     HomeScreen(uiState, sizeClass, navigateToCreate)
 }
@@ -180,63 +192,10 @@ fun HomeNavigation(
         startDestination = HomeTabScreen.Home
     ) {
         composable<HomeTabScreen.Home> {
-            val viewModel = hiltViewModel<DashboardViewModel>()
-            val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
-            LaunchedEffect(Unit) {
-                viewModel.screenOpenEvent(it.destination.route)
-            }
-            DashBoardScreen(
-                state, sizeClass,
-                { widgetId, optionId ->
-                    viewModel.vote(widgetId, optionId, it.destination.route ?: "Dashboard")
-                },
-                viewModel::setFilterType
-            )
+            DashboardScreen(it.destination.route, sizeClass)
         }
         composable<HomeTabScreen.Profile> {
-            val context = LocalContext.current
-            val viewModel = hiltViewModel<ProfileViewModel>()
-            val myWidgetsViewModel = hiltViewModel<MyWidgetsViewModel>()
-            val profileUiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
-            val myWidgetsUiState by myWidgetsViewModel.uiStateFlow.collectAsStateWithLifecycle()
-            LaunchedEffect(Unit) {
-                launch {
-                    merge(viewModel.uiStateFlow.mapNotNull { it.error },
-                        myWidgetsViewModel.uiStateFlow.mapNotNull { it.error }).collect {
-                        onError(it) {
-                            viewModel.setError(null)
-                            myWidgetsViewModel.setError(null)
-                        }
-                    }
-                }
-                viewModel.screenOpenEvent(it.destination.route)
-            }
-            ProfileScreen(
-                sizeClass,
-                profileUiState,
-                myWidgetsUiState,
-                viewModel::setName,
-                viewModel::setEmail,
-                viewModel::setGender,
-                viewModel::setCountry,
-                viewModel::setAge,
-                {
-                    viewModel.onUpdate({
-                        context.getExtension(it)
-                    }, {
-                        context.getByteArray(it)
-                    }, {
-                        context.preLoadImages(listOf(it))
-                    })
-                },
-                viewModel::onImageClick,
-                onOptionClick = { widgetId, optionId ->
-                    myWidgetsViewModel.vote(widgetId, optionId, it.destination.route ?: "Profile")
-                },
-                onScreenOpen = {
-                    viewModel.screenOpenEvent(it)
-                }
-            )
+            ProfileScreen(it.destination.route, sizeClass, onError)
         }
     }
 }

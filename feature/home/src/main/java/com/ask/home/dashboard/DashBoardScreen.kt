@@ -23,6 +23,7 @@ import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ask.common.WidgetWithUserView
 import com.ask.home.R
 import com.ask.user.User
@@ -44,12 +47,32 @@ import com.ask.widget.FilterType
 import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun DashboardScreen(
+    route: String?,
+    sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero)
+) {
+    val viewModel = hiltViewModel<DashboardViewModel>()
+    val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        viewModel.screenOpenEvent(route)
+    }
+    DashBoardScreen(
+        state, sizeClass,
+        { widgetId, optionId ->
+            viewModel.vote(widgetId, optionId, route ?: "Dashboard")
+        },
+        viewModel::setFilterType
+    )
+}
+
 @Preview(name = "phone", device = "spec:shape=Normal,width=360,height=640,unit=dp,dpi=480")
 @Preview(name = "pixel4", device = "id:pixel_4")
 @Preview(name = "tablet", device = "spec:shape=Normal,width=1280,height=800,unit=dp,dpi=480")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
-fun DashBoardScreen(
+private fun DashBoardScreen(
     @PreviewParameter(DashBoardScreenPreviewParameterProvider::class) uiState: DashboardUiState,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     onOptionClick: (String, String) -> Unit = { _, _ -> },

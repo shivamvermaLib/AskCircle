@@ -14,6 +14,7 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.ktx.storage
 import dagger.Module
 import dagger.Provides
@@ -39,21 +40,35 @@ object CoreFirebaseModules {
 
     @Singleton
     @Provides
+    @Named(FIREBASE_DB)
+    fun provideFirebaseMainReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
+        return firebaseDatabase.getReference(if (BuildConfig.DEBUG) TEST_DB else MAIN_DB)
+    }
+
+    @Singleton
+    @Provides
     fun provideFirebaseStorage(): FirebaseStorage {
         return Firebase.storage
     }
 
     @Singleton
     @Provides
+    @Named(FIREBASE_DB)
+    fun provideMainStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
+        return firebaseStorage.getReference(FIREBASE_DB)
+    }
+
+    @Singleton
+    @Provides
     @Named(TABLE_UPDATED_TIME)
-    fun provideUpdatedTimeReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference(TABLE_UPDATED_TIME)
+    fun provideUpdatedTimeReference(@Named(FIREBASE_DB) databaseReference: DatabaseReference): DatabaseReference {
+        return databaseReference.child(TABLE_UPDATED_TIME)
     }
 
     @Singleton
     @Provides
     fun provideUpdatedTimeDataOneSource(@Named(TABLE_UPDATED_TIME) databaseReference: DatabaseReference): FirebaseOneDataSource<UpdatedTime> =
-        object : FirebaseOneDataSource<UpdatedTime>(databaseReference) {
+        object : FirebaseOneDataSource<UpdatedTime>(databaseReference, UpdatedTime()) {
             override fun getItemFromMutableData(mutableData: MutableData): UpdatedTime? {
                 return mutableData.getValue(UpdatedTime::class.java)
             }
@@ -75,7 +90,7 @@ object CoreFirebaseModules {
     fun provideRemoteConfig(): FirebaseRemoteConfig {
         return Firebase.remoteConfig.apply {
             val configSettings = remoteConfigSettings {
-                minimumFetchIntervalInSeconds = 3600
+                minimumFetchIntervalInSeconds = if (BuildConfig.DEBUG) 10 else 3600
             }
             setConfigSettingsAsync(configSettings)
         }

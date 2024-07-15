@@ -233,7 +233,10 @@ abstract class FirebaseDataSource<T>(private val databaseReference: DatabaseRefe
     }
 }
 
-abstract class FirebaseOneDataSource<T>(private val databaseReference: DatabaseReference) {
+abstract class FirebaseOneDataSource<T>(
+    private val databaseReference: DatabaseReference,
+    private val defaultValue: T?
+) {
     abstract fun getItemFromMutableData(mutableData: MutableData): T?
     abstract fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): T?
     suspend fun getItem(): T? = suspendCoroutine { cont ->
@@ -255,10 +258,11 @@ abstract class FirebaseOneDataSource<T>(private val databaseReference: DatabaseR
             databaseReference.runTransaction(object : Transaction.Handler {
                 override fun doTransaction(currentData: MutableData): Transaction.Result {
                     val item = getItemFromMutableData(currentData) ?: return Transaction.success(
-                        currentData
+                        currentData.apply {
+                            value = defaultValue
+                        }
                     )
-                    val updatedItem = updateItem(item)
-                    currentData.value = updatedItem
+                    currentData.value = updateItem(item)
                     return Transaction.success(currentData)
                 }
 

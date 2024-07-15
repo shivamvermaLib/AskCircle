@@ -30,12 +30,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,18 +45,78 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ask.common.AppImage
 import com.ask.common.AppOptionTypeSelect
 import com.ask.common.AppTextField
 import com.ask.common.DropDownWithSelect
 import com.ask.common.connectivityState
+import com.ask.common.getByteArray
+import com.ask.common.getExtension
+import com.ask.common.preLoadImages
 import com.ask.home.R
 import com.ask.user.Gender
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
+
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@Composable
+fun ProfileScreen(
+    route: String?,
+    sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
+    onError: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
+) {
+    val context = LocalContext.current
+    val viewModel = hiltViewModel<ProfileViewModel>()
+    val myWidgetsViewModel = hiltViewModel<MyWidgetsViewModel>()
+    val profileUiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val myWidgetsUiState by myWidgetsViewModel.uiStateFlow.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) {
+        launch {
+            merge(viewModel.uiStateFlow.mapNotNull { it.error },
+                myWidgetsViewModel.uiStateFlow.mapNotNull { it.error }).collect {
+                onError(it) {
+                    viewModel.setError(null)
+                    myWidgetsViewModel.setError(null)
+                }
+            }
+        }
+        viewModel.screenOpenEvent(route)
+    }
+    ProfileScreen(
+        sizeClass,
+        profileUiState,
+        myWidgetsUiState,
+        viewModel::setName,
+        viewModel::setEmail,
+        viewModel::setGender,
+        viewModel::setCountry,
+        viewModel::setAge,
+        {
+            viewModel.onUpdate({
+                context.getExtension(it)
+            }, {
+                context.getByteArray(it)
+            }, {
+                context.preLoadImages(listOf(it))
+            })
+        },
+        viewModel::onImageClick,
+        onOptionClick = { widgetId, optionId ->
+            myWidgetsViewModel.vote(widgetId, optionId, route ?: "Profile")
+        },
+        onScreenOpen = {
+            viewModel.screenOpenEvent(it)
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(
+private fun ProfileScreen(
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     profile: ProfileUiState,
     myWidgetsUiState: MyWidgetsUiState,

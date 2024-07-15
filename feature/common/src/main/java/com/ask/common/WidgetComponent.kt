@@ -33,9 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,6 +45,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.ask.core.EMPTY
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
 class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :
@@ -244,14 +247,14 @@ fun TextOption(
         Spacer(modifier = Modifier.size(10.dp))
         if (isInput) {
             BasicTextField(
-                value = option.text ?: "",
+                value = option.text ?: EMPTY,
                 onValueChange = onValueChange,
                 modifier = Modifier.weight(1f),
                 singleLine = true,
             )
         } else {
             Text(
-                text = option.text!!,
+                text = option.text ?: EMPTY,
                 modifier = Modifier.weight(1f),
                 color = if (didUserVoted) {
                     Color.White
@@ -350,7 +353,7 @@ fun ImageOption(
         )
         .clickable { onImageClick(option.id) }) {
         AppImage(
-            url = option.imageUrl!!,
+            url = option.imageUrl ?: EMPTY,
             contentDescription = option.id,
             contentScale = ContentScale.Crop,
             placeholder = R.drawable.baseline_image_24,
@@ -377,21 +380,7 @@ fun ImageOption(
                 color = MaterialTheme.colorScheme.primary
             )
         }
-        if (isInput) {
-            Box(
-                modifier = Modifier
-                    .padding(bottom = 6.dp, end = 6.dp)
-                    .align(Alignment.BottomEnd)
-            ) {
-                Icon(
-                    Icons.Rounded.Delete,
-                    stringResource(R.string.delete, option.text ?: ""),
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clickable { onDeleteIconClick(index) }
-                )
-            }
-        }
+
         Box(
             modifier = Modifier
                 .matchParentSize()
@@ -399,6 +388,22 @@ fun ImageOption(
                 .padding(bottom = 8.dp, end = 8.dp)
                 .align(Alignment.BottomEnd)
         ) {
+            if (isInput) {
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 6.dp, end = 6.dp)
+                        .align(Alignment.BottomEnd)
+                ) {
+                    Icon(
+                        ImageVector.vectorResource(id = R.drawable.baseline_delete_24),
+                        stringResource(R.string.delete, option.text ?: ""),
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clickable { onDeleteIconClick(index) },
+                        tint = Color.Unspecified
+                    )
+                }
+            }
             if (hasVotes)
                 Text(
                     text = "${optionWithVotes.votesPercentFormat}%",

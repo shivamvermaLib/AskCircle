@@ -1,10 +1,9 @@
 package com.ask.user
 
+import com.ask.core.FIREBASE_DB
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
-import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import dagger.Module
 import dagger.Provides
@@ -20,8 +19,8 @@ object UserFirebaseModules {
     @Singleton
     @Provides
     @Named(TABLE_USERS)
-    fun provideUserStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
-        return firebaseStorage.getReference(TABLE_USERS)
+    fun provideUserStorageReference(@Named(FIREBASE_DB) storageReference: StorageReference): StorageReference {
+        return storageReference.child(TABLE_USERS)
     }
 
 
@@ -36,8 +35,8 @@ object UserFirebaseModules {
     @Singleton
     @Provides
     @Named(TABLE_USERS)
-    fun provideUserReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference(TABLE_USERS)
+    fun provideUserReference(@Named(FIREBASE_DB) databaseReference: DatabaseReference): DatabaseReference {
+        return databaseReference.child(TABLE_USERS)
     }
 
     @Singleton

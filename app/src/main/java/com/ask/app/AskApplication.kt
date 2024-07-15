@@ -1,6 +1,12 @@
 package com.ask.app
 
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
@@ -9,6 +15,8 @@ import coil.disk.DiskCache
 import coil.memory.MemoryCache
 import com.ask.common.ConnectionState
 import com.ask.common.observeConnectivityAsFlow
+import com.ask.workmanager.NOTIFICATION_CHANNEL_ID
+import com.google.firebase.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,14 +43,31 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
+        createNotificationChannel()
         scope.launch {
             launch {
-                applicationContext.observeConnectivityAsFlow().collect {
-                    if (it == ConnectionState.Available) {
-                        remoteConfigRepository.fetchInit()
+                applicationContext.observeConnectivityAsFlow().collect { connectionState ->
+                    if (connectionState == ConnectionState.Available) {
+                        remoteConfigRepository.fetchInit().let {
+                            println("Remote Config: $it")
+                        }
                     }
                 }
             }
+        }
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "My Channel"
+            val descriptionText = "Channel for new widget notifications"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
         }
     }
 

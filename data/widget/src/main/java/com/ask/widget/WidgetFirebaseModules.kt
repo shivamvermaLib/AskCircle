@@ -1,5 +1,6 @@
 package com.ask.widget
 
+import com.ask.core.FIREBASE_DB
 import com.ask.core.FirebaseDataSource
 import com.ask.user.User
 import com.google.firebase.database.DataSnapshot
@@ -21,8 +22,8 @@ object WidgetFirebaseModules {
     @Singleton
     @Provides
     @Named(TABLE_WIDGETS)
-    fun provideWidgetStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
-        return firebaseStorage.getReference(TABLE_WIDGETS)
+    fun provideWidgetStorageReference(@Named(FIREBASE_DB) storageReference: StorageReference): StorageReference {
+        return storageReference.child(TABLE_WIDGETS)
     }
 
 
@@ -37,15 +38,15 @@ object WidgetFirebaseModules {
     @Singleton
     @Provides
     @Named(TABLE_WIDGETS)
-    fun provideWidgetReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference(TABLE_WIDGETS)
+    fun provideWidgetReference(@Named(FIREBASE_DB) databaseReference: DatabaseReference): DatabaseReference {
+        return databaseReference.child(TABLE_WIDGETS)
     }
 
     @Singleton
     @Provides
     @Named(TABLE_WIDGET_IDS)
-    fun provideWidgetIdsReference(firebaseDatabase: FirebaseDatabase): DatabaseReference {
-        return firebaseDatabase.getReference(TABLE_WIDGET_IDS)
+    fun provideWidgetIdsReference(@Named(FIREBASE_DB) databaseReference: DatabaseReference): DatabaseReference {
+        return databaseReference.child(TABLE_WIDGET_IDS)
     }
 
 

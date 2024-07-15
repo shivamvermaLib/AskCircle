@@ -65,7 +65,7 @@ fun generateCombinationsForUsers(
     age: Int?,
     location: User.UserLocation,
     userId: String
-): List<String> {
+): Set<String> {
     val country = location.country?.lowercase()
     val state = location.state?.lowercase()
     val city = location.city?.lowercase()
@@ -100,7 +100,7 @@ fun generateCombinationsForUsers(
     }
 
     // Generate gender-based combinations
-    val genderCombination = mutableListOf<String>()
+    val genderCombination = mutableSetOf<String>()
     if (genderName != null) {
         if (ageCombinations.isEmpty()) {
             genderCombination.add(genderName)
@@ -122,6 +122,7 @@ fun generateCombinationsForUsers(
 
         }
     }
+    genderCombination.add(ALL)
     genderCombination.add(userId)
     return genderCombination
 }

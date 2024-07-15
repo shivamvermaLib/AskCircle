@@ -19,16 +19,19 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
     suspend operator fun invoke(
         isConnected: Boolean = true,
         preloadImages: suspend (List<String>) -> Unit
-    ) {
+    ): Boolean {
         if (!isConnected) {
             if (userRepository.getCurrentUserOptional() == null) {
                 throw Exception("User not signed in")
             }
-            return
+            return false
         }
-        if (widgetRepository.doesSyncRequired(sharedPreference.getUpdatedTime())) {
+
+        val lastUpdatedTime = sharedPreference.getUpdatedTime()
+        if (widgetRepository.doesSyncRequired(lastUpdatedTime)) {
             val time = System.currentTimeMillis()
-            userRepository.createUser().let { userWithLocation ->
+
+            val sendNotification = userRepository.createUser().let { userWithLocation ->
                 generateCombinationsForUsers(
                     userWithLocation.user.gender,
                     userWithLocation.user.age,
@@ -36,6 +39,8 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     userWithLocation.user.id
                 ).let { list ->
                     widgetRepository.syncWidgetsFromServer(
+                        userRepository.getCurrentUserId(),
+                        lastUpdatedTime,
                         list,
                         { userId ->
                             userRepository.getUser(userId)
@@ -46,8 +51,9 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                                 }
                         },
                         preloadImages
-                    )
-                    countryRepository.syncCountries()
+                    ).also {
+                        countryRepository.syncCountries()
+                    }
                 }
             }
             val duration = System.currentTimeMillis() - time
@@ -59,8 +65,10 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     profileTime = System.currentTimeMillis()
                 )
             )
+            return sendNotification
         } else {
             println("Sync not required")
+            return false
         }
     }
 }
