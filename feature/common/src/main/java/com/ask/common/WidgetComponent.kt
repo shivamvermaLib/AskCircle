@@ -24,38 +24,46 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
 class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :
-    PreviewParameterProvider<com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience> {
-    override val values: Sequence<com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience>
+    PreviewParameterProvider<WidgetWithOptionsAndVotesForTargetAudience> {
+    override val values: Sequence<WidgetWithOptionsAndVotesForTargetAudience>
         get() = sequenceOf(
-            com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience(
+            WidgetWithOptionsAndVotesForTargetAudience(
                 widget = com.ask.widget.Widget(title = "Who will win the IPL?"),
                 options = listOf(
-                    com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                    WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                         option = com.ask.widget.Widget.Option(text = "Mumbai Indians"),
                         votes = emptyList()
                     ).apply {
-                        votesPercent = "30"
+                        votesPercent = 30f
                     },
-                    com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                    WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                         option = com.ask.widget.Widget.Option(text = "Chennai Super Kings"),
                         votes = emptyList()
                     ).apply {
                         didUserVoted = true
-                        votesPercent = "70"
+                        votesPercent = 70f
                     }
                 ),
                 targetAudienceGender = com.ask.widget.Widget.TargetAudienceGender(),
@@ -63,21 +71,21 @@ class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :
                 targetAudienceLocations = listOf(com.ask.widget.Widget.TargetAudienceLocation()),
                 user = com.ask.user.User(name = "Shivam")
             ),
-            com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience(
+            WidgetWithOptionsAndVotesForTargetAudience(
                 widget = com.ask.widget.Widget(title = "Who will win the IPL?"),
                 options = listOf(
-                    com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                    WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                         option = com.ask.widget.Widget.Option(imageUrl = "https://picsum.photos/id/237/200/300"),
                         votes = emptyList()
                     ).apply {
-                        votesPercent = "30"
+                        votesPercent = 45.6F
                     },
-                    com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                    WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                         option = com.ask.widget.Widget.Option(imageUrl = "https://picsum.photos/id/237/200/300"),
                         votes = emptyList()
                     ).apply {
                         didUserVoted = true
-                        votesPercent = "70"
+                        votesPercent = 54.4F
                     }
                 ),
                 targetAudienceGender = com.ask.widget.Widget.TargetAudienceGender(),
@@ -91,7 +99,7 @@ class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :
 @Preview
 @Composable
 fun WidgetWithUserView(
-    @PreviewParameter(WidgetWithOptionAndVotesForTargetAudiencePreviewParameters::class) widgetWithOptionsAndVotesForTargetAudience: com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience,
+    @PreviewParameter(WidgetWithOptionAndVotesForTargetAudiencePreviewParameters::class) widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
     onOptionClick: (String, String) -> Unit = { _, _ -> }
 ) {
     ElevatedCard(modifier = Modifier
@@ -141,7 +149,7 @@ fun WidgetUserView(user: com.ask.user.User, startedAt: Long) {
 //TODO: need to work on image with text
 @Composable
 fun WidgetView(
-    widget: com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience,
+    widget: WidgetWithOptionsAndVotesForTargetAudience,
     onOptionClick: (String, String) -> Unit = { _, _ -> }
 ) {
     Text(text = widget.widget.title, style = MaterialTheme.typography.labelLarge)
@@ -152,7 +160,7 @@ fun WidgetView(
     }
     Spacer(modifier = Modifier.size(10.dp))
     if (widget.isImageOnly) {
-        com.ask.common.NonLazyGrid(
+        NonLazyGrid(
             modifier = Modifier,
             rowModifier = Modifier,
             spacing = 6.dp,
@@ -164,6 +172,7 @@ fun WidgetView(
                 index = index,
                 totalOptions = widget.options.size,
                 optionWithVotes = widgetOption,
+                hasVotes = widget.hasVotes,
                 didUserVoted = widgetOption.didUserVoted,
             ) {
                 onOptionClick(widget.widget.id, it)
@@ -176,6 +185,7 @@ fun WidgetView(
                     index = index,
                     widgetOption = widgetOption,
                     didUserVoted = widgetOption.didUserVoted,
+                    hasVotes = widget.hasVotes,
                     onOptionClick = {
                         onOptionClick(widget.widget.id, it)
                     }
@@ -189,9 +199,10 @@ fun WidgetView(
 @Composable
 fun TextOption(
     index: Int,
-    widgetOption: com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
+    widgetOption: WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
     didUserVoted: Boolean,
     isInput: Boolean = false,
+    hasVotes: Boolean = false,
     onValueChange: (String) -> Unit = {},
     onClearIconClick: () -> Unit = {},
     onOptionClick: (String) -> Unit = {},
@@ -201,29 +212,31 @@ fun TextOption(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.let {
-                if (didUserVoted) {
-                    it.primary
-                } else {
-                    it.primaryContainer
-                }
-            })
-            .padding(
-                all = 5.dp
-            )
+            .background(
+                shape = RoundedCornerShape(28.dp),
+                color = MaterialTheme.colorScheme.let {
+                    if (didUserVoted) {
+                        it.primary
+                    } else {
+                        it.primaryContainer
+                    }
+                })
+            .padding(all = 5.dp)
             .clickable {
                 onOptionClick(option.id)
-            }, verticalAlignment = Alignment.CenterVertically
+            },
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .background(shape = CircleShape, color = Color.White)
-                .size(30.dp)
+                .size(36.dp)
         ) {
             Text(
                 text = "${index + 1}",
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.align(Alignment.Center),
                 color = MaterialTheme.colorScheme.primary
             )
@@ -247,8 +260,11 @@ fun TextOption(
                 },
                 maxLines = 1
             )
-            if (widgetOption.votesPercent.isNotBlank())
-                Text(text = "${widgetOption.votesPercent}%")
+            if (hasVotes)
+                Text(
+                    text = "${widgetOption.votesPercentFormat}%",
+                    color = if (didUserVoted) Color.White else Color.Black
+                )
         }
         Spacer(modifier = Modifier.size(5.dp))
         if (isInput) {
@@ -274,12 +290,20 @@ fun TextOption(
 fun ImageOption(
     index: Int,
     totalOptions: Int,
-    optionWithVotes: com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
+    optionWithVotes: WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
     didUserVoted: Boolean,
     isInput: Boolean = false,
+    hasVotes: Boolean = false,
     onDeleteIconClick: (Int) -> Unit = {},
     onImageClick: (String) -> Unit,
 ) {
+    var sizeImage by remember { mutableStateOf(IntSize.Zero) }
+
+    val gradient = Brush.verticalGradient(
+        colors = listOf(Color.Transparent, Color.Black),
+        startY = sizeImage.height.toFloat() / 3.8f,  // 1/3
+        endY = sizeImage.height.toFloat()
+    )
     val (option, _) = optionWithVotes
     val roundedCornerShape = RoundedCornerShape(
         topStart = when (index) {
@@ -328,26 +352,29 @@ fun ImageOption(
         AppImage(
             url = option.imageUrl!!,
             contentDescription = option.id,
-            contentScale = if (isInput) ContentScale.Inside else ContentScale.Crop,
+            contentScale = ContentScale.Crop,
             placeholder = R.drawable.baseline_image_24,
             error = R.drawable.baseline_broken_image_24,
             modifier = Modifier
                 .clip(roundedCornerShape)
                 .fillMaxSize()
                 .align(Alignment.Center)
+                .onGloballyPositioned { sizeImage = it.size }
         )
         Box(
             modifier = Modifier
-                .padding(top = 6.dp, end = 6.dp)
-                .align(Alignment.TopEnd)
+                .padding(top = 6.dp, start = 6.dp)
+                .align(Alignment.TopStart)
                 .background(shape = CircleShape, color = Color.White)
-                .size(25.dp)
+                .size(36.dp)
         ) {
             Text(
                 text = "${index + 1}",
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.align(Alignment.Center),
+                color = MaterialTheme.colorScheme.primary
             )
         }
         if (isInput) {
@@ -365,18 +392,21 @@ fun ImageOption(
                 )
             }
         }
-        if (optionWithVotes.votesPercent.isNotBlank())
-            Box(
-                modifier = Modifier
-                    .padding(bottom = 6.dp, end = 6.dp)
-                    .align(Alignment.BottomEnd)
-            ) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(gradient, shape = roundedCornerShape)
+                .padding(bottom = 8.dp, end = 8.dp)
+                .align(Alignment.BottomEnd)
+        ) {
+            if (hasVotes)
                 Text(
-                    text = "${optionWithVotes.votesPercent}%",
+                    text = "${optionWithVotes.votesPercentFormat}%",
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.align(Alignment.Center),
+                    modifier = Modifier.align(Alignment.BottomEnd),
+                    color = Color.White
                 )
-            }
+        }
     }
 }

@@ -66,6 +66,7 @@ import com.ask.common.NonLazyGrid
 import com.ask.common.TextOption
 import com.ask.common.connectivityState
 import com.ask.country.Country
+import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.workmanager.CreateWidgetWorker
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
@@ -226,7 +227,7 @@ private fun CreateWidgetScreen(
                         val option = createWidgetUiState.options[index]
                         ImageOption(
                             index = index,
-                            optionWithVotes = com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                            optionWithVotes = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                                 option = option, votes = emptyList()
                             ),
                             didUserVoted = false,
@@ -251,7 +252,7 @@ private fun CreateWidgetScreen(
                         createWidgetUiState.options.forEachIndexed { index, option ->
                             Row {
                                 TextOption(index = index,
-                                    widgetOption = com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
+                                    widgetOption = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                                         option = option, votes = emptyList()
                                     ),
                                     didUserVoted = false,

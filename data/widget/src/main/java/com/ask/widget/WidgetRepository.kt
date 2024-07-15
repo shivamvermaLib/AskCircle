@@ -28,6 +28,8 @@ class WidgetRepository @Inject constructor(
 
     fun getWidgets() = widgetDao.getWidgets().flowOn(dispatcher)
 
+    fun getTrendingWidgets() = widgetDao.getTrendingWidgets().flowOn(dispatcher)
+
     suspend fun createWidget(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
         getExtension: (String) -> String,

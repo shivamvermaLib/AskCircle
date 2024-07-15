@@ -186,18 +186,8 @@ fun AppImage(
     error: Int
 ) {
     val isConnected by connectivityState()
-    val listener = object : ImageRequest.Listener {
-        override fun onError(request: ImageRequest, result: ErrorResult) {
-            super.onError(request, result)
-        }
-
-        override fun onSuccess(request: ImageRequest, result: SuccessResult) {
-            super.onSuccess(request, result)
-        }
-    }
     val imageRequest = ImageRequest.Builder(LocalContext.current)
         .data(url)
-        .listener(listener)
         .dispatcher(Dispatchers.IO)
         .memoryCacheKey(url)
         .diskCacheKey(url)

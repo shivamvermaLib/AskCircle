@@ -3,14 +3,11 @@ package com.ask.home.profile
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,31 +18,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -60,7 +52,7 @@ import com.ask.home.R
 import com.ask.user.Gender
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
@@ -77,88 +69,110 @@ fun ProfileScreen(
     onScreenOpen: (String) -> Unit = {}
 ) {
     val widthClass = sizeClass.widthSizeClass
-    var selectedTab by remember { mutableStateOf(ProfileTab.Profile) }
-    Column(
-        modifier = Modifier.padding(all = 16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+//    var selectedTab by remember { mutableStateOf(ProfileTab.Profile) }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(text = stringResource(id = R.string.profile))
+                },
+            )
+        }
     ) {
-        Spacer(modifier = Modifier.size(20.dp))
-        Card(modifier = Modifier.fillMaxWidth()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                for (tab in ProfileTab.entries) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .padding(5.dp)
-                            .background(
-                                color = if (selectedTab == tab && widthClass == WindowWidthSizeClass.Compact) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                shape = RoundedCornerShape(9.dp)
+        Column(
+            modifier = Modifier
+                .padding(it)
+                .padding(all = 16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.size(20.dp))
+            /*Card(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    for (tab in ProfileTab.entries) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(5.dp)
+                                .background(
+                                    color = if (selectedTab == tab && widthClass == WindowWidthSizeClass.Compact) MaterialTheme.colorScheme.primary else Color.Transparent,
+                                    shape = RoundedCornerShape(9.dp)
+                                )
+                                .clickable {
+                                    if (widthClass == WindowWidthSizeClass.Compact)
+                                        selectedTab = tab
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(id = tab.title),
+                                textAlign = TextAlign.Center,
+                                color = if (selectedTab == tab && widthClass == WindowWidthSizeClass.Compact) Color.White else Color.Black
                             )
-                            .clickable {
-                                if (widthClass == WindowWidthSizeClass.Compact)
-                                    selectedTab = tab
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(id = tab.title),
-                            textAlign = TextAlign.Center,
-                            color = if (selectedTab == tab && widthClass == WindowWidthSizeClass.Compact) Color.White else Color.Black
-                        )
+                        }
                     }
                 }
-            }
-        }
-        Spacer(modifier = Modifier.size(16.dp))
-        LaunchedEffect(selectedTab) {
-            onScreenOpen(selectedTab.name)
-        }
-        if (widthClass == WindowWidthSizeClass.Compact) {
-            when (selectedTab) {
-                ProfileTab.Profile -> ProfileTabView(
-                    profile = profile,
-                    onImageClick = onImageClick,
-                    setName = setName,
-                    setEmail = setEmail,
-                    setGender = setGender,
-                    setCountry = setCountry,
-                    setAge = setAge,
-                    onUpdate = onUpdate
-                )
+            }*/
+            Spacer(modifier = Modifier.size(16.dp))
+            /* LaunchedEffect(selectedTab) {
+                 onScreenOpen(selectedTab.name)
+             }*/
+            ProfileTabView(
+                profile = profile,
+                onImageClick = onImageClick,
+                setName = setName,
+                setEmail = setEmail,
+                setGender = setGender,
+                setCountry = setCountry,
+                setAge = setAge,
+                onUpdate = onUpdate
+            )
+            /*if (widthClass == WindowWidthSizeClass.Compact) {
+                when (selectedTab) {
+                    ProfileTab.Profile -> ProfileTabView(
+                        profile = profile,
+                        onImageClick = onImageClick,
+                        setName = setName,
+                        setEmail = setEmail,
+                        setGender = setGender,
+                        setCountry = setCountry,
+                        setAge = setAge,
+                        onUpdate = onUpdate
+                    )
 
-                ProfileTab.MyWidgets -> MyWidgetsScreen(
-                    uiState = myWidgetsUiState,
-                    onOptionClick = onOptionClick
-                )
-            }
-        } else {
-            Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                ProfileTabView(
-                    modifier = Modifier.weight(1f),
-                    profile = profile,
-                    onImageClick = onImageClick,
-                    setName = setName,
-                    setEmail = setEmail,
-                    setGender = setGender,
-                    setCountry = setCountry,
-                    setAge = setAge,
-                    onUpdate = onUpdate
-                )
-                MyWidgetsScreen(
-                    uiState = myWidgetsUiState, onOptionClick = onOptionClick,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+                    ProfileTab.MyWidgets -> MyWidgetsScreen(
+                        uiState = myWidgetsUiState,
+                        onOptionClick = onOptionClick
+                    )
+                }
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    ProfileTabView(
+                        modifier = Modifier.weight(1f),
+                        profile = profile,
+                        onImageClick = onImageClick,
+                        setName = setName,
+                        setEmail = setEmail,
+                        setGender = setGender,
+                        setCountry = setCountry,
+                        setAge = setAge,
+                        onUpdate = onUpdate
+                    )
+                    MyWidgetsScreen(
+                        uiState = myWidgetsUiState, onOptionClick = onOptionClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }*/
         }
     }
 }
@@ -247,7 +261,7 @@ fun ProfileTabView(
                 AppOptionTypeSelect(
                     selected = profile.gender == Gender.MALE,
                     { setGender(Gender.MALE) },
-                    stringResource(id = R.string.female),
+                    stringResource(id = R.string.male),
                     ImageVector.vectorResource(id = R.drawable.baseline_male_24)
                 )
                 Spacer(modifier = Modifier.size(5.dp))

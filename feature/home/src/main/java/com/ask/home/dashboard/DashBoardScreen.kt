@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import com.ask.common.WidgetWithUserView
 import com.ask.home.R
 import com.ask.user.User
+import com.ask.widget.FilterType
 import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 

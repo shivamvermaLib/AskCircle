@@ -14,16 +14,19 @@ fun Flow<List<WidgetWithOptionsAndVotesForTargetAudience>>.mapWithCompute(userId
                         optionWithVotes.apply {
                             didUserVoted = userId in optionWithVotes.votes.map { it.userId }
                             votesPercent =
-                                if (totalVotes > 0 && widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes > 0) String.format(
-                                    Locale.getDefault(),
-                                    "%.1f",
-                                    ((totalVotes / widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes) * 100).toFloat()
-                                ) else "0.0"
+                                if (totalVotes > 0 && widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes > 0)
+                                    (totalVotes.toFloat() / widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes.toFloat()) * 100
+                                else 0f
+                            votesPercentFormat = votesPercent.toPercentage()
                         }
                     }
                 ).apply {
-                    isCreatorOfTheWidget =
-                        userId == widgetWithOptionsAndVotesForTargetAudience.widget.creatorId
+                    hasVotes = options.any { it.votes.isNotEmpty() }
+                    isCreatorOfTheWidget = userId == widget.creatorId
                 }
             }
     }
+
+fun Float.toPercentage(): String {
+    return String.format(Locale.getDefault(), "%.1f", this)
+}

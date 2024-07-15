@@ -191,6 +191,10 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
 
     @get:Exclude
     @Ignore
+    var hasVotes: Boolean = false
+
+    @get:Exclude
+    @Ignore
     val isImageOnly = options.all { it.option.imageUrl != null && it.option.text == null }
 
     @get:Exclude
@@ -219,7 +223,11 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
 
         @get:Exclude
         @Ignore
-        var votesPercent: String = EMPTY
+        var votesPercent: Float = 0f
+
+        @get:Exclude
+        @Ignore
+        var votesPercentFormat: String = EMPTY
 
     }
 }

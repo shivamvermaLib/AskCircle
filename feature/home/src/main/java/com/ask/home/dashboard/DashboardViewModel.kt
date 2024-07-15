@@ -4,13 +4,16 @@ import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.common.BaseViewModel
 import com.ask.user.UserRepository
+import com.ask.widget.FilterType
 import com.ask.widget.GetWidgetsUseCase
 import com.ask.widget.WidgetRepository
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -21,18 +24,17 @@ class DashboardViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
-    private val _widgetsFlow = getWidgetsUseCase()
     private val _filterTypeFlow = MutableStateFlow(FilterType.Latest)
     private val _errorFlow = MutableStateFlow<String?>(null)
 
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     val uiStateFlow =
-        combine(_widgetsFlow, _errorFlow, _filterTypeFlow) { widgets, error, filterType ->
-            DashboardUiState(when (filterType) {
-                FilterType.Latest -> widgets
-                FilterType.Trending -> widgets.sortedByDescending { widgetWithOptionsAndVotesForTargetAudience ->
-                    widgetWithOptionsAndVotesForTargetAudience.options.sumOf { it.totalVotes }
-                }
-            }, error)
+        combine(
+            _filterTypeFlow.flatMapMerge { getWidgetsUseCase(it) },
+            _errorFlow
+        ) { widgets, error ->
+            DashboardUiState(widgets, error)
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
@@ -73,4 +75,3 @@ data class DashboardUiState(
     val error: String? = null
 )
 
-enum class FilterType { Latest, Trending }

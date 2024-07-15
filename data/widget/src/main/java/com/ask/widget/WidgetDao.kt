@@ -17,6 +17,21 @@ interface WidgetDao {
     @Query("select * from widgets where creatorId = :userId order by createdAt desc")
     fun getUserWidgets(userId: String): Flow<List<WidgetWithOptionsAndVotesForTargetAudience>>
 
+    @Transaction
+    @Query("SELECT *FROM widgets\n" +
+        "LEFT JOIN (\n" +
+        "    SELECT widgetId, SUM(vote_count) AS total_votes\n" +
+        "    FROM (\n" +
+        "        SELECT optionid, COUNT(*) AS vote_count\n" +
+        "        FROM `widget-option-votes`\n" +
+        "        GROUP BY optionid\n" +
+        "    ) AS option_votes\n" +
+        "    LEFT JOIN `widgets-options` ON option_votes.optionid = `widgets-options`.id\n" +
+        "    GROUP BY widgetId\n" +
+        ") AS votes ON widgets.id = votes.widgetId\n" +
+        "ORDER BY votes.total_votes DESC;")
+    fun getTrendingWidgets(): Flow<List<WidgetWithOptionsAndVotesForTargetAudience>>
+
     @Upsert
     suspend fun insertWidget(
         widget: Widget,
