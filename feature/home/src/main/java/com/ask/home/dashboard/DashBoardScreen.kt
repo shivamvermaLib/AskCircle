@@ -50,7 +50,7 @@ import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun DashboardScreen(
-    route: String?,
+    route: String,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero)
 ) {
     val viewModel = hiltViewModel<DashboardViewModel>()
@@ -61,7 +61,7 @@ fun DashboardScreen(
     DashBoardScreen(
         state, sizeClass,
         { widgetId, optionId ->
-            viewModel.vote(widgetId, optionId, route ?: "Dashboard")
+            viewModel.vote(widgetId, optionId, route)
         },
         viewModel::setFilterType
     )

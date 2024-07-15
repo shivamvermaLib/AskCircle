@@ -39,8 +39,7 @@ class CreateWidgetViewModel @Inject constructor(
     private val _targetAudienceLocations =
         MutableStateFlow(emptyList<Widget.TargetAudienceLocation>())
     private val _countriesFlow = countryRepository.getCountries()
-    private val _loading = MutableStateFlow(false)
-    private val _error = MutableStateFlow<String?>(null)
+
 
     fun setTitle(title: String) {
         _titleFlow.value = title

@@ -125,6 +125,12 @@ class AnalyticsLogger @Inject constructor(
         })
     }
 
+    fun remoteConfigFetchEvent(it: Boolean) {
+        firebaseAnalytics.logEvent(REMOTE_CONFIG_FETCH, Bundle().apply {
+            putBoolean(SUCCESS, it)
+        })
+    }
+
 
     companion object {
         const val SCREEN_OPEN = "screen_open"
@@ -152,5 +158,7 @@ class AnalyticsLogger @Inject constructor(
         const val HAS_PROFILE_PIC = "has_profile_pic"
         const val HAS_EMAIL = "has_email"
         const val SYNC_USERS_AND_WIDGETS_DURATION = "sync_users_and_widgets_duration"
+        const val REMOTE_CONFIG_FETCH = "remote_config_fetch"
+        const val SUCCESS = "success"
     }
 }

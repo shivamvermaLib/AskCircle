@@ -6,6 +6,8 @@
 
     <string name="percent" translatable="false" formatted="false">%1$s%</string>
     <string name="no_internet">No Internet</string>
+    <string name="splash">Splash</string>
+    <string name="home">Home</string>
 
 
 </resources>

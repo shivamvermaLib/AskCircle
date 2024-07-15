@@ -6,7 +6,9 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-class RemoteConfigRepository @Inject constructor(private val remoteConfig: FirebaseRemoteConfig) {
+class RemoteConfigRepository @Inject constructor(
+    private val remoteConfig: FirebaseRemoteConfig,
+) {
 
     suspend fun fetchInit(): Boolean = suspendCoroutine { cont ->
         remoteConfig.fetchAndActivate()

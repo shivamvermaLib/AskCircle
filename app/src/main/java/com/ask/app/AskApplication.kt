@@ -5,19 +5,19 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import androidx.core.app.NotificationCompat
-import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.disk.DiskCache
 import coil.memory.MemoryCache
+import com.ask.analytics.AnalyticsLogger
 import com.ask.common.ConnectionState
 import com.ask.common.observeConnectivityAsFlow
 import com.ask.workmanager.NOTIFICATION_CHANNEL_ID
-import com.google.firebase.BuildConfig
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,7 +33,13 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
     @Inject
     lateinit var remoteConfigRepository: com.ask.core.RemoteConfigRepository
 
-    private val scope = CoroutineScope(Dispatchers.Main)
+    @Inject
+    lateinit var analyticsLogger: AnalyticsLogger
+
+    private val scope =
+        CoroutineScope(Dispatchers.Main + CoroutineExceptionHandler { _, throwable ->
+            FirebaseCrashlytics.getInstance().recordException(throwable)
+        })
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -48,8 +54,8 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
             launch {
                 applicationContext.observeConnectivityAsFlow().collect { connectionState ->
                     if (connectionState == ConnectionState.Available) {
-                        remoteConfigRepository.fetchInit().let {
-                            println("Remote Config: $it")
+                        remoteConfigRepository.fetchInit().also {
+                            analyticsLogger.remoteConfigFetchEvent(it)
                         }
                     }
                 }

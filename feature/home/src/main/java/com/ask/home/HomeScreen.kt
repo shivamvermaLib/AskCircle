@@ -56,6 +56,8 @@ import com.ask.workmanager.WorkerStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @Composable
 fun HomeScreen(
@@ -192,10 +194,10 @@ fun HomeNavigation(
         startDestination = HomeTabScreen.Home
     ) {
         composable<HomeTabScreen.Home> {
-            DashboardScreen(it.destination.route, sizeClass)
+            DashboardScreen(Json.encodeToString(HomeTabScreen.Home), sizeClass)
         }
         composable<HomeTabScreen.Profile> {
-            ProfileScreen(it.destination.route, onError)
+            ProfileScreen(Json.encodeToString(HomeTabScreen.Profile), onError)
         }
     }
 }

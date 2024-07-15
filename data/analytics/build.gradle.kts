@@ -36,11 +36,12 @@ android {
 
 dependencies {
     implementation(libs.hilt.android)
-    implementation(project(":data:widget"))
-    implementation(project(":data:user"))
     kapt(libs.hilt.compiler)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+
+    implementation(project(":data:widget"))
+    implementation(project(":data:user"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

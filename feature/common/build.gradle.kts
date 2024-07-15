@@ -52,9 +52,12 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.window.size)
+
+    implementation(libs.firebase.crashlytics)
+    implementation(libs.coil.compose)
+
     implementation(project(":data:analytics"))
     implementation(project(":data:core"))
-    implementation(libs.coil.compose)
     implementation(project(":data:widget"))
     implementation(project(":data:user"))
 

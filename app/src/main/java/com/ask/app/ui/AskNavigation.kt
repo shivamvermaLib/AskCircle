@@ -19,6 +19,8 @@ import com.ask.home.HomeScreen
 import com.ask.splash.SplashScreen
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -26,7 +28,7 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = SplashScreen) {
         composable<SplashScreen> {
-            SplashScreen(it.destination.route ?: "Splash") {
+            SplashScreen(Json.encodeToString(SplashScreen)) {
                 navController.navigate(HomeScreen) {
                     popUpTo(SplashScreen) {
                         inclusive = true
@@ -36,12 +38,12 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
         }
         composable<TestAPI> { TestAPIScreen() }
         composable<HomeScreen> {
-            HomeScreen(it.destination.route ?: "Home", sizeClass) {
+            HomeScreen(Json.encodeToString(HomeScreen), sizeClass) {
                 navController.navigate(CreateScreen)
             }
         }
         composable<CreateScreen> {
-            CreateWidgetScreen(it.destination.route ?: "Create", sizeClass) {
+            CreateWidgetScreen(Json.encodeToString(CreateScreen), sizeClass) {
                 navController.popBackStack()
             }
         }

@@ -61,7 +61,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(
-    route: String?,
+    route: String,
     onError: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current

@@ -63,6 +63,7 @@ dependencies {
     kapt(libs.hilt.compiler)
 
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.firebase.crashlytics)
 
     implementation(project(":data:user"))
     implementation(project(":data:analytics"))

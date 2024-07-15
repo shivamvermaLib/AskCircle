@@ -9,6 +9,7 @@ import com.ask.country.CountryRepository
 import com.ask.home.isValidEmail
 import com.ask.user.Gender
 import com.ask.user.UserRepository
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -28,6 +29,7 @@ class ProfileViewModel @Inject constructor(
     private val _currentUserFlow = userRepository.getCurrentUserLive()
         .catch {
             it.printStackTrace()
+            FirebaseCrashlytics.getInstance().recordException(it)
             _errorFlow.value = it.message
         }
     private val _countriesFlow = countryRepository.getCountries()
@@ -76,6 +78,7 @@ class ProfileViewModel @Inject constructor(
     }.catch {
         it.printStackTrace()
         _errorFlow.value = it.message
+        FirebaseCrashlytics.getInstance().recordException(it)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ProfileUiState())
 
     init {
