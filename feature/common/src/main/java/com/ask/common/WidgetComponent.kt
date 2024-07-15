@@ -1,8 +1,8 @@
 package com.ask.common
 
-import android.text.format.DateUtils
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -40,71 +41,28 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.ask.core.EMPTY
+import com.ask.user.User
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
-class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :
-    PreviewParameterProvider<WidgetWithOptionsAndVotesForTargetAudience> {
-    override val values: Sequence<WidgetWithOptionsAndVotesForTargetAudience>
-        get() = sequenceOf(
-            WidgetWithOptionsAndVotesForTargetAudience(
-                widget = com.ask.widget.Widget(title = "Who will win the IPL?"),
-                options = listOf(
-                    WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                        option = com.ask.widget.Widget.Option(text = "Mumbai Indians"),
-                        votes = emptyList()
-                    ).apply {
-                        votesPercent = 30f
-                    },
-                    WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                        option = com.ask.widget.Widget.Option(text = "Chennai Super Kings"),
-                        votes = emptyList()
-                    ).apply {
-                        didUserVoted = true
-                        votesPercent = 70f
-                    }
-                ),
-                targetAudienceGender = com.ask.widget.Widget.TargetAudienceGender(),
-                targetAudienceAgeRange = com.ask.widget.Widget.TargetAudienceAgeRange(),
-                targetAudienceLocations = listOf(com.ask.widget.Widget.TargetAudienceLocation()),
-                user = com.ask.user.User(name = "Shivam")
-            ),
-            WidgetWithOptionsAndVotesForTargetAudience(
-                widget = com.ask.widget.Widget(title = "Who will win the IPL?"),
-                options = listOf(
-                    WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                        option = com.ask.widget.Widget.Option(imageUrl = "https://picsum.photos/id/237/200/300"),
-                        votes = emptyList()
-                    ).apply {
-                        votesPercent = 45.6F
-                    },
-                    WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                        option = com.ask.widget.Widget.Option(imageUrl = "https://picsum.photos/id/237/200/300"),
-                        votes = emptyList()
-                    ).apply {
-                        didUserVoted = true
-                        votesPercent = 54.4F
-                    }
-                ),
-                targetAudienceGender = com.ask.widget.Widget.TargetAudienceGender(),
-                targetAudienceAgeRange = com.ask.widget.Widget.TargetAudienceAgeRange(),
-                targetAudienceLocations = listOf(com.ask.widget.Widget.TargetAudienceLocation()),
-                user = com.ask.user.User(name = "Shivam")
-            )
-        )
-}
-
-@Preview
 @Composable
 fun WidgetWithUserView(
-    @PreviewParameter(WidgetWithOptionAndVotesForTargetAudiencePreviewParameters::class) widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
+    widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
     onOptionClick: (String, String) -> Unit = { _, _ -> }
 ) {
+    val lastVotedEmptyOptions = listOf(
+        stringResource(R.string.your_voice_matters_vote_now),
+        stringResource(R.string.shape_the_outcome_cast_your_vote),
+        stringResource(R.string.join_the_conversation_vote_today),
+        stringResource(R.string.be_a_trendsetter_vote_first),
+        stringResource(R.string.get_involved_make_your_vote_count),
+        stringResource(R.string.start_the_discussion_with_your_vote),
+        stringResource(R.string.let_s_shape_the_future_vote_now),
+        stringResource(R.string.vote_for_your_favorite_option)
+    )
+
     ElevatedCard(modifier = Modifier
         .fillMaxWidth()
         .padding(all = 16.dp), onClick = { /*TODO*/ }) {
@@ -113,16 +71,40 @@ fun WidgetWithUserView(
         ) {
             WidgetUserView(
                 user = widgetWithOptionsAndVotesForTargetAudience.user,
-                startedAt = widgetWithOptionsAndVotesForTargetAudience.widget.startAt
+                startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat
             )
-            Spacer(modifier = Modifier.size(10.dp))
+            Spacer(modifier = Modifier.size(12.dp))
+            HorizontalDivider(thickness = 1.dp)
+            Spacer(modifier = Modifier.size(6.dp))
+            Text(
+                text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
+                    stringResource(
+                        R.string.last_voted, it
+                    )
+                }
+                    ?: lastVotedEmptyOptions.random(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.outline,
+                fontWeight = FontWeight.W400
+            )
+            Spacer(modifier = Modifier.size(6.dp))
             WidgetView(widget = widgetWithOptionsAndVotesForTargetAudience, onOptionClick)
+            Spacer(modifier = Modifier.size(16.dp))
+            Text(
+                text = stringResource(
+                    R.string.total_votes,
+                    widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
+                ),
+                color = MaterialTheme.colorScheme.outline,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.W400
+            )
         }
     }
 }
 
 @Composable
-fun WidgetUserView(user: com.ask.user.User, startedAt: Long) {
+fun WidgetUserView(user: User, startedAtFormat: String) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -139,12 +121,7 @@ fun WidgetUserView(user: com.ask.user.User, startedAt: Long) {
         Text(text = user.name, modifier = Modifier.padding(horizontal = 6.dp))
         Spacer(modifier = Modifier.weight(1f))
         Text(
-            text = DateUtils.getRelativeTimeSpanString(
-                startedAt,
-                System.currentTimeMillis(),
-                DateUtils.MINUTE_IN_MILLIS,
-                DateUtils.FORMAT_ABBREV_RELATIVE
-            ).toString(), style = MaterialTheme.typography.bodySmall
+            text = startedAtFormat, style = MaterialTheme.typography.bodySmall
         )
     }
 }
@@ -155,7 +132,7 @@ fun WidgetView(
     widget: WidgetWithOptionsAndVotesForTargetAudience,
     onOptionClick: (String, String) -> Unit = { _, _ -> }
 ) {
-    Text(text = widget.widget.title, style = MaterialTheme.typography.labelLarge)
+    Text(text = widget.widget.title, style = MaterialTheme.typography.titleMedium)
     widget.widget.description?.let {
         Text(
             text = it, style = MaterialTheme.typography.bodySmall
@@ -232,7 +209,7 @@ fun TextOption(
     ) {
         Box(
             modifier = Modifier
-                .background(shape = CircleShape, color = Color.White)
+                .background(shape = CircleShape, color = MaterialTheme.colorScheme.surface)
                 .size(36.dp)
         ) {
             Text(
@@ -241,7 +218,6 @@ fun TextOption(
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.align(Alignment.Center),
-                color = MaterialTheme.colorScheme.primary
             )
         }
         Spacer(modifier = Modifier.size(10.dp))
@@ -257,29 +233,33 @@ fun TextOption(
                 text = option.text ?: EMPTY,
                 modifier = Modifier.weight(1f),
                 color = if (didUserVoted) {
-                    Color.White
+                    if (isSystemInDarkTheme()) Color.Black else Color.White
                 } else {
-                    Color.Black
+                    if (isSystemInDarkTheme()) Color.White else Color.Black
                 },
                 maxLines = 1
             )
             if (hasVotes)
                 Text(
                     text = "${widgetOption.votesPercentFormat}%",
-                    color = if (didUserVoted) Color.White else Color.Black
+                    color = if (didUserVoted) {
+                        if (isSystemInDarkTheme()) Color.Black else Color.White
+                    } else {
+                        if (isSystemInDarkTheme()) Color.White else Color.Black
+                    },
                 )
         }
         Spacer(modifier = Modifier.size(5.dp))
         if (isInput) {
             Icon(
                 Icons.Rounded.Close,
-                stringResource(R.string.clear, option.text ?: ""),
+                stringResource(R.string.clear, option.text ?: EMPTY),
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onClearIconClick() })
             Icon(
                 Icons.Rounded.Delete,
-                stringResource(R.string.delete, option.text ?: ""),
+                stringResource(R.string.delete, option.text ?: EMPTY),
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onDeleteIconClick(index) }
@@ -355,7 +335,7 @@ fun ImageOption(
         AppImage(
             url = option.imageUrl ?: EMPTY,
             contentDescription = option.id,
-            contentScale = ContentScale.Crop,
+            contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
             placeholder = R.drawable.baseline_image_24,
             error = R.drawable.baseline_broken_image_24,
             modifier = Modifier
@@ -368,7 +348,10 @@ fun ImageOption(
             modifier = Modifier
                 .padding(top = 6.dp, start = 6.dp)
                 .align(Alignment.TopStart)
-                .background(shape = CircleShape, color = Color.White)
+                .background(
+                    shape = CircleShape,
+                    color = if (didUserVoted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+                )
                 .size(36.dp)
         ) {
             Text(
@@ -377,7 +360,7 @@ fun ImageOption(
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.align(Alignment.Center),
-                color = MaterialTheme.colorScheme.primary
+                color = if (didUserVoted) Color.White else MaterialTheme.colorScheme.primary
             )
         }
 
@@ -396,7 +379,7 @@ fun ImageOption(
                 ) {
                     Icon(
                         ImageVector.vectorResource(id = R.drawable.baseline_delete_24),
-                        stringResource(R.string.delete, option.text ?: ""),
+                        stringResource(R.string.delete, option.text ?: EMPTY),
                         modifier = Modifier
                             .size(28.dp)
                             .clickable { onDeleteIconClick(index) },

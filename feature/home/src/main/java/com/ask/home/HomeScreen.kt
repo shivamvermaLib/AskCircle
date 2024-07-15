@@ -195,7 +195,7 @@ fun HomeNavigation(
             DashboardScreen(it.destination.route, sizeClass)
         }
         composable<HomeTabScreen.Profile> {
-            ProfileScreen(it.destination.route, sizeClass, onError)
+            ProfileScreen(it.destination.route, onError)
         }
     }
 }

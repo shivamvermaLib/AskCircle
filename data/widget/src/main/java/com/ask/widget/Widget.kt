@@ -1,5 +1,6 @@
 package com.ask.widget
 
+import android.text.format.DateUtils
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -14,7 +15,7 @@ import com.google.firebase.database.Exclude
 import kotlinx.serialization.Serializable
 import java.util.UUID
 
-@kotlinx.serialization.Serializable
+@Serializable
 @Entity(
     tableName = TABLE_WIDGETS, foreignKeys = [
         ForeignKey(
@@ -42,9 +43,18 @@ data class Widget(
         return userId == creatorId
     }
 
+    @get:Exclude
+    @Ignore
+    var startAtFormat: String = DateUtils.getRelativeTimeSpanString(
+        startAt,
+        System.currentTimeMillis(),
+        DateUtils.MINUTE_IN_MILLIS,
+        DateUtils.FORMAT_ABBREV_RELATIVE
+    ).toString()
+
     enum class WidgetType { Poll, Quiz }
 
-    @kotlinx.serialization.Serializable
+    @Serializable
     @Entity(
         tableName = TABLE_WIDGET_OPTIONS, foreignKeys = [
             ForeignKey(
@@ -64,7 +74,7 @@ data class Widget(
         val createdAt: Long = System.currentTimeMillis(),
         val updatedAt: Long = System.currentTimeMillis()
     ) {
-        @kotlinx.serialization.Serializable
+        @Serializable
         @Entity(
             tableName = TABLE_WIDGET_OPTION_VOTES, foreignKeys = [
                 ForeignKey(
@@ -86,7 +96,7 @@ data class Widget(
         )
     }
 
-    @kotlinx.serialization.Serializable
+    @Serializable
     @Entity(
         TABLE_TARGET_AUDIENCE_LOCATIONS, foreignKeys = [
             ForeignKey(
@@ -108,7 +118,7 @@ data class Widget(
         val updatedAt: Long = System.currentTimeMillis()
     )
 
-    @kotlinx.serialization.Serializable
+    @Serializable
     @Entity(
         TABLE_TARGET_AUDIENCE_AGE_RANGES, foreignKeys = [
             ForeignKey(
@@ -129,7 +139,7 @@ data class Widget(
         val updatedAt: Long = System.currentTimeMillis()
     )
 
-    @kotlinx.serialization.Serializable
+    @Serializable
     @Entity(
         TABLE_TARGET_AUDIENCE_GENDERS, foreignKeys = [
             ForeignKey(
@@ -152,7 +162,7 @@ data class Widget(
     enum class GenderFilter { ALL, MALE, FEMALE }
 }
 
-@kotlinx.serialization.Serializable
+@Serializable
 data class WidgetWithOptionsAndVotesForTargetAudience(
     @Embedded val widget: Widget,
     @Relation(
@@ -204,6 +214,19 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
     @get:Exclude
     @Ignore
     val widgetTotalVotes = options.map { it.votes }.flatten().size
+
+    @get:Exclude
+    @Ignore
+    val lastVotedAtFormat =
+        options.map { it.votes }.flatten().maxByOrNull { it.votedAt }?.votedAt?.let {
+            DateUtils.getRelativeTimeSpanString(
+                it,
+                System.currentTimeMillis(),
+                DateUtils.MINUTE_IN_MILLIS,
+                DateUtils.FORMAT_ABBREV_RELATIVE
+            ).toString().uppercase()
+        }
+
 
     @Serializable
     data class OptionWithVotes(

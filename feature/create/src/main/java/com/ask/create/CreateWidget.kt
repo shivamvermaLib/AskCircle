@@ -386,23 +386,23 @@ fun GenderSelect(
         Spacer(modifier = Modifier.weight(1f))
         AppOptionTypeSelect(
             selected = createWidgetUiState.targetAudienceGender.gender == com.ask.widget.Widget.GenderFilter.ALL,
-            { onGenderChanged(com.ask.widget.Widget.GenderFilter.ALL) },
-            stringResource(R.string.all),
-            null
+            onSelectedChange = { onGenderChanged(com.ask.widget.Widget.GenderFilter.ALL) },
+            title = stringResource(R.string.all),
+            icon = null
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
             selected = createWidgetUiState.targetAudienceGender.gender == com.ask.widget.Widget.GenderFilter.MALE,
-            { onGenderChanged(com.ask.widget.Widget.GenderFilter.MALE) },
-            stringResource(com.ask.common.R.string.male),
-            ImageVector.vectorResource(id = com.ask.common.R.drawable.baseline_male_24)
+            onSelectedChange = { onGenderChanged(com.ask.widget.Widget.GenderFilter.MALE) },
+            title = stringResource(com.ask.common.R.string.male),
+            icon = ImageVector.vectorResource(id = com.ask.common.R.drawable.baseline_male_24)
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
             selected = createWidgetUiState.targetAudienceGender.gender == com.ask.widget.Widget.GenderFilter.FEMALE,
-            { onGenderChanged(com.ask.widget.Widget.GenderFilter.FEMALE) },
-            stringResource(com.ask.common.R.string.female),
-            ImageVector.vectorResource(id = com.ask.common.R.drawable.baseline_female_24)
+            onSelectedChange = { onGenderChanged(com.ask.widget.Widget.GenderFilter.FEMALE) },
+            title = stringResource(com.ask.common.R.string.female),
+            icon = ImageVector.vectorResource(id = com.ask.common.R.drawable.baseline_female_24)
         )
     }
 }
@@ -417,16 +417,16 @@ fun OptionTypeSelect(
         Spacer(modifier = Modifier.weight(1f))
         AppOptionTypeSelect(
             selected = createWidgetUiState.optionType == CreateWidgetUiState.WidgetOptionType.Text,
-            { onOptionTypeChanged.invoke(CreateWidgetUiState.WidgetOptionType.Text) },
-            stringResource(R.string.text),
-            ImageVector.vectorResource(id = R.drawable.baseline_text_fields_24)
+            onSelectedChange = { onOptionTypeChanged.invoke(CreateWidgetUiState.WidgetOptionType.Text) },
+            title = stringResource(R.string.text),
+            icon = ImageVector.vectorResource(id = R.drawable.baseline_text_fields_24)
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
             selected = createWidgetUiState.optionType == CreateWidgetUiState.WidgetOptionType.Image,
-            { onOptionTypeChanged.invoke(CreateWidgetUiState.WidgetOptionType.Image) },
-            stringResource(R.string.image),
-            ImageVector.vectorResource(id = com.ask.common.R.drawable.baseline_image_24)
+            onSelectedChange = { onOptionTypeChanged.invoke(CreateWidgetUiState.WidgetOptionType.Image) },
+            title = stringResource(R.string.image),
+            icon = ImageVector.vectorResource(id = com.ask.common.R.drawable.baseline_image_24)
         )
     }
 }
