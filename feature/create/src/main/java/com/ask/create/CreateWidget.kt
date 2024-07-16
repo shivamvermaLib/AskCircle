@@ -67,6 +67,7 @@ import com.ask.common.NonLazyGrid
 import com.ask.common.TextOption
 import com.ask.common.connectivityState
 import com.ask.country.Country
+import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.workmanager.CreateWidgetWorker
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -123,7 +124,7 @@ private fun CreateWidgetScreen(
     setTitle: (String) -> Unit = {},
     setDesc: (String) -> Unit = {},
     onOptionTypeChanged: (CreateWidgetUiState.WidgetOptionType) -> Unit = {},
-    onOptionChanged: (Int, com.ask.widget.Widget.Option) -> Unit = { _, _ -> },
+    onOptionChanged: (Int, Widget.Option) -> Unit = { _, _ -> },
     onAddOption: () -> Unit = {},
     onGenderChanged: (com.ask.widget.Widget.GenderFilter) -> Unit = {},
     onMinAgeChanged: (Int) -> Unit = {},

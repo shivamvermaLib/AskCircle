@@ -143,6 +143,12 @@ class AnalyticsLogger @Inject constructor(
         })
     }
 
+    fun imageOpenEvent(imageUrl: String) {
+        firebaseAnalytics.logEvent(IMAGE_OPEN, Bundle().apply {
+            putString(IMAGE_URL, imageUrl)
+        })
+    }
+
 
     companion object {
         const val SCREEN_OPEN = "screen_open"
@@ -175,5 +181,7 @@ class AnalyticsLogger @Inject constructor(
         const val REFRESH_COUNT_EVENT = "refresh_count_event"
         const val REFRESH_COUNT_SERVER = "refresh_count_server"
         const val REFRESH_COUNT_LOCAL = "refresh_count_local"
+        const val IMAGE_OPEN = "image_open"
+        const val IMAGE_URL = "image_url"
     }
 }

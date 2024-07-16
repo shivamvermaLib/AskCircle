@@ -1,14 +1,16 @@
 package com.ask.home.profile
 
 import androidx.lifecycle.viewModelScope
+import com.ask.analytics.AnalyticsLogger
+import com.ask.common.BaseViewModel
+import com.ask.common.GetAgeRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
-import com.ask.core.RemoteConfigRepository
-import com.ask.core.checkIfUrl
-import com.ask.country.CountryRepository
+import com.ask.country.GetCountryUseCase
 import com.ask.home.isValidEmail
 import com.ask.user.Gender
-import com.ask.user.UserRepository
+import com.ask.user.GetCurrentProfileUseCase
+import com.ask.user.UpdateProfileUseCase
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,19 +22,21 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val userRepository: UserRepository,
-    countryRepository: CountryRepository,
-    remoteConfigRepository: RemoteConfigRepository,
-    private val analyticsLogger: com.ask.analytics.AnalyticsLogger
-) : com.ask.common.BaseViewModel(analyticsLogger) {
+    getCurrentProfileUseCase: GetCurrentProfileUseCase,
+    private val updateProfileUseCase: UpdateProfileUseCase,
+    getCountryUseCase: GetCountryUseCase,
+    getAgeRemoteConfigUseCase: GetAgeRemoteConfigUseCase,
+    analyticsLogger: AnalyticsLogger
+) : BaseViewModel(analyticsLogger) {
 
-    private val _currentUserFlow = userRepository.getCurrentUserLive()
+    private val _currentUserFlow = getCurrentProfileUseCase.invoke()
         .catch {
             it.printStackTrace()
             FirebaseCrashlytics.getInstance().recordException(it)
             _errorFlow.value = it.message
         }
-    private val _countriesFlow = countryRepository.getCountries()
+    private val _countriesFlow = getCountryUseCase()
+    private val _ageRange = getAgeRemoteConfigUseCase()
 
     private val _userNameFlow = MutableStateFlow(EMPTY)
     private val _userEmailFlow = MutableStateFlow(EMPTY)
@@ -72,8 +76,8 @@ class ProfileViewModel @Inject constructor(
             allowUpdate = allowUpdate,
             profileLoading = profileLoading,
             error = error,
-            minAgeRange = remoteConfigRepository.getAgeRangeMin().toInt(),
-            maxAgeRange = remoteConfigRepository.getAgeRangeMax().toInt()
+            minAgeRange = _ageRange.min,
+            maxAgeRange = _ageRange.max
         )
     }.catch {
         it.printStackTrace()
@@ -126,38 +130,19 @@ class ProfileViewModel @Inject constructor(
         val profile = uiStateFlow.value
         safeApiCall({
             _profileLoadingFlow.value = true
-            analyticsLogger.updateProfileEvent(
-                profile.gender,
-                profile.age,
-                profile.country,
-                profile.profilePic.isNullOrBlank().not(),
-                profile.email.isNotBlank()
-            )
         }, {
-            val extension = profile.profilePic?.let { path ->
-                path.takeIf { it.isNotBlank() && it.checkIfUrl().not() }
-                    ?.let { getExtension(it) }
-            }
-            userRepository.updateUser(
-                name = profile.name,
-                email = profile.email,
-                gender = profile.gender,
-                age = profile.age,
-                country = profile.country,
-                profilePicExtension = extension,
-                profileByteArray = profile.profilePic?.takeIf { it.checkIfUrl().not() }
-                    ?.let { path -> getBytes(path) },
-            ).also {
-                it.user.profilePic?.let { it1 -> preloadImage(it1) }
-            }
-            _profileLoadingFlow.value = false
-            analyticsLogger.profileUpdatedEvent(
+            updateProfileUseCase.invoke(
+                profile.name,
+                profile.email,
                 profile.gender,
                 profile.age,
+                profile.profilePic,
                 profile.country,
-                profile.profilePic.isNullOrBlank().not(),
-                profile.email.isNotBlank()
+                getExtension,
+                getBytes,
+                preloadImage
             )
+            _profileLoadingFlow.value = false
         }, {
             _profileLoadingFlow.value = false
             _errorFlow.value = it

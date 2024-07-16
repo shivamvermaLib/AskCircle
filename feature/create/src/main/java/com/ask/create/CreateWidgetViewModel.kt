@@ -3,11 +3,12 @@ package com.ask.create
 import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.common.BaseViewModel
+import com.ask.common.GetAgeRemoteConfigUseCase
+import com.ask.common.GetMaxOptionRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
-import com.ask.core.RemoteConfigRepository
 import com.ask.country.Country
-import com.ask.country.CountryRepository
+import com.ask.country.GetCountryUseCase
 import com.ask.widget.Widget
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,12 +18,14 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CreateWidgetViewModel @Inject constructor(
-    countryRepository: CountryRepository,
-    remoteConfigRepository: RemoteConfigRepository,
+    getCountryUseCase: GetCountryUseCase,
+    getAgeRemoteConfigUseCase: GetAgeRemoteConfigUseCase,
+    getMaxOptionRemoteConfigUseCase: GetMaxOptionRemoteConfigUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
     private val minOptions = 2
-    private val maxOptions = remoteConfigRepository.getMaxOptionSize()
+    private val maxOptions = getMaxOptionRemoteConfigUseCase()
+    private val ageRange = getAgeRemoteConfigUseCase()
     private val _titleFlow = MutableStateFlow(EMPTY)
     private val _titleErrorFlow = MutableStateFlow(EMPTY)
     private val _descFlow = MutableStateFlow(EMPTY)
@@ -38,7 +41,7 @@ class CreateWidgetViewModel @Inject constructor(
     private val _targetAudienceAgeRange = MutableStateFlow(Widget.TargetAudienceAgeRange())
     private val _targetAudienceLocations =
         MutableStateFlow(emptyList<Widget.TargetAudienceLocation>())
-    private val _countriesFlow = countryRepository.getCountries()
+    private val _countriesFlow = getCountryUseCase()
 
 
     fun setTitle(title: String) {
@@ -144,7 +147,7 @@ class CreateWidgetViewModel @Inject constructor(
         _targetAudienceAgeRange,
         _targetAudienceLocations,
         _countriesFlow,
-    ) { title, titleError, desc, descError, optionType, options, gender, ageRange, locations, countries ->
+    ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries ->
         val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size in 2..4
             && ((optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all { !it.text.isNullOrBlank() }) || (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() }))
         CreateWidgetUiState(
@@ -158,9 +161,9 @@ class CreateWidgetViewModel @Inject constructor(
             locations,
             countries,
             allowCreate,
-            targetAudienceAgeRange = ageRange,
-            minAge = remoteConfigRepository.getAgeRangeMin().toInt(),
-            maxAge = remoteConfigRepository.getAgeRangeMax().toInt()
+            targetAudienceAgeRange = targetAudienceAgeRange,
+            minAge = ageRange.min,
+            maxAge = ageRange.max
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
 }

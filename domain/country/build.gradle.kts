@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.ask.widget"
+    namespace = "com.ask.country"
     compileSdk = 34
 
     defaultConfig {
@@ -35,14 +35,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":data:user"))
-    implementation(project(":data:widget"))
-    implementation(project(":data:country"))
-    implementation(project(":data:core"))
-    implementation(project(":data:analytics"))
-
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
+
+    implementation(project(":data:country"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

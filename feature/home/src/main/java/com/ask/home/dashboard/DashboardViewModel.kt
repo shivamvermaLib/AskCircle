@@ -3,10 +3,9 @@ package com.ask.home.dashboard
 import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.common.BaseViewModel
-import com.ask.user.UserRepository
 import com.ask.widget.FilterType
 import com.ask.widget.GetWidgetsUseCase
-import com.ask.widget.WidgetRepository
+import com.ask.widget.UpdateVoteUseCase
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -19,9 +18,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardViewModel @Inject constructor(
-    private val widgetRepository: WidgetRepository,
+    private val updateVoteUseCase: UpdateVoteUseCase,
     getWidgetsUseCase: GetWidgetsUseCase,
-    private val userRepository: UserRepository,
     private val analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
     private val _filterTypeFlow = MutableStateFlow(FilterType.Latest)
@@ -47,23 +45,8 @@ class DashboardViewModel @Inject constructor(
     }
 
     fun vote(widgetId: String, optionId: String, screenName: String) {
-        safeApiCall({
-            analyticsLogger.voteWidgetEvent(
-                widgetId,
-                optionId,
-                userRepository.getCurrentUserId(),
-                screenName
-            )
-        }, {
-            widgetRepository.vote(widgetId, optionId, userRepository.getCurrentUserId())
-                .also {
-                    analyticsLogger.votedWidgetEvent(
-                        widgetId,
-                        optionId,
-                        userRepository.getCurrentUserId(),
-                        screenName
-                    )
-                }
+        safeApiCall({}, {
+            updateVoteUseCase(widgetId, optionId, screenName)
         }, {
             _errorFlow.value = it
         })

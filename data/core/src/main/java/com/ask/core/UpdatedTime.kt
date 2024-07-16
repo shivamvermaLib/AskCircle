@@ -12,3 +12,4 @@ data class UpdatedTime(
 fun isUpdateRequired(updatedTime: UpdatedTime, lastUpdatedTime: UpdatedTime): Boolean {
     return updatedTime.widgetTime >= lastUpdatedTime.widgetTime || updatedTime.voteTime >= lastUpdatedTime.voteTime || updatedTime.profileTime >= lastUpdatedTime.profileTime
 }
+

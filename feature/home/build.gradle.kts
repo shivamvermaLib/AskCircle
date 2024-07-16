@@ -60,6 +60,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
+    implementation(project(":domain:user"))
     kapt(libs.hilt.compiler)
 
     implementation(libs.kotlinx.serialization.json)
@@ -72,6 +73,7 @@ dependencies {
     implementation(project(":data:widget"))
     implementation(project(":domain:common"))
     implementation(project(":domain:widget"))
+    implementation(project(":domain:country"))
     implementation(project(":feature:common"))
     implementation(project(":workmanager"))
 

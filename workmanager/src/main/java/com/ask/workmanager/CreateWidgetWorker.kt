@@ -28,37 +28,9 @@ import kotlinx.serialization.json.Json
 @HiltWorker
 class CreateWidgetWorker @AssistedInject constructor(
     private val createWidgetUseCase: CreateWidgetUseCase,
-    private val analyticsLogger: AnalyticsLogger,
     @Assisted context: Context,
     @Assisted params: WorkerParameters
 ) : CoroutineWorker(context, params) {
-
-    private fun createWidgetEvent(w: WidgetWithOptionsAndVotesForTargetAudience) {
-        analyticsLogger.createWidgetEvent(
-            w.widget.widgetType,
-            w.widget.description.isNullOrBlank().not(),
-            w.options.size,
-            w.options.all { it.option.imageUrl != null },
-            w.targetAudienceGender.gender,
-            w.targetAudienceLocations.mapNotNull { it.country },
-            w.targetAudienceAgeRange.min,
-            w.targetAudienceAgeRange.max
-        )
-    }
-
-    private fun createdWidgetEvent(w: WidgetWithOptionsAndVotesForTargetAudience) {
-        analyticsLogger.createdWidgetEvent(
-            w.widget.id,
-            w.widget.widgetType,
-            w.widget.description.isNullOrBlank().not(),
-            w.options.size,
-            w.options.all { it.option.imageUrl != null },
-            w.targetAudienceGender.gender,
-            w.targetAudienceLocations.mapNotNull { it.country },
-            w.targetAudienceAgeRange.min,
-            w.targetAudienceAgeRange.max
-        )
-    }
 
     override suspend fun doWork(): Result {
         return try {
@@ -69,7 +41,7 @@ class CreateWidgetWorker @AssistedInject constructor(
                     it
                 )
             }?.let { widgetWithOptionsAndVotesForTargetAudience ->
-                createWidgetEvent(widgetWithOptionsAndVotesForTargetAudience)
+
                 createWidgetUseCase.invoke(widgetWithOptionsAndVotesForTargetAudience, {
                     applicationContext.getExtension(it)!!
                 }, {
@@ -77,7 +49,6 @@ class CreateWidgetWorker @AssistedInject constructor(
                 }
                 ).let { it ->
                     applicationContext.preLoadImages(it.options.mapNotNull { it.option.imageUrl })
-                    createdWidgetEvent(it)
                 }
             }
             setProgress(workDataOf(STATUS to WorkerStatus.Success.name))

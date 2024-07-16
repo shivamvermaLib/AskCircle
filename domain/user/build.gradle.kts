@@ -38,6 +38,9 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(project(":data:user"))
     implementation(project(":data:widget"))
+    implementation(project(":domain:common"))
+    implementation(project(":data:analytics"))
+    implementation(project(":data:core"))
     kapt(libs.hilt.compiler)
 
 

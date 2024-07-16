@@ -54,6 +54,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.ask.common.connectivityState
 import com.ask.home.dashboard.DashboardScreen
+import com.ask.home.imageview.ImageViewModel
 import com.ask.home.imageview.ImageViewScreen
 import com.ask.home.profile.ProfileScreen
 import com.ask.workmanager.CreateWidgetWorker
@@ -213,6 +214,10 @@ fun HomeNavigation(
             }
             composable<HomeTabScreen.ImageView> {
                 val imageView = it.toRoute<HomeTabScreen.ImageView>()
+                val imageViewModel = hiltViewModel<ImageViewModel>()
+                LaunchedEffect(Unit) {
+                    imageViewModel.onImageOpen(imageView.imagePath)
+                }
                 ImageViewScreen(
                     imageView,
                     this@SharedTransitionLayout,
