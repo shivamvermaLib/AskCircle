@@ -1,6 +1,9 @@
 package com.ask.app.ui
 
 import android.content.res.Configuration
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
@@ -115,6 +118,8 @@ class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :
         )
 }
 
+/*
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO)
 @Composable
@@ -122,7 +127,14 @@ fun WidgetWithUserViewPreview(
     @PreviewParameter(WidgetWithOptionAndVotesForTargetAudiencePreviewParameters::class) widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
 ) {
     ASKTheme {
-        WidgetWithUserView(widgetWithOptionsAndVotesForTargetAudience = widgetWithOptionsAndVotesForTargetAudience)
+        SharedTransitionLayout {
+            WidgetWithUserView(
+                widgetWithOptionsAndVotesForTargetAudience = widgetWithOptionsAndVotesForTargetAudience,
+                sharedTransitionScope = this@SharedTransitionLayout,
+                animatedContentScope =
+            )
+        }
     }
 }
+*/
 

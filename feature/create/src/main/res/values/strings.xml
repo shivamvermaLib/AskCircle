@@ -11,5 +11,11 @@
     <string name="target_audience">Target Audience</string>
 
     <string name="close">Close</string>
+    <string name="create">Create</string>
+    <string name="location">Location</string>
+    <string name="select">Select</string>
+    <string name="gender">Gender</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
 
 </resources>

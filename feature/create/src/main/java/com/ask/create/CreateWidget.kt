@@ -3,6 +3,7 @@ package com.ask.create
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -112,7 +113,7 @@ fun CreateWidgetScreen(
 
 @OptIn(
     ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class,
-    ExperimentalCoroutinesApi::class
+    ExperimentalCoroutinesApi::class, ExperimentalSharedTransitionApi::class
 )
 @Preview
 @Composable
@@ -233,15 +234,19 @@ private fun CreateWidgetScreen(
                             didUserVoted = false,
                             totalOptions = createWidgetUiState.options.size,
                             isInput = true,
-                            onDeleteIconClick = onRemoveOption
-                        ) {
-                            imagePickerIndex = index
-                            singlePhotoPickerLauncher.launch(
-                                PickVisualMediaRequest(
-                                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                            onDeleteIconClick = onRemoveOption,
+                            onImageClick = {
+                                imagePickerIndex = index
+                                singlePhotoPickerLauncher.launch(
+                                    PickVisualMediaRequest(
+                                        ActivityResultContracts.PickVisualMedia.ImageOnly
+                                    )
                                 )
-                            )
-                        }
+                            },
+                            onOpenImage = {},
+                            animatedContentScope = null,
+                            sharedTransitionScope = null
+                        )
                     }
 
                     CreateWidgetUiState.WidgetOptionType.Text -> Column(
@@ -294,7 +299,7 @@ private fun CreateWidgetScreen(
                     enabled = createWidgetUiState.allowCreate && isConnected,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = stringResource(com.ask.common.R.string.create))
+                    Text(text = stringResource(R.string.create))
                 }
                 Spacer(modifier = Modifier.size(100.dp))
             }
@@ -312,7 +317,7 @@ fun LocationSelect(
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = stringResource(com.ask.common.R.string.location),
+            text = stringResource(R.string.location),
             style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -344,7 +349,7 @@ fun LocationSelect(
                 })
         }
         DropDownWithSelect(createWidgetUiState.countries,
-            stringResource(com.ask.common.R.string.select),
+            stringResource(R.string.select),
             modifier = Modifier.padding(horizontal = 4.dp),
             itemString = { "${it.emoji} ${it.name}" }) {
             onSelectCountry(it)
@@ -380,7 +385,7 @@ fun GenderSelect(
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = stringResource(com.ask.common.R.string.gender),
+            text = stringResource(R.string.gender),
             style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.weight(1f))
@@ -394,15 +399,15 @@ fun GenderSelect(
         AppOptionTypeSelect(
             selected = createWidgetUiState.targetAudienceGender.gender == com.ask.widget.Widget.GenderFilter.MALE,
             onSelectedChange = { onGenderChanged(com.ask.widget.Widget.GenderFilter.MALE) },
-            title = stringResource(com.ask.common.R.string.male),
-            icon = ImageVector.vectorResource(id = com.ask.common.R.drawable.baseline_male_24)
+            title = stringResource(R.string.male),
+            icon = ImageVector.vectorResource(id = R.drawable.baseline_male_24)
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
             selected = createWidgetUiState.targetAudienceGender.gender == com.ask.widget.Widget.GenderFilter.FEMALE,
             onSelectedChange = { onGenderChanged(com.ask.widget.Widget.GenderFilter.FEMALE) },
-            title = stringResource(com.ask.common.R.string.female),
-            icon = ImageVector.vectorResource(id = com.ask.common.R.drawable.baseline_female_24)
+            title = stringResource(R.string.female),
+            icon = ImageVector.vectorResource(id = R.drawable.baseline_female_24)
         )
     }
 }
@@ -426,7 +431,7 @@ fun OptionTypeSelect(
             selected = createWidgetUiState.optionType == CreateWidgetUiState.WidgetOptionType.Image,
             onSelectedChange = { onOptionTypeChanged.invoke(CreateWidgetUiState.WidgetOptionType.Image) },
             title = stringResource(R.string.image),
-            icon = ImageVector.vectorResource(id = com.ask.common.R.drawable.baseline_image_24)
+            icon = ImageVector.vectorResource(id = R.drawable.baseline_image_24)
         )
     }
 }

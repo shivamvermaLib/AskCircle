@@ -3,7 +3,11 @@ package com.ask.home.profile
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,16 +57,21 @@ import com.ask.common.getByteArray
 import com.ask.common.getExtension
 import com.ask.common.preLoadImages
 import com.ask.common.shimmerBrush
+import com.ask.core.EMPTY
 import com.ask.home.R
 import com.ask.user.Gender
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ProfileScreen(
     route: String,
-    onError: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onError: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
+    onOpenImage: (String) -> Unit = {}
 ) {
     val context = LocalContext.current
     val viewModel = hiltViewModel<ProfileViewModel>()
@@ -79,6 +88,8 @@ fun ProfileScreen(
     }
     ProfileScreen(
         profileUiState,
+        sharedTransitionScope,
+        animatedContentScope,
         viewModel::setName,
         viewModel::setEmail,
         viewModel::setGender,
@@ -93,22 +104,29 @@ fun ProfileScreen(
                 context.preLoadImages(listOf(it))
             })
         },
-        viewModel::onImageClick
+        viewModel::onImageClick,
+        onOpenImage
     )
 }
 
 @Preview
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalCoroutinesApi::class,
+    ExperimentalSharedTransitionApi::class
+)
 @Composable
 private fun ProfileScreen(
     @PreviewParameter(ProfileTabViewPreviewParameter::class) profile: ProfileUiState,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     setName: (String) -> Unit = {},
     setEmail: (String) -> Unit = {},
     setGender: (Gender) -> Unit = {},
     setCountry: (String) -> Unit = {},
     setAge: (Int) -> Unit = {},
     onUpdate: () -> Unit = {},
-    onImageClick: (String) -> Unit = {}
+    onImageClick: (String) -> Unit = {},
+    onOpenImage: (String) -> Unit = {}
 ) {
     Scaffold(
         topBar = {
@@ -141,16 +159,25 @@ private fun ProfileScreen(
                             .background(shimmerBrush(), shape = RoundedCornerShape(20.dp))
                     )
                 } else {
-                    AppImage(
-                        url = profile.profilePic,
-                        contentDescription = profile.name,
-                        contentScale = ContentScale.Fit,
-                        placeholder = R.drawable.baseline_account_box_24,
-                        error = R.drawable.baseline_account_box_24,
-                        modifier = Modifier
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                    )
+                    with(sharedTransitionScope) {
+                        AppImage(
+                            url = profile.profilePic,
+                            contentDescription = profile.name,
+                            contentScale = ContentScale.Fit,
+                            placeholder = R.drawable.baseline_account_box_24,
+                            error = R.drawable.baseline_account_box_24,
+                            modifier =  Modifier.Companion
+                                .sharedElement(
+                                    sharedTransitionScope.rememberSharedContentState(
+                                        key = profile.profilePic ?: EMPTY
+                                    ),
+                                    animatedVisibilityScope = animatedContentScope
+                                )
+                                .height(160.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable { profile.profilePic?.let { onOpenImage(it) } }
+                        )
+                    }
                 }
                 FilledIconButton(onClick = {
                     singlePhotoPickerLauncher.launch(

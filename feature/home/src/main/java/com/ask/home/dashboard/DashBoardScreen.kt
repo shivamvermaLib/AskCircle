@@ -1,5 +1,8 @@
 package com.ask.home.dashboard
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,11 +50,14 @@ import com.ask.widget.FilterType
 import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardScreen(
     route: String,
-    sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero)
+    sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onOpenImage: (String?) -> Unit,
 ) {
     val viewModel = hiltViewModel<DashboardViewModel>()
     val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -59,24 +65,34 @@ fun DashboardScreen(
         viewModel.screenOpenEvent(route)
     }
     DashBoardScreen(
-        state, sizeClass,
+        state,
+        sizeClass,
+        sharedTransitionScope,
+        animatedContentScope,
         { widgetId, optionId ->
             viewModel.vote(widgetId, optionId, route)
         },
-        viewModel::setFilterType
+        viewModel::setFilterType,
+        onOpenImage = onOpenImage
     )
 }
 
 @Preview(name = "phone", device = "spec:shape=Normal,width=360,height=640,unit=dp,dpi=480")
 @Preview(name = "pixel4", device = "id:pixel_4")
 @Preview(name = "tablet", device = "spec:shape=Normal,width=1280,height=800,unit=dp,dpi=480")
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class,
+    ExperimentalSharedTransitionApi::class
+)
 @Composable
 private fun DashBoardScreen(
     @PreviewParameter(DashBoardScreenPreviewParameterProvider::class) uiState: DashboardUiState,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     onOptionClick: (String, String) -> Unit = { _, _ -> },
     onFilterTypeChange: (FilterType) -> Unit = {},
+    onOpenImage: (String?) -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     Scaffold(
@@ -120,7 +136,14 @@ private fun DashBoardScreen(
             widthClass = WindowWidthSizeClass.Medium
         }
         if (widthClass == WindowWidthSizeClass.Compact) {
-            DashboardList(it, uiState, onOptionClick)
+            DashboardList(
+                it,
+                uiState,
+                sharedTransitionScope,
+                animatedContentScope,
+                onOptionClick,
+                onOpenImage
+            )
         } else {
             val columnCount =
                 if (widthClass == WindowWidthSizeClass.Expanded && heightClass == WindowHeightSizeClass.Medium) 3
@@ -128,16 +151,28 @@ private fun DashBoardScreen(
                 else if (widthClass == WindowWidthSizeClass.Expanded && heightClass == WindowHeightSizeClass.Expanded) 3
                 else 2
 
-            DashboardGrid(it, uiState, columnCount, onOptionClick)
+            DashboardGrid(
+                it,
+                uiState,
+                columnCount,
+                sharedTransitionScope,
+                animatedContentScope,
+                onOptionClick,
+                onOpenImage
+            )
         }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardList(
     it: PaddingValues,
     uiState: DashboardUiState,
-    onOptionClick: (String, String) -> Unit
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onOptionClick: (String, String) -> Unit,
+    onOpenImage: (String?) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier
@@ -145,7 +180,13 @@ fun DashboardList(
             .padding(it)
     ) {
         items(uiState.widgets) { widget ->
-            WidgetWithUserView(widget, onOptionClick)
+            WidgetWithUserView(
+                widget,
+                sharedTransitionScope,
+                animatedContentScope,
+                onOptionClick,
+                onOpenImage
+            )
         }
         item {
             Box(modifier = Modifier.size(100.dp))
@@ -153,12 +194,16 @@ fun DashboardList(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardGrid(
     it: PaddingValues,
     uiState: DashboardUiState,
     columnCount: Int,
-    onOptionClick: (String, String) -> Unit
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onOptionClick: (String, String) -> Unit,
+    onOpenImage: (String?) -> Unit,
 ) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(columnCount), modifier = Modifier
@@ -166,7 +211,13 @@ fun DashboardGrid(
             .padding(it)
     ) {
         items(uiState.widgets) { widget ->
-            WidgetWithUserView(widget, onOptionClick)
+            WidgetWithUserView(
+                widget,
+                sharedTransitionScope,
+                animatedContentScope,
+                onOptionClick,
+                onOpenImage
+            )
         }
         item {
             Box(modifier = Modifier.size(100.dp))

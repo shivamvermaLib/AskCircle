@@ -1,7 +1,12 @@
 package com.ask.common
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,11 +52,16 @@ import com.ask.core.EMPTY
 import com.ask.user.User
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun WidgetWithUserView(
     widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
-    onOptionClick: (String, String) -> Unit = { _, _ -> }
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onOptionClick: (String, String) -> Unit = { _, _ -> },
+    onOpenImage: (String?) -> Unit,
 ) {
+    //TODO: check to make sure it appear only once in the screen
     val lastVotedEmptyOptions = listOf(
         stringResource(R.string.your_voice_matters_vote_now),
         stringResource(R.string.shape_the_outcome_cast_your_vote),
@@ -62,6 +72,7 @@ fun WidgetWithUserView(
         stringResource(R.string.let_s_shape_the_future_vote_now),
         stringResource(R.string.vote_for_your_favorite_option)
     )
+    val selectedLastVotedEmptyOption by remember { mutableStateOf(lastVotedEmptyOptions.random()) }
 
     ElevatedCard(modifier = Modifier
         .fillMaxWidth()
@@ -71,7 +82,10 @@ fun WidgetWithUserView(
         ) {
             WidgetUserView(
                 user = widgetWithOptionsAndVotesForTargetAudience.user,
-                startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat
+                startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
+                onOpenImage
             )
             Spacer(modifier = Modifier.size(12.dp))
             HorizontalDivider(thickness = 1.dp)
@@ -81,14 +95,19 @@ fun WidgetWithUserView(
                     stringResource(
                         R.string.last_voted, it
                     )
-                }
-                    ?: lastVotedEmptyOptions.random(),
+                } ?: selectedLastVotedEmptyOption,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline,
                 fontWeight = FontWeight.W400
             )
             Spacer(modifier = Modifier.size(6.dp))
-            WidgetView(widget = widgetWithOptionsAndVotesForTargetAudience, onOptionClick)
+            WidgetView(
+                widget = widgetWithOptionsAndVotesForTargetAudience,
+                sharedTransitionScope,
+                animatedContentScope,
+                onOptionClick,
+                onOpenImage
+            )
             Spacer(modifier = Modifier.size(16.dp))
             Text(
                 text = stringResource(
@@ -103,21 +122,51 @@ fun WidgetWithUserView(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun WidgetUserView(user: User, startedAtFormat: String) {
+fun WidgetUserView(
+    user: User,
+    startedAtFormat: String,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onOpenImage: (String?) -> Unit,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        AppImage(
-            url = user.profilePic,
-            contentDescription = user.name,
-            contentScale = ContentScale.Crop,
-            placeholder = R.drawable.baseline_account_circle_24,
-            error = R.drawable.baseline_account_circle_24,
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-        )
+        if (user.profilePic.isNullOrBlank()) {
+            AppImage(
+                url = user.profilePic,
+                contentDescription = user.name,
+                contentScale = ContentScale.Crop,
+                placeholder = R.drawable.baseline_account_circle_24,
+                error = R.drawable.baseline_account_circle_24,
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .clickable { onOpenImage(user.profilePic) }
+            )
+        } else {
+            with(sharedTransitionScope) {
+                AppImage(
+                    url = user.profilePic,
+                    contentDescription = user.name,
+                    contentScale = ContentScale.Crop,
+                    placeholder = R.drawable.baseline_account_circle_24,
+                    error = R.drawable.baseline_account_circle_24,
+                    modifier = Modifier.Companion
+                        .sharedElement(
+                            sharedTransitionScope.rememberSharedContentState(
+                                key = user.profilePic ?: EMPTY
+                            ),
+                            animatedVisibilityScope = animatedContentScope
+                        )
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable { onOpenImage(user.profilePic) }
+                )
+            }
+        }
         Text(text = user.name, modifier = Modifier.padding(horizontal = 6.dp))
         Spacer(modifier = Modifier.weight(1f))
         Text(
@@ -127,10 +176,14 @@ fun WidgetUserView(user: User, startedAtFormat: String) {
 }
 
 //TODO: need to work on image with text
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun WidgetView(
     widget: WidgetWithOptionsAndVotesForTargetAudience,
-    onOptionClick: (String, String) -> Unit = { _, _ -> }
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onOptionClick: (String, String) -> Unit = { _, _ -> },
+    onOpenImage: (String?) -> Unit,
 ) {
     Text(text = widget.widget.title, style = MaterialTheme.typography.titleMedium)
     widget.widget.description?.let {
@@ -154,9 +207,14 @@ fun WidgetView(
                 optionWithVotes = widgetOption,
                 hasVotes = widget.hasVotes,
                 didUserVoted = widgetOption.didUserVoted,
-            ) {
-                onOptionClick(widget.widget.id, it)
-            }
+
+                onImageClick = {
+                    onOptionClick(widget.widget.id, it)
+                },
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
+                onOpenImage = onOpenImage
+            )
         }
     } else if (widget.isTextOnly) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -269,16 +327,21 @@ fun TextOption(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun ImageOption(
+    modifier: Modifier = Modifier,
     index: Int,
     totalOptions: Int,
     optionWithVotes: WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
     didUserVoted: Boolean,
     isInput: Boolean = false,
     hasVotes: Boolean = false,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null,
     onDeleteIconClick: (Int) -> Unit = {},
     onImageClick: (String) -> Unit,
+    onOpenImage: (String?) -> Unit,
 ) {
     var sizeImage by remember { mutableStateOf(IntSize.Zero) }
 
@@ -318,32 +381,60 @@ fun ImageOption(
             else -> 0.dp
         }
     )
-    Box(modifier = Modifier
-        .fillMaxWidth()
-        .height(140.dp)
-        .background(
-            color = MaterialTheme.colorScheme.let {
-                if (didUserVoted) {
-                    it.primary
-                } else {
-                    it.primaryContainer
-                }
-            },
-            shape = roundedCornerShape,
-        )
-        .clickable { onImageClick(option.id) }) {
-        AppImage(
-            url = option.imageUrl ?: EMPTY,
-            contentDescription = option.id,
-            contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
-            placeholder = R.drawable.baseline_image_24,
-            error = R.drawable.baseline_broken_image_24,
-            modifier = Modifier
-                .clip(roundedCornerShape)
-                .fillMaxSize()
-                .align(Alignment.Center)
-                .onGloballyPositioned { sizeImage = it.size }
-        )
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(140.dp)
+            .background(
+                color = MaterialTheme.colorScheme.let {
+                    if (didUserVoted) {
+                        it.primary
+                    } else {
+                        it.primaryContainer
+                    }
+                },
+                shape = roundedCornerShape,
+            )
+            .combinedClickable(
+                onClick = { onImageClick(option.id) },
+                onLongClick = { onOpenImage(option.imageUrl) }
+            ),
+    ) {
+        if (sharedTransitionScope != null && animatedContentScope != null) {
+            with(sharedTransitionScope) {
+                AppImage(
+                    url = option.imageUrl ?: EMPTY,
+                    contentDescription = option.id,
+                    contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
+                    placeholder = R.drawable.baseline_image_24,
+                    error = R.drawable.baseline_broken_image_24,
+                    modifier = Modifier.Companion
+                        .sharedElement(
+                            sharedTransitionScope.rememberSharedContentState(
+                                key = option.imageUrl ?: EMPTY
+                            ),
+                            animatedVisibilityScope = animatedContentScope
+                        )
+                        .clip(roundedCornerShape)
+                        .fillMaxSize()
+                        .align(Alignment.Center)
+                        .onGloballyPositioned { sizeImage = it.size }
+                )
+            }
+        } else {
+            AppImage(
+                url = option.imageUrl ?: EMPTY,
+                contentDescription = option.id,
+                contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
+                placeholder = R.drawable.baseline_image_24,
+                error = R.drawable.baseline_broken_image_24,
+                modifier = Modifier
+                    .clip(roundedCornerShape)
+                    .fillMaxSize()
+                    .align(Alignment.Center)
+                    .onGloballyPositioned { sizeImage = it.size }
+            )
+        }
         Box(
             modifier = Modifier
                 .padding(top = 6.dp, start = 6.dp)

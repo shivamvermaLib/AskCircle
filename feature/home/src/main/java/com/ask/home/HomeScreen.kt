@@ -4,6 +4,8 @@ import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.AccountCircle
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -48,8 +51,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.ask.common.connectivityState
 import com.ask.home.dashboard.DashboardScreen
+import com.ask.home.imageview.ImageViewScreen
 import com.ask.home.profile.ProfileScreen
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
@@ -61,9 +66,7 @@ import kotlinx.serialization.json.Json
 
 @Composable
 fun HomeScreen(
-    route: String,
-    sizeClass: WindowSizeClass,
-    navigateToCreate: () -> Unit
+    route: String, sizeClass: WindowSizeClass, navigateToCreate: () -> Unit
 ) {
     val context = LocalContext.current
     val workerFlow = CreateWidgetWorker.getWorkerFlow(context)
@@ -104,52 +107,45 @@ private fun HomeScreen(
     LaunchedEffect(isConnected) {
         if (!isConnected) {
             snackBarHostState.showSnackbar(
-                message = "No Internet Connection",
-                duration = SnackbarDuration.Indefinite
+                message = "No Internet Connection", duration = SnackbarDuration.Indefinite
             )
         }
     }
-    Scaffold(
-        snackbarHost = {
-            SnackbarHost(
-                hostState = snackBarHostState,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
-            ) {
-                Snackbar {
-                    Text(it.visuals.message)
-                }
+    Scaffold(snackbarHost = {
+        SnackbarHost(
+            hostState = snackBarHostState,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 5.dp)
+        ) {
+            Snackbar {
+                Text(it.visuals.message)
             }
-        },
-        floatingActionButton = {
-            if (homeUiState.createWidgetStatus != WorkerStatus.Loading) ExtendedFloatingActionButton(
-                onClick = onCreateClick,
-                icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
-                text = { Text(text = stringResource(id = R.string.create)) },
-            )
-        },
-        bottomBar = {
-            val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
-            val currentRoute = navBackStackEntry?.destination?.route
-            NavigationBar {
-                listOf(HomeTabScreen.Home, HomeTabScreen.Profile).forEach { item ->
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                when (item) {
-                                    HomeTabScreen.Home -> Icons.Filled.Home
-                                    HomeTabScreen.Profile -> Icons.Rounded.AccountCircle
-                                },
-                                contentDescription = item.toString()
-                            )
-                        },
-                        label = { Text(item.toString()) },
-                        selected = currentRoute == item.javaClass.canonicalName,
-                        onClick = { homeNavigationController.navigate(item) }
+        }
+    }, floatingActionButton = {
+        if (homeUiState.createWidgetStatus != WorkerStatus.Loading) ExtendedFloatingActionButton(
+            onClick = onCreateClick,
+            icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
+            text = { Text(text = stringResource(id = R.string.create)) },
+        )
+    }, bottomBar = {
+        val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
+        val currentRoute = navBackStackEntry?.destination?.route
+        NavigationBar {
+            listOf(HomeTabScreen.Home, HomeTabScreen.Profile).forEach { item ->
+                NavigationBarItem(icon = {
+                    Icon(
+                        when (item) {
+                            HomeTabScreen.Home -> Icons.Filled.Home
+                            HomeTabScreen.Profile -> Icons.Rounded.AccountCircle
+                            else -> Icons.Rounded.Close
+                        }, contentDescription = item.toString()
                     )
-                }
+                },
+                    label = { Text(item.toString()) },
+                    selected = currentRoute == item.javaClass.canonicalName,
+                    onClick = { homeNavigationController.navigate(item) })
             }
-        })
-    {
+        }
+    }) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -182,22 +178,49 @@ private fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun HomeNavigation(
     homeNavigationController: NavHostController,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     onError: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
 ) {
-    NavHost(
-        navController = homeNavigationController,
-        startDestination = HomeTabScreen.Home
-    ) {
-        composable<HomeTabScreen.Home> {
-            DashboardScreen(Json.encodeToString(HomeTabScreen.Home), sizeClass)
-        }
-        composable<HomeTabScreen.Profile> {
-            ProfileScreen(Json.encodeToString(HomeTabScreen.Profile), onError)
+    SharedTransitionLayout {
+        NavHost(
+            navController = homeNavigationController, startDestination = HomeTabScreen.Home
+        ) {
+            composable<HomeTabScreen.Home> {
+                DashboardScreen(
+                    Json.encodeToString(HomeTabScreen.Home),
+                    sizeClass,
+                    this@SharedTransitionLayout,
+                    this@composable
+                ) {
+                    it?.let {
+                        homeNavigationController.navigate(HomeTabScreen.ImageView(it))
+                    }
+                }
+            }
+            composable<HomeTabScreen.Profile> {
+                ProfileScreen(
+                    Json.encodeToString(HomeTabScreen.Profile),
+                    this@SharedTransitionLayout,
+                    this@composable,
+                    onError
+                ) {
+                    homeNavigationController.navigate(HomeTabScreen.ImageView(it))
+                }
+            }
+            composable<HomeTabScreen.ImageView> {
+                val imageView = it.toRoute<HomeTabScreen.ImageView>()
+                ImageViewScreen(
+                    imageView,
+                    this@SharedTransitionLayout,
+                    this@composable
+                ) {
+                    homeNavigationController.popBackStack()
+                }
+            }
         }
     }
 }
@@ -210,5 +233,8 @@ sealed interface HomeTabScreen {
 
     @Serializable
     data object Profile : HomeTabScreen
+
+    @Serializable
+    data class ImageView(val imagePath: String) : HomeTabScreen
 }
 

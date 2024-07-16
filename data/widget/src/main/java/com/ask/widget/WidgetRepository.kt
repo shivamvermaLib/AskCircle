@@ -193,6 +193,7 @@ class WidgetRepository @Inject constructor(
                 })
             }
         }.also { widgetWithOptionsAndVotesForTargetAudience ->
+            //TODO: should have code to delete votes also, if user remove vote from widget
             widgetDao.insertWidget(
                 widgetWithOptionsAndVotesForTargetAudience.widget,
                 widgetWithOptionsAndVotesForTargetAudience.targetAudienceGender,

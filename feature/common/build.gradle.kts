@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.material3.window.size)
+    implementation(libs.androidx.navigation.compose)
 
     implementation(libs.firebase.crashlytics)
     implementation(libs.coil.compose)
