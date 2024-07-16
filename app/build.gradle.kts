@@ -26,8 +26,18 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("release.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD")
+            keyAlias = System.getenv("KEY_ALIAS")
+            keyPassword = System.getenv("KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs["release"]
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -101,6 +111,8 @@ dependencies {
     // For local unit tests
     testImplementation(libs.hilt.android.testing)
     kaptTest(libs.hilt.compiler)
+
+    implementation(libs.play.services.ads)
 
     implementation(project(":data:widget"))
     implementation(project(":data:country"))

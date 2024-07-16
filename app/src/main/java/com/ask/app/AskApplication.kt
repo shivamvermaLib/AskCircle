@@ -15,6 +15,9 @@ import com.ask.analytics.AnalyticsLogger
 import com.ask.common.ConnectionState
 import com.ask.common.observeConnectivityAsFlow
 import com.ask.workmanager.NOTIFICATION_CHANNEL_ID
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -49,6 +52,7 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
+        adMob()
         createNotificationChannel()
         scope.launch {
             launch {
@@ -61,6 +65,15 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
                 }
             }
         }
+    }
+
+    private fun adMob() {
+        MobileAds.initialize(this) {}
+        MobileAds.setRequestConfiguration(
+            RequestConfiguration.Builder()
+                .setTestDeviceIds(listOf(AdRequest.DEVICE_ID_EMULATOR))
+                .build()
+        )
     }
 
     private fun createNotificationChannel() {

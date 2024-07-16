@@ -1,6 +1,7 @@
 package com.ask.core
 
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -11,7 +12,9 @@ class RemoteConfigRepository @Inject constructor(
 ) {
     suspend fun fetchInit(): Boolean = suspendCoroutine { cont ->
         remoteConfig.fetchAndActivate()
-            .addOnSuccessListener { cont.resume(it) }
+            .addOnSuccessListener {
+                cont.resume(it)
+            }
             .addOnFailureListener { cont.resumeWithException(it) }
     }
 
@@ -20,6 +23,9 @@ class RemoteConfigRepository @Inject constructor(
     fun getSyncTimeInMinutes() = remoteConfig.getLong(SYNC_TIME_IN_MINUTES)
     fun getMaxOptionSize() = remoteConfig.getLong(MAX_OPTION_SIZE)
     fun refreshCountServer() = remoteConfig.getLong(FULL_REFRESH)
+    fun dashBoardAdMobIndexList() =
+        Json.decodeFromString<List<Int>>(remoteConfig.getString(DASHBOARD_AD_MOB_INDEXES))
+
 
     companion object {
         const val AGE_RANGE_MIN = "min_age_range"
@@ -27,6 +33,7 @@ class RemoteConfigRepository @Inject constructor(
         const val SYNC_TIME_IN_MINUTES = "sync_time_in_minutes"
         const val MAX_OPTION_SIZE = "max_option_size"
         const val FULL_REFRESH = "full_refresh"
+        const val DASHBOARD_AD_MOB_INDEXES = "dashboard_ad_mob_index"
     }
 
 

@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -5,6 +8,14 @@ plugins {
 }
 
 android {
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(FileInputStream(localPropertiesFile))
+    } else {
+        throw GradleException("Gradle properties file does not exists or not contains API keys")
+    }
+
     namespace = "com.ask.common"
     compileSdk = 34
 
@@ -16,6 +27,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("String", "BANNER_ID", localProperties.getProperty("BANNER_ID"))
     }
 
     buildTypes {
@@ -36,6 +48,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.1"
@@ -61,6 +74,7 @@ dependencies {
     implementation(project(":data:core"))
     implementation(project(":data:widget"))
     implementation(project(":data:user"))
+    implementation(libs.play.services.ads.lite)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
