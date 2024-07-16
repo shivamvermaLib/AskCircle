@@ -41,6 +41,11 @@ jobs:
           echo $ENCODED_STRING > keystore-b64.txt
           base64 -d keystore-b64.txt > $SIGNING_KEY_STORE_PATH
 
+      - name: Update Username from Secrets
+        env:
+          BANNER_ID: ${{ secrets.BANNER_ID }}
+        run: echo BANNER_ID="$BANNER_ID" > ./local.properties
+
       #2
       - name: Build Release apk
         env:
