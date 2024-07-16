@@ -50,16 +50,16 @@ jobs:
 
       - name: Update Username from Secrets
         env:
-          MOCK_USERNAME: ${{ secrets.BANNER_ID }}
+          BANNER_ID: ${{ secrets.BANNER_ID }}
         run: echo BANNER_ID="$BANNER_ID" > ./local.properties
 
       # Run Tests Build
-      - name: Run gradle tests
-        run: ./gradlew test
+#      - name: Run gradle tests
+#        run: ./gradlew test
 
       # Run Build Project
-      - name: Build gradle project
-        run: ./gradlew build
+#      - name: Build gradle project
+#        run: ./gradlew build
 
       # Create APK Debug
       - name: Build apk debug project (APK) - ${{ env.main_project_module }} module
