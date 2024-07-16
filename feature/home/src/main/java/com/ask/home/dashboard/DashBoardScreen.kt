@@ -60,8 +60,19 @@ fun DashboardScreen(
     onOpenImage: (String?) -> Unit,
 ) {
     val viewModel = hiltViewModel<DashboardViewModel>()
+    val lastVotedEmptyOptions = listOf(
+        stringResource(R.string.your_voice_matters_vote_now),
+        stringResource(R.string.shape_the_outcome_cast_your_vote),
+        stringResource(R.string.join_the_conversation_vote_today),
+        stringResource(R.string.be_a_trendsetter_vote_first),
+        stringResource(R.string.get_involved_make_your_vote_count),
+        stringResource(R.string.start_the_discussion_with_your_vote),
+        stringResource(R.string.let_s_shape_the_future_vote_now),
+        stringResource(R.string.vote_for_your_favorite_option)
+    )
     val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
+        viewModel.setLastVotedEmptyOptions(lastVotedEmptyOptions)
         viewModel.screenOpenEvent(route)
     }
     DashBoardScreen(

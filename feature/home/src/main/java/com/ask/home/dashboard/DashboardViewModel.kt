@@ -24,20 +24,29 @@ class DashboardViewModel @Inject constructor(
 ) : BaseViewModel(analyticsLogger) {
     private val _filterTypeFlow = MutableStateFlow(FilterType.Latest)
     private val _errorFlow = MutableStateFlow<String?>(null)
-
+    private val _lastVotedEmptyOptionsFlow = MutableStateFlow<List<String>>(emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiStateFlow =
         combine(
             _filterTypeFlow.flatMapMerge { getWidgetsUseCase(it) },
+            _lastVotedEmptyOptionsFlow,
             _errorFlow
-        ) { widgets, error ->
-            DashboardUiState(widgets, error)
+        ) { widgets, lastVotedEmptyOptions, error ->
+            DashboardUiState(widgets.map {
+                it.apply {
+                    lastVotedAtOptional = lastVotedEmptyOptions.random()
+                }
+            }, error)
         }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5000),
             DashboardUiState()
         )
+
+    fun setLastVotedEmptyOptions(list: List<String>) {
+        _lastVotedEmptyOptionsFlow.value = list
+    }
 
     fun setFilterType(filterType: FilterType) {
         _filterTypeFlow.value = filterType
@@ -57,4 +66,3 @@ data class DashboardUiState(
     val widgets: List<WidgetWithOptionsAndVotesForTargetAudience> = emptyList(),
     val error: String? = null
 )
-

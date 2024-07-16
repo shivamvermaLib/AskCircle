@@ -61,18 +61,6 @@ fun WidgetWithUserView(
     onOptionClick: (String, String) -> Unit = { _, _ -> },
     onOpenImage: (String?) -> Unit,
 ) {
-    //TODO: check to make sure it appear only once in the screen
-    val lastVotedEmptyOptions = listOf(
-        stringResource(R.string.your_voice_matters_vote_now),
-        stringResource(R.string.shape_the_outcome_cast_your_vote),
-        stringResource(R.string.join_the_conversation_vote_today),
-        stringResource(R.string.be_a_trendsetter_vote_first),
-        stringResource(R.string.get_involved_make_your_vote_count),
-        stringResource(R.string.start_the_discussion_with_your_vote),
-        stringResource(R.string.let_s_shape_the_future_vote_now),
-        stringResource(R.string.vote_for_your_favorite_option)
-    )
-    val selectedLastVotedEmptyOption by remember { mutableStateOf(lastVotedEmptyOptions.random()) }
 
     ElevatedCard(modifier = Modifier
         .fillMaxWidth()
@@ -92,10 +80,8 @@ fun WidgetWithUserView(
             Spacer(modifier = Modifier.size(6.dp))
             Text(
                 text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
-                    stringResource(
-                        R.string.last_voted, it
-                    )
-                } ?: selectedLastVotedEmptyOption,
+                    stringResource(R.string.last_voted, it)
+                } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.outline,
                 fontWeight = FontWeight.W400

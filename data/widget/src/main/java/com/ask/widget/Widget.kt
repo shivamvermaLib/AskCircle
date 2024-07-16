@@ -227,6 +227,10 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
             ).toString().uppercase()
         }
 
+    @get:Exclude
+    @Ignore
+    var lastVotedAtOptional: String = ""
+
 
     @Serializable
     data class OptionWithVotes(
