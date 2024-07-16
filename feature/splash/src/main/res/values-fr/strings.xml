@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="initializing">Initialisation</string>
+    <string name="loading">Chargement</string>
+    <string name="success">Succès</string>
+    <string name="error">Erreur</string>
+</resources>

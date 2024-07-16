@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Ask Circle</string>
+    <string name="filter">필터</string>
+    <string name="name">이름</string>
+    <string name="email">이메일</string>
+    <string name="age">나이</string>
+    <string name="update">업데이트</string>
+    <string name="edit_image">이미지 편집</string>
+    <string name="my_widgets">내 위젯</string>
+    <string name="profile">프로필</string>
+    <string name="create_widget">위젯 생성</string>
+    <string name="creating">생성 중…</string>
+    <string name="male">남성</string>
+    <string name="female">여성</string>
+    <string name="gender">성별</string>
+    <string name="select">선택</string>
+    <string name="location">위치</string>
+    <string name="clear">지우기 %1$s</string>
+    <string name="delete">삭제 %1$s</string>
+    <string name="no_widgets">위젯 없음</string>
+    <string name="create">생성</string>
+    <string name="your_voice_matters_vote_now">당신의 목소리는 중요합니다! 지금 투표하세요.</string>
+    <string name="shape_the_outcome_cast_your_vote">결과를 형성하세요! 투표하세요.</string>
+    <string name="join_the_conversation_vote_today">대화에 참여하세요! 오늘 투표하세요.</string>
+    <string name="be_a_trendsetter_vote_first">트렌드 세터가 되세요! 먼저 투표하세요.</string>
+    <string name="get_involved_make_your_vote_count">참여하세요! 당신의 투표가 중요합니다.</string>
+    <string name="start_the_discussion_with_your_vote">투표로 논의를 시작하세요.</string>
+    <string name="let_s_shape_the_future_vote_now">미래를 형성합시다! 지금 투표하세요.</string>
+    <string name="vote_for_your_favorite_option">당신이 좋아하는 옵션에 투표하세요!</string>
+
+
+</resources>

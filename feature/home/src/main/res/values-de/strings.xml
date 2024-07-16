@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Ask Circle</string>
+    <string name="filter">Filter</string>
+    <string name="name">Name</string>
+    <string name="email">E-Mail</string>
+    <string name="age">Alter</string>
+    <string name="update">Aktualisieren</string>
+    <string name="edit_image">Bild bearbeiten</string>
+    <string name="my_widgets">Meine Widgets</string>
+    <string name="profile">Profil</string>
+    <string name="create_widget">Widget erstellen</string>
+    <string name="creating">Erstellen…</string>
+    <string name="male">Männlich</string>
+    <string name="female">Weiblich</string>
+    <string name="gender">Geschlecht</string>
+    <string name="select">Auswählen</string>
+    <string name="location">Ort</string>
+    <string name="clear">Löschen %1$s</string>
+    <string name="delete">Löschen %1$s</string>
+    <string name="no_widgets">Keine Widgets</string>
+    <string name="create">Erstellen</string>
+    <string name="your_voice_matters_vote_now">Ihre Stimme zählt! Jetzt abstimmen.</string>
+    <string name="shape_the_outcome_cast_your_vote">Das Ergebnis gestalten! Stimmen Sie ab.</string>
+    <string name="join_the_conversation_vote_today">Nehmen Sie an der Diskussion teil! Heute abstimmen.</string>
+    <string name="be_a_trendsetter_vote_first">Seien Sie ein Trendsetter! Stimmen Sie zuerst ab.</string>
+    <string name="get_involved_make_your_vote_count">Beteiligen Sie sich! Ihre Stimme zählt.</string>
+    <string name="start_the_discussion_with_your_vote">Beginnen Sie die Diskussion mit Ihrer Stimme.</string>
+    <string name="let_s_shape_the_future_vote_now">Gestalten wir die Zukunft! Jetzt abstimmen.</string>
+    <string name="vote_for_your_favorite_option">Stimmen Sie für Ihre Lieblingsoption ab!</string>
+
+</resources>

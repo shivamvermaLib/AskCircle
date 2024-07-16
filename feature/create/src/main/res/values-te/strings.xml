@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="age_range">వయస్సు పరిధి</string>
+    <string name="all">అన్నీ</string>
+    <string name="text">పాఠ్యం</string>
+    <string name="options">ఎంపికలు</string>
+    <string name="image">చిత్రం</string>
+    <string name="title">శీర్షిక</string>
+    <string name="description">వివరణ</string>
+    <string name="add_option">ఎంపికను జోడించండి</string>
+    <string name="target_audience">లక్ష్య ప్రేక్షకులు</string>
+    <string name="close">మూసివేయి</string>
+    <string name="create">సృష్టించు</string>
+    <string name="location">స్థానం</string>
+    <string name="select">ఎంచుకోండి</string>
+    <string name="gender">లింగం</string>
+    <string name="male">పురుషుడు</string>
+    <string name="female">స్త్రీ</string>
+
+</resources>

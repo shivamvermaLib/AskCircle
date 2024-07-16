@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">AskCircle</string>
+    <string name="male">ذكر</string>
+    <string name="female">أنثى</string>
+    <string name="gender">النوع</string>
+    <string name="select">حدد</string>
+    <string name="location">الموقع</string>
+    <string name="clear">مسح %1$s</string>
+    <string name="delete">حذف %1$s</string>
+    <string name="no_widgets">لا توجد أدوات</string>
+    <string name="create">إنشاء</string>
+    <string name="last_voted">آخر تصويت %1$s</string>
+    <string name="total_votes">%1$s إجمالي الأصوات</string>
+
+</resources>

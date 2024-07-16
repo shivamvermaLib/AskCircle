@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">AskCircle</string>
+    <string name="male">पुरुष</string>
+    <string name="female">महिला</string>
+    <string name="gender">लिंग</string>
+    <string name="select">चुनें</string>
+    <string name="location">स्थान</string>
+    <string name="clear">साफ करें %1$s</string>
+    <string name="delete">हटाएं %1$s</string>
+    <string name="no_widgets">कोई विजेट्स नहीं</string>
+    <string name="create">बनाएं</string>
+    <string name="last_voted">अंतिम वोट %1$s</string>
+    <string name="total_votes">%1$s कुल वोट</string>
+
+</resources>
