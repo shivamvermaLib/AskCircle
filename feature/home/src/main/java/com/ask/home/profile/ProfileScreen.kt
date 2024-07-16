@@ -166,7 +166,7 @@ private fun ProfileScreen(
                             contentScale = ContentScale.Fit,
                             placeholder = R.drawable.baseline_account_box_24,
                             error = R.drawable.baseline_account_box_24,
-                            modifier =  Modifier.Companion
+                            modifier = Modifier.Companion
                                 .sharedElement(
                                     sharedTransitionScope.rememberSharedContentState(
                                         key = profile.profilePic ?: EMPTY
@@ -320,7 +320,7 @@ private fun ProfileScreen(
             ElevatedButton(
                 onClick = onUpdate,
                 modifier = Modifier.fillMaxWidth(),
-                enabled = profile.allowUpdate && isConnected
+                enabled = profile.allowUpdate && isConnected && !profile.profileLoading
             ) {
                 Text(text = stringResource(R.string.update))
             }
