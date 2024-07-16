@@ -61,50 +61,53 @@ fun WidgetWithUserView(
     onOptionClick: (String, String) -> Unit = { _, _ -> },
     onOpenImage: (String?) -> Unit,
 ) {
-
-    ElevatedCard(modifier = Modifier
-        .fillMaxWidth()
-        .padding(all = 16.dp), onClick = { /*TODO*/ }) {
-        Column(
-            modifier = Modifier.padding(all = 16.dp)
-        ) {
-            WidgetUserView(
-                user = widgetWithOptionsAndVotesForTargetAudience.user,
-                startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat,
-                sharedTransitionScope = sharedTransitionScope,
-                animatedContentScope = animatedContentScope,
-                onOpenImage
-            )
-            Spacer(modifier = Modifier.size(12.dp))
-            HorizontalDivider(thickness = 1.dp)
-            Spacer(modifier = Modifier.size(6.dp))
-            Text(
-                text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
-                    stringResource(R.string.last_voted, it)
-                } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.outline,
-                fontWeight = FontWeight.W400
-            )
-            Spacer(modifier = Modifier.size(6.dp))
-            WidgetView(
-                widget = widgetWithOptionsAndVotesForTargetAudience,
-                sharedTransitionScope,
-                animatedContentScope,
-                onOptionClick,
-                onOpenImage
-            )
-            Spacer(modifier = Modifier.size(16.dp))
-            Text(
-                text = stringResource(
-                    R.string.total_votes,
-                    widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
-                ),
-                color = MaterialTheme.colorScheme.outline,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.W400
-            )
+    Column(modifier = Modifier.fillMaxWidth()) {
+        ElevatedCard(modifier = Modifier
+            .fillMaxWidth()
+            .padding(all = 16.dp), onClick = { /*TODO*/ }) {
+            Column(
+                modifier = Modifier.padding(all = 16.dp)
+            ) {
+                WidgetUserView(
+                    user = widgetWithOptionsAndVotesForTargetAudience.user,
+                    startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope,
+                    onOpenImage
+                )
+                Spacer(modifier = Modifier.size(12.dp))
+                HorizontalDivider(thickness = 1.dp)
+                Spacer(modifier = Modifier.size(6.dp))
+                Text(
+                    text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
+                        stringResource(R.string.last_voted, it)
+                    } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.outline,
+                    fontWeight = FontWeight.W400
+                )
+                Spacer(modifier = Modifier.size(6.dp))
+                WidgetView(
+                    widget = widgetWithOptionsAndVotesForTargetAudience,
+                    sharedTransitionScope,
+                    animatedContentScope,
+                    onOptionClick,
+                    onOpenImage
+                )
+                Spacer(modifier = Modifier.size(16.dp))
+                Text(
+                    text = stringResource(
+                        R.string.total_votes,
+                        widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
+                    ),
+                    color = MaterialTheme.colorScheme.outline,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = FontWeight.W400
+                )
+            }
         }
+        if (widgetWithOptionsAndVotesForTargetAudience.showAdMob)
+            AppAdmobBanner(modifier = Modifier.fillMaxWidth())
     }
 }
 

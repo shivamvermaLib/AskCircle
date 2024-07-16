@@ -102,6 +102,8 @@ dependencies {
     testImplementation(libs.hilt.android.testing)
     kaptTest(libs.hilt.compiler)
 
+    implementation(libs.play.services.ads)
+
     implementation(project(":data:widget"))
     implementation(project(":data:country"))
     implementation(project(":data:core"))

@@ -231,6 +231,9 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
     @Ignore
     var lastVotedAtOptional: String = ""
 
+    @get:Exclude
+    @Ignore
+    var showAdMob = false
 
     @Serializable
     data class OptionWithVotes(

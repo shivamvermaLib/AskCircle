@@ -61,6 +61,7 @@ dependencies {
     implementation(project(":data:core"))
     implementation(project(":data:widget"))
     implementation(project(":data:user"))
+    implementation(libs.play.services.ads.lite)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
