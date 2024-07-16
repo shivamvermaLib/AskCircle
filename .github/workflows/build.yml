@@ -13,7 +13,7 @@ on:
     branches:
       - development
       - main
-#      - 'release/**'
+  #      - 'release/**'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -48,6 +48,11 @@ jobs:
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
+      - name: Update Username from Secrets
+        env:
+          MOCK_USERNAME: ${{ secrets.BANNER_ID }}
+        run: echo BANNER_ID="$BANNER_ID" > ./local.properties
+
       # Run Tests Build
       - name: Run gradle tests
         run: ./gradlew test
@@ -64,10 +69,10 @@ jobs:
       - name: Build apk release project (APK) - ${{ env.main_project_module }} module
         run: ./gradlew assemble
 
-#      # Create Bundle AAB Release
-#      # Noted for main module build [main_project_module]:bundleRelease
-#      - name: Build app bundle release (AAB) - ${{ env.main_project_module }} module
-#        run: ./gradlew ${{ env.main_project_module }}:bundleRelease
+      #      # Create Bundle AAB Release
+      #      # Noted for main module build [main_project_module]:bundleRelease
+      #      - name: Build app bundle release (AAB) - ${{ env.main_project_module }} module
+      #        run: ./gradlew ${{ env.main_project_module }}:bundleRelease
 
       # Upload Artifact Build
       # Noted For Output [main_project_module]/build/outputs/apk/debug/
