@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="initializing">جارٍ التهيئة</string>
+    <string name="loading">جارٍ التحميل</string>
+    <string name="success">نجاح</string>
+    <string name="error">خطأ</string>
+</resources>

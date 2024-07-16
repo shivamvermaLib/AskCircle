@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="age_range">Altersgruppe</string>
+    <string name="all">Alle</string>
+    <string name="text">Text</string>
+    <string name="options">Optionen</string>
+    <string name="image">Bild</string>
+    <string name="title">Titel</string>
+    <string name="description">Beschreibung</string>
+    <string name="add_option">Option hinzufügen</string>
+    <string name="target_audience">Zielgruppe</string>
+    <string name="close">Schließen</string>
+    <string name="create">Erstellen</string>
+    <string name="location">Standort</string>
+    <string name="select">Auswählen</string>
+    <string name="gender">Geschlecht</string>
+    <string name="male">Männlich</string>
+    <string name="female">Weiblich</string>
+
+</resources>

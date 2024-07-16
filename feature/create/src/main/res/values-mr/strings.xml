@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="age_range">वयोगट</string>
+    <string name="all">सर्व</string>
+    <string name="text">पाठ</string>
+    <string name="options">पर्याय</string>
+    <string name="image">प्रतिमा</string>
+    <string name="title">शीर्षक</string>
+    <string name="description">वर्णन</string>
+    <string name="add_option">पर्याय जोडा</string>
+    <string name="target_audience">लक्षित प्रेक्षक</string>
+    <string name="close">बंद करा</string>
+    <string name="create">तयार करा</string>
+    <string name="location">स्थान</string>
+    <string name="select">निवडा</string>
+    <string name="gender">लिंग</string>
+    <string name="male">पुरुष</string>
+    <string name="female">महिला</string>
+
+</resources>

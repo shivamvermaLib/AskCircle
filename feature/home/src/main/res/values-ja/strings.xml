@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Ask Circle</string>
+    <string name="filter">フィルター</string>
+    <string name="name">名前</string>
+    <string name="email">メール</string>
+    <string name="age">年齢</string>
+    <string name="update">更新</string>
+    <string name="edit_image">画像を編集</string>
+    <string name="my_widgets">私のウィジェット</string>
+    <string name="profile">プロフィール</string>
+    <string name="create_widget">ウィジェットを作成</string>
+    <string name="creating">作成中…</string>
+    <string name="male">男性</string>
+    <string name="female">女性</string>
+    <string name="gender">性別</string>
+    <string name="select">選択</string>
+    <string name="location">場所</string>
+    <string name="clear">クリア %1$s</string>
+    <string name="delete">削除 %1$s</string>
+    <string name="no_widgets">ウィジェットがありません</string>
+    <string name="create">作成</string>
+    <string name="your_voice_matters_vote_now">あなたの声は大切です！今すぐ投票してください。</string>
+    <string name="shape_the_outcome_cast_your_vote">結果を形作りましょう！投票してください。</string>
+    <string name="join_the_conversation_vote_today">会話に参加しましょう！今日投票してください。</string>
+    <string name="be_a_trendsetter_vote_first">トレンドセッターになりましょう！最初に投票してください。</string>
+    <string name="get_involved_make_your_vote_count">参加してください！あなたの投票は重要です。</string>
+    <string name="start_the_discussion_with_your_vote">投票で議論を始めましょう。</string>
+    <string name="let_s_shape_the_future_vote_now">未来を形作りましょう！今すぐ投票してください。</string>
+    <string name="vote_for_your_favorite_option">お気に入りのオプションに投票してください！</string>
+
+</resources>

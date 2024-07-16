@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="age_range">പ്രായ പരിധി</string>
+    <string name="all">എല്ലാം</string>
+    <string name="text">ടെക്സ്റ്റ്</string>
+    <string name="options">ഓപ്ഷനുകൾ</string>
+    <string name="image">ചിത്രം</string>
+    <string name="title">ശീർഷകം</string>
+    <string name="description">വിവരണം</string>
+    <string name="add_option">ഓപ്ഷൻ ചേർക്കുക</string>
+    <string name="target_audience">ലക്ഷ്യമിടുന്ന പ്രേക്ഷകർ</string>
+    <string name="close">അടയ്ക്കുക</string>
+    <string name="create">സൃഷ്ടിക്കുക</string>
+    <string name="location">സ്ഥലം</string>
+    <string name="select">തിരഞ്ഞെടുക്കുക</string>
+    <string name="gender">ലിംഗം</string>
+    <string name="male">പുരുഷൻ</string>
+    <string name="female">സ്ത്രീ</string>
+</resources>
