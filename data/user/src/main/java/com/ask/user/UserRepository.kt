@@ -141,4 +141,8 @@ class UserRepository @Inject constructor(
             }
     }
 
+    suspend fun clearAll() = withContext(dispatcher) {
+        userDao.deleteAll()
+    }
+
 }

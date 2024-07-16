@@ -55,11 +55,17 @@ interface WidgetDao {
     @Upsert
     suspend fun insertVotes(voteList: List<Widget.Option.Vote>)
 
+    @Delete
+    suspend fun deleteVote(vote: Widget.Option.Vote)
+
     @Transaction
     @Query("select * from widgets where id = :id")
     suspend fun getWidgetById(id: String): WidgetWithOptionsAndVotesForTargetAudience?
 
     @Delete
     suspend fun deleteWidget(widget: Widget)
+
+    @Query("DELETE FROM widgets")
+    suspend fun clearData()
 
 }

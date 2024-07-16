@@ -21,7 +21,12 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
         Json.decodeFromString<UpdatedTime>(it)
     } ?: UpdatedTime()
 
+    fun getRefreshCount(): Long = sharedPreference.getLong(REFRESH_COUNT, 0)
+
+    fun setRefreshCount(count: Long) = sharedPreference.edit().putLong(REFRESH_COUNT, count).apply()
+
     companion object {
         const val APP_SHARED_PREFERENCE = "app_shared_preference"
+        const val REFRESH_COUNT = "Refresh count"
     }
 }

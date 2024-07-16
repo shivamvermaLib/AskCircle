@@ -31,6 +31,7 @@ class SyncWidgetWorker @AssistedInject constructor(
     @Assisted context: Context,
     @Assisted params: WorkerParameters
 ) : CoroutineWorker(context, params) {
+
     override suspend fun doWork(): Result {
         return try {
             setProgress(workDataOf(STATUS to WorkerStatus.Loading.name))

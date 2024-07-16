@@ -24,4 +24,8 @@ class CountryRepository @Inject constructor(
 
     fun getCountries() = countryDao.getAlCountries().flowOn(dispatcher)
 
+    suspend fun clearAll() = withContext(dispatcher) {
+        countryDao.deleteAll()
+    }
+
 }

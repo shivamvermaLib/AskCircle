@@ -2,6 +2,7 @@ package com.ask.widget
 
 import com.ask.analytics.AnalyticsLogger
 import com.ask.core.AppSharedPreference
+import com.ask.core.RemoteConfigRepository
 import com.ask.core.UpdatedTime
 import com.ask.country.CountryRepository
 import com.ask.user.UserRepository
@@ -13,7 +14,8 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
     private val widgetRepository: WidgetRepository,
     private val countryRepository: CountryRepository,
     private val analyticsLogger: AnalyticsLogger,
-    private val sharedPreference: AppSharedPreference
+    private val sharedPreference: AppSharedPreference,
+    private val remoteConfigRepository: RemoteConfigRepository,
 ) {
 
     suspend operator fun invoke(
@@ -26,9 +28,24 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             }
             return false
         }
+        val refreshCountServer = remoteConfigRepository.refreshCountServer()
+        val refreshCountLocal = sharedPreference.getRefreshCount()
+        var refreshNeeded = false
+        if (refreshCountServer != refreshCountLocal) {
+            sharedPreference.setRefreshCount(refreshCountServer)
+            refreshNeeded = true
+            widgetRepository.clearAll()
+            userRepository.clearAll()
+            countryRepository.clearAll()
+            analyticsLogger.refreshTriggerEvent(
+                refreshCountServer,
+                refreshCountLocal,
+                userRepository.getCurrentUserId()
+            )
+        }
 
         val lastUpdatedTime = sharedPreference.getUpdatedTime()
-        if (widgetRepository.doesSyncRequired(lastUpdatedTime)) {
+        if (refreshNeeded || widgetRepository.doesSyncRequired(lastUpdatedTime)) {
             val time = System.currentTimeMillis()
 
             val sendNotification = userRepository.createUser().let { userWithLocation ->

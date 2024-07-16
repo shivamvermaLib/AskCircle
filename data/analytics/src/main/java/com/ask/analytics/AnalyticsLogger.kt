@@ -131,6 +131,18 @@ class AnalyticsLogger @Inject constructor(
         })
     }
 
+    fun refreshTriggerEvent(
+        refreshCountServer: Long,
+        refreshCountLocal: Long,
+        currentUserId: String
+    ) {
+        firebaseAnalytics.logEvent(REFRESH_COUNT_EVENT, Bundle().apply {
+            putLong(REFRESH_COUNT_SERVER, refreshCountServer)
+            putLong(REFRESH_COUNT_LOCAL, refreshCountLocal)
+            putString(USER_ID, currentUserId)
+        })
+    }
+
 
     companion object {
         const val SCREEN_OPEN = "screen_open"
@@ -160,5 +172,8 @@ class AnalyticsLogger @Inject constructor(
         const val SYNC_USERS_AND_WIDGETS_DURATION = "sync_users_and_widgets_duration"
         const val REMOTE_CONFIG_FETCH = "remote_config_fetch"
         const val SUCCESS = "success"
+        const val REFRESH_COUNT_EVENT = "refresh_count_event"
+        const val REFRESH_COUNT_SERVER = "refresh_count_server"
+        const val REFRESH_COUNT_LOCAL = "refresh_count_local"
     }
 }

@@ -11,31 +11,34 @@ import kotlinx.coroutines.flow.Flow
 interface UserDao {
     @Transaction
     @Query("SELECT * FROM users")
-    fun getAllUsers(): Flow<List<com.ask.user.User>>
+    fun getAllUsers(): Flow<List<User>>
 
     @Upsert
     suspend fun insertAll(
-        users: List<com.ask.user.User>,
-        userLocations: List<com.ask.user.User.UserLocation>
+        users: List<User>,
+        userLocations: List<User.UserLocation>
     )
 
     @Upsert
-    suspend fun insertUser(user: com.ask.user.User)
+    suspend fun insertUser(user: User)
 
     @Delete
-    suspend fun deleteUser(user: com.ask.user.User)
+    suspend fun deleteUser(user: User)
 
     @Transaction
     @Query("select * from users where id = :id")
-    suspend fun getUserDetailsById(id: String): com.ask.user.UserWithLocation?
+    suspend fun getUserDetailsById(id: String): UserWithLocation?
 
     @Query("SELECT * FROM users where id = :id")
-    suspend fun getUserById(id: String): com.ask.user.User?
+    suspend fun getUserById(id: String): User?
 
     @Query("select * from users where id in (:ids)")
-    suspend fun getUsersByIds(ids: List<String>): List<com.ask.user.User>
+    suspend fun getUsersByIds(ids: List<String>): List<User>
 
     @Transaction
     @Query("select * from users where id = :id")
-    fun getUserByIdLive(id: String): Flow<com.ask.user.UserWithLocation>
+    fun getUserByIdLive(id: String): Flow<UserWithLocation>
+
+    @Query("DELETE FROM users")
+    suspend fun deleteAll()
 }

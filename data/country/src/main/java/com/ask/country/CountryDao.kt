@@ -16,4 +16,7 @@ interface CountryDao {
 
     @Query("select * from countries")
     fun getAlCountries(): Flow<List<Country>>
+
+    @Query("delete from countries")
+    suspend fun deleteAll()
 }

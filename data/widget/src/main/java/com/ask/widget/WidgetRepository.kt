@@ -175,11 +175,14 @@ class WidgetRepository @Inject constructor(
 
     suspend fun vote(widgetId: String, optionId: String, userId: String) =
         withContext(dispatcher) {
+            var removeVote: Widget.Option.Vote? = null
             widgetDataSource.updateItemFromTransaction(widgetId) { widgetWithOptionsAndVotesForTargetAudience ->
                 widgetWithOptionsAndVotesForTargetAudience.copy(options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
                     val (option, votes) = optionWithVotes
                     val mutableVotes = votes.toMutableList()
-                    if (mutableVotes.removeIf { it.userId == userId }) {
+                    val index = mutableVotes.indexOfFirst { it.userId == userId }
+                    if (index != -1) {
+                        removeVote = mutableVotes.removeAt(index)
                         optionWithVotes.copy(votes = mutableVotes)
                     } else if (option.id == optionId) {
                         optionWithVotes.copy(
@@ -191,20 +194,25 @@ class WidgetRepository @Inject constructor(
                         optionWithVotes
                     }
                 })
-            }
-        }.also { widgetWithOptionsAndVotesForTargetAudience ->
-            //TODO: should have code to delete votes also, if user remove vote from widget
-            widgetDao.insertWidget(
-                widgetWithOptionsAndVotesForTargetAudience.widget,
-                widgetWithOptionsAndVotesForTargetAudience.targetAudienceGender,
-                widgetWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange,
-                widgetWithOptionsAndVotesForTargetAudience.targetAudienceLocations,
-                widgetWithOptionsAndVotesForTargetAudience.options.map { it.option },
-                widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }.flatten()
-            )
-        }.also {
-            widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
-                updatedTime.copy(voteTime = System.currentTimeMillis())
+            }.also { widgetWithOptionsAndVotesForTargetAudience ->
+                removeVote?.let { widgetDao.deleteVote(it) }
+                widgetDao.insertWidget(
+                    widgetWithOptionsAndVotesForTargetAudience.widget,
+                    widgetWithOptionsAndVotesForTargetAudience.targetAudienceGender,
+                    widgetWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange,
+                    widgetWithOptionsAndVotesForTargetAudience.targetAudienceLocations,
+                    widgetWithOptionsAndVotesForTargetAudience.options.map { it.option },
+                    widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }
+                        .flatten()
+                )
+            }.also {
+                widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
+                    updatedTime.copy(voteTime = System.currentTimeMillis())
+                }
             }
         }
+
+    suspend fun clearAll() = withContext(dispatcher) {
+        widgetDao.clearData()
+    }
 }
