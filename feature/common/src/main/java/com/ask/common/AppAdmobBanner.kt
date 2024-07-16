@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.ask.core.BuildConfig
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
 import com.google.android.gms.ads.AdView
@@ -19,7 +20,8 @@ fun AppAdmobBanner(modifier: Modifier = Modifier) {
         factory = { context ->
             AdView(context).apply {
                 setAdSize(AdSize.BANNER)
-                adUnitId = "ca-app-pub-7177547071040972/6043795757"
+                adUnitId =
+                    if (BuildConfig.DEBUG) "ca-app-pub-3940256099942544/6300978111" else com.ask.common.BuildConfig.BANNER_ID
                 loadAd(AdRequest.Builder().build())
             }
         }
