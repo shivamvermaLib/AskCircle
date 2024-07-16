@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">AskCircle</string>
+    <string name="male">പുരുഷൻ</string>
+    <string name="female">സ്ത്രീ</string>
+    <string name="gender">ലിംഗം</string>
+    <string name="select">തിരഞ്ഞെടുക്കുക</string>
+    <string name="location">സ്ഥലം</string>
+    <string name="clear">%1$s മായ്‌ച്ചുക</string>
+    <string name="delete">%1$s നീക്കം ചെയ്യുക</string>
+    <string name="no_widgets">എന്തോ വിജറ്റുകൾ ഇല്ല</string>
+    <string name="create">സൃഷ്ടിക്കുക</string>
+    <string name="last_voted">%1$s അവസാന വോട്ട്</string>
+    <string name="total_votes">%1$s ആകെ വോട്ടുകൾ</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">AskCircle</string>
+    <string name="male">男性</string>
+    <string name="female">女性</string>
+    <string name="gender">性別</string>
+    <string name="select">選択</string>
+    <string name="location">位置</string>
+    <string name="clear">クリア %1$s</string>
+    <string name="delete">削除 %1$s</string>
+    <string name="no_widgets">ウィジェットなし</string>
+    <string name="create">作成</string>
+    <string name="last_voted">最後の投票 %1$s</string>
+    <string name="total_votes">%1$s 総投票数</string>
+
+</resources>

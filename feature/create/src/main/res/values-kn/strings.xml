@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="age_range">ವಯೋಮಿತಿ</string>
+    <string name="all">ಎಲ್ಲ</string>
+    <string name="text">ಪಠ್ಯ</string>
+    <string name="options">ಆಯ್ಕೆಗಳು</string>
+    <string name="image">ಚಿತ್ರ</string>
+    <string name="title">ಶೀರ್ಷಿಕೆ</string>
+    <string name="description">ವಿವರಣೆ</string>
+    <string name="add_option">ಆಯ್ಕೆಯನ್ನು ಸೇರಿಸಿ</string>
+    <string name="target_audience">ಗುರಿ ಪ್ರೇಕ್ಷಕರು</string>
+    <string name="close">ಮುಚ್ಚಿ</string>
+    <string name="create">ಸೃಷ್ಟಿಸಿ</string>
+    <string name="location">ಸ್ಥಳ</string>
+    <string name="select">ಆಯ್ಕೆಮಾಡಿ</string>
+    <string name="gender">ಲಿಂಗ</string>
+    <string name="male">ಪುರುಷ</string>
+    <string name="female">ಹೆಣ್ಣು</string>
+
+</resources>

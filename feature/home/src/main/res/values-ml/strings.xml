@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">Ask Circle</string>
+    <string name="filter">ഫിൽട്ടർ</string>
+    <string name="name">പേര്</string>
+    <string name="email">ഇമെയിൽ</string>
+    <string name="age">പ്രായം</string>
+    <string name="update">അപ്ഡേറ്റ്</string>
+    <string name="edit_image">ചിത്രം തിരുത്തുക</string>
+    <string name="my_widgets">എന്റെ വിജറ്റ്‌സ്</string>
+    <string name="profile">പ്രൊഫൈൽ</string>
+    <string name="create_widget">വിജറ്റ് സൃഷ്ടിക്കുക</string>
+    <string name="creating">സൃഷ്ടിക്കുന്നു…</string>
+    <string name="male">ആൺ</string>
+    <string name="female">പെൺ</string>
+    <string name="gender">ലിംഗഭേദം</string>
+    <string name="select">തിരഞ്ഞെടുക്കുക</string>
+    <string name="location">സ്ഥലം</string>
+    <string name="clear">നികുത്തുക %1$s</string>
+    <string name="delete">നീക്കുക %1$s</string>
+    <string name="no_widgets">വിജറ്റ്‌സ് ഇല്ല</string>
+    <string name="create">സൃഷ്ടിക്കുക</string>
+    <string name="your_voice_matters_vote_now">നിങ്ങളുടെ ശബ്ദം പ്രാധാന്യമുള്ളതാണ്! ഇപ്പോൾ വോട്ടു ചെയ്യുക.</string>
+    <string name="shape_the_outcome_cast_your_vote">ഫലത്തെ രൂപപ്പെടുത്തുക! നിങ്ങളുടെ വോട്ട് നൽകുക.</string>
+    <string name="join_the_conversation_vote_today">സംഭാഷണത്തിൽ പങ്കുചേരുക! ഇന്ന് വോട്ടു ചെയ്യുക.</string>
+    <string name="be_a_trendsetter_vote_first">ട്രെൻഡ്സെറ്ററാകുക! ആദ്യം വോട്ടു ചെയ്യുക.</string>
+    <string name="get_involved_make_your_vote_count">പങ്കെടുക്കുക! നിങ്ങളുടെ വോട്ട് പ്രധാനമാണ്.</string>
+    <string name="start_the_discussion_with_your_vote">നിങ്ങളുടെ വോട്ടുകൊണ്ട് ചർച്ച ആരംഭിക്കുക.</string>
+    <string name="let_s_shape_the_future_vote_now">ഭാവിയെ രൂപപ്പെടുത്താം! ഇപ്പോൾ വോട്ടു ചെയ്യുക.</string>
+    <string name="vote_for_your_favorite_option">നിങ്ങളുടെ ഇഷ്ടപ്പെട്ട ഓപ്ഷനിലേക്ക് വോട്ടു ചെയ്യുക!</string>
+
+</resources>
