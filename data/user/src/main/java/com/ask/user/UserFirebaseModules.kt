@@ -1,6 +1,8 @@
 package com.ask.user
 
 import com.ask.core.FIREBASE_DB
+import com.ask.core.FirebaseDataSource
+import com.ask.core.FirebaseStorageSource
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.MutableData
@@ -23,14 +25,12 @@ object UserFirebaseModules {
         return storageReference.child(TABLE_USERS)
     }
 
-
     @Singleton
     @Provides
     @Named(TABLE_USERS)
-    fun provideUserStorageSource(@Named(TABLE_USERS) storageReference: StorageReference): com.ask.core.FirebaseStorageSource {
-        return com.ask.core.FirebaseStorageSource(storageReference)
+    fun provideUserStorageSource(@Named(TABLE_USERS) storageReference: StorageReference): FirebaseStorageSource {
+        return FirebaseStorageSource(storageReference)
     }
-
 
     @Singleton
     @Provides
@@ -41,34 +41,39 @@ object UserFirebaseModules {
 
     @Singleton
     @Provides
-    fun provideUserDataSource(@Named(TABLE_USERS) userReference: DatabaseReference): com.ask.core.FirebaseDataSource<UserWithLocation> =
-        object : com.ask.core.FirebaseDataSource<UserWithLocation>(userReference) {
+    fun provideUserDataSource(@Named(TABLE_USERS) userReference: DatabaseReference): FirebaseDataSource<UserWithLocationCategory> =
+        object : FirebaseDataSource<UserWithLocationCategory>(userReference) {
             override fun updateIdForItem(
-                t: UserWithLocation,
+                t: UserWithLocationCategory,
                 id: String
-            ): UserWithLocation {
+            ): UserWithLocationCategory {
                 return t.copy(user = t.user.copy(id = id))
             }
 
-            override fun getIdForItem(t: UserWithLocation): String {
+            override fun getIdForItem(t: UserWithLocationCategory): String {
                 return t.user.id
             }
 
-            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): UserWithLocation {
-                return UserWithLocation(
+            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): UserWithLocationCategory {
+                return UserWithLocationCategory(
                     dataSnapshot.child(USER).getValue(User::class.java)!!,
                     dataSnapshot.child(USER_LOCATION)
                         .getValue(User.UserLocation::class.java)!!,
+                    dataSnapshot.child(USER_CATEGORY).children.map {
+                        it.getValue(User.UserCategory::class.java)!!
+                    }
                 )
             }
 
-            override fun getItemFromMutableData(mutableData: MutableData): UserWithLocation? {
+            override fun getItemFromMutableData(mutableData: MutableData): UserWithLocationCategory? {
                 val user =
                     mutableData.child(USER).getValue(User::class.java) ?: return null
-                return UserWithLocation(
+                return UserWithLocationCategory(
                     user,
-                    mutableData.child(USER_LOCATION)
-                        .getValue(User.UserLocation::class.java)!!,
+                    mutableData.child(USER_LOCATION).getValue(User.UserLocation::class.java)!!,
+                    mutableData.child(USER_CATEGORY).children.map {
+                        it.getValue(User.UserCategory::class.java)!!
+                    }
                 )
             }
         }

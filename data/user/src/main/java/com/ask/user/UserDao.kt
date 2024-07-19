@@ -16,7 +16,8 @@ interface UserDao {
     @Upsert
     suspend fun insertAll(
         users: List<User>,
-        userLocations: List<User.UserLocation>
+        userLocations: List<User.UserLocation>,
+        userCategories: List<User.UserCategory>
     )
 
     @Upsert
@@ -27,7 +28,7 @@ interface UserDao {
 
     @Transaction
     @Query("select * from users where id = :id")
-    suspend fun getUserDetailsById(id: String): UserWithLocation?
+    suspend fun getUserDetailsById(id: String): UserWithLocationCategory?
 
     @Query("SELECT * FROM users where id = :id")
     suspend fun getUserById(id: String): User?
@@ -37,7 +38,7 @@ interface UserDao {
 
     @Transaction
     @Query("select * from users where id = :id")
-    fun getUserByIdLive(id: String): Flow<UserWithLocation>
+    fun getUserByIdLive(id: String): Flow<UserWithLocationCategory>
 
     @Query("DELETE FROM users")
     suspend fun deleteAll()

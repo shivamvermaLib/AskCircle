@@ -5,6 +5,7 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -31,6 +32,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -42,6 +45,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -235,6 +239,8 @@ fun TextOption(
     onOptionClick: (String) -> Unit = {},
     onDeleteIconClick: (Int) -> Unit = {}
 ) {
+    val density = LocalDensity.current
+//    var maxHeightOfText by remember { mutableStateOf(36.dp) }
     val (option, _) = widgetOption
     Row(
         modifier = Modifier
@@ -278,13 +284,19 @@ fun TextOption(
         } else {
             Text(
                 text = option.text ?: EMPTY,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+//                    .onGloballyPositioned { coordinates ->
+//                        with(density) { maxHeightOfText = coordinates.size.height.toDp() }
+//                    }
+                    .basicMarquee()
+                ,
                 color = if (didUserVoted) {
                     if (isSystemInDarkTheme()) Color.Black else Color.White
                 } else {
                     if (isSystemInDarkTheme()) Color.White else Color.Black
                 },
-                maxLines = 1
+                maxLines = 1,
             )
             if (hasVotes)
                 Text(

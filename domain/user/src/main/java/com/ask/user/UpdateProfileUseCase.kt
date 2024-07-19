@@ -16,6 +16,7 @@ class UpdateProfileUseCase @Inject constructor(
         age: Int?,
         profilePic: String?,
         country: String?,
+        userCategories: List<User.UserCategory>?,
         getExtension: (String) -> String?,
         getBytes: (String) -> ByteArray?,
         preloadImage: suspend (String) -> Unit
@@ -37,6 +38,7 @@ class UpdateProfileUseCase @Inject constructor(
             gender = gender,
             age = age,
             country = country,
+            userCategories = userCategories,
             profilePicExtension = extension,
             profileByteArray = profilePic?.takeIf { it.checkIfUrl().not() }
                 ?.let { path -> getBytes(path) },

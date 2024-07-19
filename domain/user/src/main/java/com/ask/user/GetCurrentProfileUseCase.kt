@@ -7,7 +7,7 @@ class GetCurrentProfileUseCase @Inject constructor(
     private val userRepository: UserRepository
 ) {
 
-    operator fun invoke(): Flow<UserWithLocation> {
+    operator fun invoke(): Flow<UserWithLocationCategory> {
         return userRepository.getCurrentUserLive()
     }
 

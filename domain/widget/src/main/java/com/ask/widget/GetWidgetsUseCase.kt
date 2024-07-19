@@ -11,12 +11,12 @@ class GetWidgetsUseCase @Inject constructor(
     private val widgetRepository: WidgetRepository,
     private val remoteConfigRepository: RemoteConfigRepository,
 ) {
-    operator fun invoke(filterType: FilterType): Flow<List<WidgetWithOptionsAndVotesForTargetAudience>> {
+    operator fun invoke(filter: Filter): Flow<List<WidgetWithOptionsAndVotesForTargetAudience>> {
         val adMobIndexList = remoteConfigRepository.dashBoardAdMobIndexList()
-        return when (filterType) {
-            FilterType.Latest -> widgetRepository.getWidgets()
-            FilterType.Trending -> widgetRepository.getTrendingWidgets()
-            FilterType.MyWidgets -> widgetRepository.getUserWidgets(userId = userRepository.getCurrentUserId())
+        return when (filter) {
+            Filter.Latest -> widgetRepository.getWidgets()
+            Filter.Trending -> widgetRepository.getTrendingWidgets()
+            Filter.MyWidgets -> widgetRepository.getUserWidgets(userId = userRepository.getCurrentUserId())
         }.mapWithCompute(userRepository.getCurrentUserId())
             .map {
                 it.mapIndexed { index, widgetWithOptionsAndVotesForTargetAudience ->

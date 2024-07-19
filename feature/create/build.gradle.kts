@@ -61,6 +61,8 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
     implementation(project(":data:country"))
+    implementation(project(":data:category"))
+    implementation(project(":domain:category"))
     kapt(libs.hilt.compiler)
 
     implementation(libs.kotlinx.serialization.json)

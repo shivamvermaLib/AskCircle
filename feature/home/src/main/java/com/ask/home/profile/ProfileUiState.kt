@@ -1,10 +1,12 @@
 package com.ask.home.profile
 
+import com.ask.category.CategoryWithSubCategory
 import com.ask.common.MAX_AGE_RANGE
 import com.ask.common.MIN_AGE_RANGE
 import com.ask.core.EMPTY
 import com.ask.country.Country
 import com.ask.user.Gender
+import com.ask.user.User
 
 data class ProfileUiState(
     val name: String = EMPTY,
@@ -20,5 +22,7 @@ data class ProfileUiState(
     val profileLoading: Boolean = false,
     val error: String? = null,
     val minAgeRange: Int = MIN_AGE_RANGE,
-    val maxAgeRange: Int = MAX_AGE_RANGE
+    val maxAgeRange: Int = MAX_AGE_RANGE,
+    val categories: List<CategoryWithSubCategory> = emptyList(),
+    val userCategories: List<User.UserCategory> = emptyList()
 )

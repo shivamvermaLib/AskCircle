@@ -1,6 +1,7 @@
 package com.ask.widget
 
 import com.ask.analytics.AnalyticsLogger
+import com.ask.category.CategoryRepository
 import com.ask.core.AppSharedPreference
 import com.ask.core.RemoteConfigRepository
 import com.ask.core.UpdatedTime
@@ -8,6 +9,7 @@ import com.ask.country.CountryRepository
 import com.ask.user.UserRepository
 import com.ask.user.generateCombinationsForUsers
 import javax.inject.Inject
+import javax.inject.Named
 
 class SyncUsersAndWidgetsUseCase @Inject constructor(
     private val userRepository: UserRepository,
@@ -16,6 +18,8 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
     private val analyticsLogger: AnalyticsLogger,
     private val sharedPreference: AppSharedPreference,
     private val remoteConfigRepository: RemoteConfigRepository,
+    private val categoryRepository: CategoryRepository,
+    @Named("db_version") private val dbVersion: Int
 ) {
 
     suspend operator fun invoke(
@@ -31,21 +35,25 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         val refreshCountServer = remoteConfigRepository.refreshCountServer()
         val refreshCountLocal = sharedPreference.getRefreshCount()
         var refreshNeeded = false
-        if (refreshCountServer != refreshCountLocal) {
-            sharedPreference.setRefreshCount(refreshCountServer)
+        val lastUpdatedTime = sharedPreference.getUpdatedTime()
+        val lastDbVersion = sharedPreference.getDbVersion()
+
+        if (refreshCountServer != refreshCountLocal || lastDbVersion != dbVersion) {
             refreshNeeded = true
             widgetRepository.clearAll()
             userRepository.clearAll()
             countryRepository.clearAll()
+            categoryRepository.clearAll()
             analyticsLogger.refreshTriggerEvent(
                 refreshCountServer,
                 refreshCountLocal,
                 userRepository.getCurrentUserId()
             )
+            sharedPreference.setDbVersion(dbVersion)
+        } else if (widgetRepository.doesSyncRequired(lastUpdatedTime)) {
+            refreshNeeded = true
         }
-
-        val lastUpdatedTime = sharedPreference.getUpdatedTime()
-        if (refreshNeeded || widgetRepository.doesSyncRequired(lastUpdatedTime)) {
+        if (refreshNeeded) {
             val time = System.currentTimeMillis()
 
             val sendNotification = userRepository.createUser().let { userWithLocation ->
@@ -53,7 +61,8 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     userWithLocation.user.gender,
                     userWithLocation.user.age,
                     userWithLocation.userLocation,
-                    userWithLocation.user.id
+                    userWithLocation.user.id,
+                    userWithLocation.userCategories
                 ).let { list ->
                     widgetRepository.syncWidgetsFromServer(
                         userRepository.getCurrentUserId(),
@@ -70,11 +79,13 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         preloadImages
                     ).also {
                         countryRepository.syncCountries()
+                        categoryRepository.syncCategories()
                     }
                 }
             }
             val duration = System.currentTimeMillis() - time
             analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
+            sharedPreference.setRefreshCount(refreshCountServer)
             sharedPreference.setUpdatedTime(
                 UpdatedTime(
                     widgetTime = System.currentTimeMillis(),

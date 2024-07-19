@@ -5,9 +5,7 @@ import com.ask.core.FirebaseDataSource
 import com.ask.user.User
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.MutableData
-import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import dagger.Module
 import dagger.Provides
@@ -88,7 +86,10 @@ object WidgetFirebaseModules {
                     },
                     dataSnapshot.child(TARGET_AUDIENCE_AGE_RANGES)
                         .getValue(Widget.TargetAudienceAgeRange::class.java)!!,
-                    User(id = widget.creatorId)
+                    User(id = widget.creatorId),
+                    dataSnapshot.child(TABLE_WIDGET_CATEGORIES).children.map {
+                        it.getValue(Widget.WidgetCategory::class.java)!!
+                    }
                 )
             }
 
@@ -112,7 +113,10 @@ object WidgetFirebaseModules {
                     },
                     mutableData.child(TARGET_AUDIENCE_AGE_RANGES)
                         .getValue(Widget.TargetAudienceAgeRange::class.java)!!,
-                    User(id = widget.creatorId)
+                    User(id = widget.creatorId),
+                    mutableData.child(TABLE_WIDGET_CATEGORIES).children.map {
+                        it.getValue(Widget.WidgetCategory::class.java)!!
+                    }
                 )
             }
         }

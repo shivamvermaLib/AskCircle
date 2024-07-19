@@ -53,7 +53,7 @@ fun Context.observeConnectivityAsFlow() = callbackFlow {
         .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         .build()
 
-    connectivityManager.registerNetworkCallback(networkRequest, callback)
+    connectivityManager.registerDefaultNetworkCallback(callback)
 
     // Set current state
     val currentState = getCurrentConnectivityState(connectivityManager)

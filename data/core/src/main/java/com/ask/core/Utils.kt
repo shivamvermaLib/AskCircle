@@ -14,3 +14,8 @@ fun String.extension(): String {
 fun String.fileNameWithExtension(): String {
     return substring(lastIndexOf(SLASH) + 1)
 }
+
+fun String?.toSearchNeededField(predicate: ((String) -> Boolean)? = null): String? {
+    return this?.takeIf { it.isNotBlank() && predicate?.invoke(it) ?: true }?.lowercase()
+        ?.replace(" ", "-")
+}

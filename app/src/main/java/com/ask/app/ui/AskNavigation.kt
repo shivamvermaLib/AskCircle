@@ -1,25 +1,17 @@
 package com.ask.app.ui
 
-import android.content.res.Configuration
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionLayout
-import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.ask.app.ui.screens.TestAPIScreen
-import com.ask.app.ui.theme.ASKTheme
-import com.ask.common.WidgetWithUserView
 import com.ask.create.CreateWidgetScreen
 import com.ask.home.HomeScreen
 import com.ask.splash.SplashScreen
+import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -39,7 +31,7 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                 }
             }
         }
-        composable<TestAPI> { TestAPIScreen() }
+//        composable<TestAPI> { TestAPIScreen() }
         composable<HomeScreen> {
             HomeScreen(Json.encodeToString(HomeScreen), sizeClass) {
                 navController.navigate(CreateScreen)
@@ -72,48 +64,50 @@ class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :
     override val values: Sequence<WidgetWithOptionsAndVotesForTargetAudience>
         get() = sequenceOf(
             WidgetWithOptionsAndVotesForTargetAudience(
-                widget = com.ask.widget.Widget(title = "Who will win the IPL?"),
+                widget = Widget(title = "Who will win the IPL?"),
                 options = listOf(
                     WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                        option = com.ask.widget.Widget.Option(text = "Mumbai Indians"),
+                        option = Widget.Option(text = "Mumbai Indians"),
                         votes = emptyList()
                     ).apply {
                         votesPercent = 30f
                     },
                     WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                        option = com.ask.widget.Widget.Option(text = "Chennai Super Kings"),
+                        option = Widget.Option(text = "Chennai Super Kings"),
                         votes = emptyList()
                     ).apply {
                         didUserVoted = true
                         votesPercent = 70f
                     }
                 ),
-                targetAudienceGender = com.ask.widget.Widget.TargetAudienceGender(),
-                targetAudienceAgeRange = com.ask.widget.Widget.TargetAudienceAgeRange(),
-                targetAudienceLocations = listOf(com.ask.widget.Widget.TargetAudienceLocation()),
-                user = com.ask.user.User(name = "Shivam")
+                targetAudienceGender = Widget.TargetAudienceGender(),
+                targetAudienceAgeRange = Widget.TargetAudienceAgeRange(),
+                targetAudienceLocations = listOf(Widget.TargetAudienceLocation()),
+                user = com.ask.user.User(name = "Shivam"),
+                categories = listOf(Widget.WidgetCategory(category = "Health"))
             ),
             WidgetWithOptionsAndVotesForTargetAudience(
-                widget = com.ask.widget.Widget(title = "Who will win the IPL?"),
+                widget = Widget(title = "Who will win the IPL?"),
                 options = listOf(
                     WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                        option = com.ask.widget.Widget.Option(imageUrl = "https://picsum.photos/id/237/200/300"),
+                        option = Widget.Option(imageUrl = "https://picsum.photos/id/237/200/300"),
                         votes = emptyList()
                     ).apply {
                         votesPercent = 45.6F
                     },
                     WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                        option = com.ask.widget.Widget.Option(imageUrl = "https://picsum.photos/id/237/200/300"),
+                        option = Widget.Option(imageUrl = "https://picsum.photos/id/237/200/300"),
                         votes = emptyList()
                     ).apply {
                         didUserVoted = true
                         votesPercent = 54.4F
                     }
                 ),
-                targetAudienceGender = com.ask.widget.Widget.TargetAudienceGender(),
-                targetAudienceAgeRange = com.ask.widget.Widget.TargetAudienceAgeRange(),
-                targetAudienceLocations = listOf(com.ask.widget.Widget.TargetAudienceLocation()),
-                user = com.ask.user.User(name = "Shivam")
+                targetAudienceGender = Widget.TargetAudienceGender(),
+                targetAudienceAgeRange = Widget.TargetAudienceAgeRange(),
+                targetAudienceLocations = listOf(Widget.TargetAudienceLocation()),
+                user = com.ask.user.User(name = "Shivam"),
+                categories = listOf(Widget.WidgetCategory(category = "Health"))
             )
         )
 }

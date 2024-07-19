@@ -12,5 +12,6 @@
     <string name="create">बनाएं</string>
     <string name="last_voted">अंतिम वोट %1$s</string>
     <string name="total_votes">%1$s कुल वोट</string>
+    <string name="search">Search</string>
 
 </resources>

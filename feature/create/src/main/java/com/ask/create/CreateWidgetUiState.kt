@@ -1,5 +1,6 @@
 package com.ask.create
 
+import com.ask.category.CategoryWithSubCategory
 import com.ask.common.MAX_AGE_RANGE
 import com.ask.common.MIN_AGE_RANGE
 import com.ask.core.EMPTY
@@ -27,6 +28,8 @@ data class CreateWidgetUiState(
     val targetAudienceAgeRange: Widget.TargetAudienceAgeRange = Widget.TargetAudienceAgeRange(
         min = minAge, max = maxAge
     ),
+    val widgetCategories: List<Widget.WidgetCategory> = emptyList(),
+    val categories: List<CategoryWithSubCategory> = emptyList()
 ) {
     enum class WidgetOptionType { Text, Image }
 
@@ -42,7 +45,8 @@ data class CreateWidgetUiState(
             targetAudienceGender,
             targetAudienceLocations,
             targetAudienceAgeRange,
-            User()
+            User(),
+            widgetCategories
         )
 
 }

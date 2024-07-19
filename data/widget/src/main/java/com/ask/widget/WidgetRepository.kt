@@ -87,7 +87,8 @@ class WidgetRepository @Inject constructor(
                 targetAudienceGender,
                 targetAudienceAgeRange,
                 targetAudienceLocations,
-                createdPollWithOptionsAndVotesForTargetAudience.widget.creatorId
+                createdPollWithOptionsAndVotesForTargetAudience.widget.creatorId,
+                categories
             ).map {
                 async {
                     val widgetId = widgetIdDataSource.getItemOrNull(it)

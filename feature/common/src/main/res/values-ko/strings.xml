@@ -12,5 +12,6 @@
     <string name="create">만들기</string>
     <string name="last_voted">마지막 투표 %1$s</string>
     <string name="total_votes">%1$s 총 투표 수</string>
+    <string name="search">Search</string>
 
 </resources>

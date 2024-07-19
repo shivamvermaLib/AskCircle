@@ -12,5 +12,6 @@
     <string name="create">إنشاء</string>
     <string name="last_voted">آخر تصويت %1$s</string>
     <string name="total_votes">%1$s إجمالي الأصوات</string>
+    <string name="search">Search</string>
 
 </resources>
