@@ -4,6 +4,9 @@ import com.ask.core.DOT
 import com.ask.core.FirebaseDataSource
 import com.ask.core.FirebaseOneDataSource
 import com.ask.core.FirebaseStorageSource
+import com.ask.core.IMAGE_SPLIT_FACTOR
+import com.ask.core.ImageSizeType
+import com.ask.core.UNDERSCORE
 import com.ask.core.UpdatedTime
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -53,10 +56,11 @@ class UserRepository @Inject constructor(
         country: String? = null,
         age: Int? = null,
         profilePicExtension: String? = null,
-        profileByteArray: ByteArray? = null,
+        profileByteArray: Map<ImageSizeType, ByteArray>? = null,
         userCategories: List<User.UserCategory>? = null,
     ): UserWithLocationCategory =
         withContext(dispatcher) {
+            println("User repository called")
             val userDetails = getCurrentUser()
             if (name == null && email == null && gender == null && country == null && age == null && profilePicExtension == null && profileByteArray == null) {
                 return@withContext userDetails
@@ -70,10 +74,12 @@ class UserRepository @Inject constructor(
                         age = age ?: userDetails.user.age,
                         gender = gender ?: userDetails.user.gender,
                         profilePic = when (profileByteArray != null && profilePicExtension != null) {
-                            true -> userStorageSource.upload(
-                                "${userDetails.user.id}$DOT${profilePicExtension}",
-                                profileByteArray
-                            )
+                            true -> profileByteArray.map {
+                                userStorageSource.upload(
+                                    "${userDetails.user.id}$UNDERSCORE${it.key.name}$DOT${profilePicExtension}",
+                                    it.value
+                                )
+                            }.joinToString(separator = IMAGE_SPLIT_FACTOR)
 
                             else -> userDetails.user.profilePic
                         }

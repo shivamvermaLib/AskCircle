@@ -11,6 +11,8 @@ import androidx.room.Relation
 import com.ask.core.ALL
 import com.ask.core.EMPTY
 import com.ask.core.ID
+import com.ask.core.IMAGE_SPLIT_FACTOR
+import com.ask.core.ImageSizeType
 import com.ask.core.UNDERSCORE
 import com.ask.core.toSearchNeededField
 import com.ask.user.User
@@ -77,6 +79,7 @@ data class Widget(
         val createdAt: Long = System.currentTimeMillis(),
         val updatedAt: Long = System.currentTimeMillis()
     ) {
+
         @Serializable
         @Entity(
             tableName = TABLE_WIDGET_OPTION_VOTES, foreignKeys = [

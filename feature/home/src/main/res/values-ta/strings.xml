@@ -29,5 +29,6 @@
     <string name="let_s_shape_the_future_vote_now">எதிர்காலத்தை வடிவமைப்போம்! இப்போது வாக்களிக்கவும்.</string>
     <string name="vote_for_your_favorite_option">உங்கள் விருப்பமான விருப்பத்திற்கு வாக்களிக்கவும்!</string>
     <string name="dashboard">Dashboard</string>
+    <string name="profile_update_in_progress">Profile Update in Progress</string>
 
 </resources>

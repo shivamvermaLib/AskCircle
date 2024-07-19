@@ -1,6 +1,7 @@
 package com.ask.widget
 
 import com.ask.analytics.AnalyticsLogger
+import com.ask.core.ImageSizeType
 import com.ask.user.UserRepository
 import javax.inject.Inject
 
@@ -40,7 +41,7 @@ class CreateWidgetUseCase @Inject constructor(
     suspend operator fun invoke(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
         getExtension: (String) -> String,
-        getByteArray: (String) -> ByteArray
+        getByteArray: suspend (String) -> Map<ImageSizeType, ByteArray>,
     ): WidgetWithOptionsAndVotesForTargetAudience {
         createWidgetEvent(widgetWithOptionsAndVotesForTargetAudience)
         return widgetRepository.createWidget(

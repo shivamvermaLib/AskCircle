@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.items
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -44,6 +44,7 @@ fun DashboardScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     onOpenImage: (String?) -> Unit,
+    onOpenIndexImage: (Int, String?) -> Unit,
 ) {
     val viewModel = hiltViewModel<DashboardViewModel>()
     val lastVotedEmptyOptions = listOf(
@@ -72,7 +73,8 @@ fun DashboardScreen(
         { widgetId, optionId ->
             viewModel.vote(widgetId, optionId, route)
         },
-        onOpenImage = onOpenImage
+        onOpenImage = onOpenImage,
+        onOpenIndexImage = onOpenIndexImage
     )
 }
 
@@ -91,6 +93,7 @@ private fun DashBoardScreen(
     animatedContentScope: AnimatedContentScope,
     onOptionClick: (String, String) -> Unit = { _, _ -> },
     onOpenImage: (String?) -> Unit,
+    onOpenIndexImage: (Int, String?) -> Unit,
 ) {
     var widthClass = sizeClass.widthSizeClass
     val heightClass = sizeClass.heightSizeClass
@@ -107,7 +110,8 @@ private fun DashBoardScreen(
             sharedTransitionScope,
             animatedContentScope,
             onOptionClick,
-            onOpenImage
+            onOpenImage,
+            onOpenIndexImage
         )
     } else {
         val columnCount =
@@ -122,7 +126,8 @@ private fun DashBoardScreen(
             sharedTransitionScope,
             animatedContentScope,
             onOptionClick,
-            onOpenImage
+            onOpenImage,
+            onOpenIndexImage
         )
     }
 }
@@ -135,16 +140,19 @@ fun DashboardList(
     animatedContentScope: AnimatedContentScope,
     onOptionClick: (String, String) -> Unit,
     onOpenImage: (String?) -> Unit,
+    onOpenIndexImage: (Int, String?) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        items(uiState.widgets) { widget ->
+        itemsIndexed(uiState.widgets) { index, widget ->
             WidgetWithUserView(
+                index,
                 widget,
                 sharedTransitionScope,
                 animatedContentScope,
                 onOptionClick,
+                onOpenIndexImage,
                 onOpenImage
             )
         }
@@ -163,17 +171,20 @@ fun DashboardGrid(
     animatedContentScope: AnimatedContentScope,
     onOptionClick: (String, String) -> Unit,
     onOpenImage: (String?) -> Unit,
+    onOpenIndexImage: (Int, String?) -> Unit,
 ) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(columnCount),
         modifier = Modifier.fillMaxSize()
     ) {
-        items(uiState.widgets) { widget ->
+        itemsIndexed(uiState.widgets) { index, widget ->
             WidgetWithUserView(
+                index,
                 widget,
                 sharedTransitionScope,
                 animatedContentScope,
                 onOptionClick,
+                onOpenIndexImage,
                 onOpenImage
             )
         }

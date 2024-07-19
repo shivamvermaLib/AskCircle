@@ -49,6 +49,7 @@ data class User(
         val updatedAt: Long = System.currentTimeMillis()
     )
 
+    @Serializable
     @Entity(
         tableName = TABLE_USER_CATEGORY,
         foreignKeys = [

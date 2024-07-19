@@ -261,7 +261,7 @@ fun HomeNavigation(
     homeNavigationController: NavHostController,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     dashboard: HomeTabScreen.Dashboard,
-    onError: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
+    onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
 ) {
     SharedTransitionLayout {
         NavHost(
@@ -275,24 +275,28 @@ fun HomeNavigation(
                     sizeClass,
                     Filter.valueOf(route.filter),
                     this@SharedTransitionLayout,
-                    this@composable
-                ) {
-                    it?.let {
-                        homeNavigationController.navigate(HomeTabScreen.ImageView(it))
+                    this@composable,
+                    onOpenImage = {
+                        it?.let {
+                            homeNavigationController.navigate(HomeTabScreen.ImageView(it))
+                        }
+                    },
+                    onOpenIndexImage = { index, url ->
+                        url?.let {
+                            homeNavigationController.navigate(HomeTabScreen.ImageView(it, index))
+                        }
                     }
-                }
+                )
             }
             composable<HomeTabScreen.Profile> {
                 ProfileScreen(
                     Json.encodeToString(HomeTabScreen.Profile),
                     this@SharedTransitionLayout,
                     this@composable,
-                    onError,
-                    {
-                        homeNavigationController.navigate(HomeTabScreen.ImageView(it))
-                    },
-
-                )
+                    onMessage,
+                ) {
+                    homeNavigationController.navigate(HomeTabScreen.ImageView(it))
+                }
             }
             composable<HomeTabScreen.ImageView> {
                 val imageView = it.toRoute<HomeTabScreen.ImageView>()
@@ -323,6 +327,6 @@ sealed interface HomeTabScreen {
     data object Profile : HomeTabScreen
 
     @Serializable
-    data class ImageView(val imagePath: String) : HomeTabScreen
+    data class ImageView(val imagePath: String, val index: Int = -1) : HomeTabScreen
 
 }

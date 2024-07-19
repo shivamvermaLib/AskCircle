@@ -7,6 +7,7 @@ import com.ask.common.BaseViewModel
 import com.ask.common.GetAgeRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
+import com.ask.core.ImageSizeType
 import com.ask.country.GetCountryUseCase
 import com.ask.home.isValidEmail
 import com.ask.user.Gender
@@ -135,8 +136,8 @@ class ProfileViewModel @Inject constructor(
 
     fun onUpdate(
         getExtension: (String) -> String?,
-        getBytes: (String) -> ByteArray?,
-        preloadImage: suspend (String) -> Unit
+        getBytes: suspend (String) -> Map<ImageSizeType, ByteArray>,
+        preloadImage: suspend (List<String>) -> Unit
     ) {
         val profile = uiStateFlow.value
         safeApiCall({
