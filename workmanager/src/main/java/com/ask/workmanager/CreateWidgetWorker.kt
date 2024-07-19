@@ -12,10 +12,10 @@ import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import com.ask.analytics.AnalyticsLogger
-import com.ask.common.getByteArray
 import com.ask.common.getExtension
+import com.ask.common.getResizedImageByteArray
 import com.ask.common.preLoadImages
+import com.ask.core.getAllImages
 import com.ask.widget.CreateWidgetUseCase
 import com.ask.widget.WIDGET
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
@@ -37,18 +37,16 @@ class CreateWidgetWorker @AssistedInject constructor(
             setProgress(workDataOf(STATUS to WorkerStatus.Loading.name))
             val widgetString = inputData.getString(WIDGET)
             widgetString?.let {
-                Json.decodeFromString<WidgetWithOptionsAndVotesForTargetAudience>(
-                    it
-                )
+                Json.decodeFromString<WidgetWithOptionsAndVotesForTargetAudience>(it)
             }?.let { widgetWithOptionsAndVotesForTargetAudience ->
-
                 createWidgetUseCase.invoke(widgetWithOptionsAndVotesForTargetAudience, {
                     applicationContext.getExtension(it)!!
                 }, {
-                    applicationContext.getByteArray(it)!!
+                    applicationContext.getResizedImageByteArray(it)
                 }
                 ).let { it ->
-                    applicationContext.preLoadImages(it.options.mapNotNull { it.option.imageUrl })
+                    applicationContext.preLoadImages(it.options.map { it.option.imageUrl.getAllImages() }
+                        .flatten())
                 }
             }
             setProgress(workDataOf(STATUS to WorkerStatus.Success.name))

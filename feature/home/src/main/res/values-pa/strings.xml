@@ -28,5 +28,7 @@
     <string name="start_the_discussion_with_your_vote">ਆਪਣੀ ਵੋਟ ਨਾਲ ਗੱਲਬਾਤ ਸ਼ੁਰੂ ਕਰੋ।</string>
     <string name="let_s_shape_the_future_vote_now">ਭਵਿੱਖ ਨੂੰ ਸੰਕਲਿਤ ਕਰੋ! ਹੁਣੇ ਵੋਟ ਦਿਓ।</string>
     <string name="vote_for_your_favorite_option">ਆਪਣੇ ਮਨਪਸੰਦ ਵਿਕਲਪ ਲਈ ਵੋਟ ਦਿਓ!</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="profile_update_in_progress">Profile Update in Progress</string>
 
 </resources>

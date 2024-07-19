@@ -28,5 +28,7 @@
     <string name="start_the_discussion_with_your_vote">投票で議論を始めましょう。</string>
     <string name="let_s_shape_the_future_vote_now">未来を形作りましょう！今すぐ投票してください。</string>
     <string name="vote_for_your_favorite_option">お気に入りのオプションに投票してください！</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="profile_update_in_progress">Profile Update in Progress</string>
 
 </resources>

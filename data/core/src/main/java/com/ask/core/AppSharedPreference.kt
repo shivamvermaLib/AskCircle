@@ -25,8 +25,13 @@ class AppSharedPreference @Inject constructor(@ApplicationContext context: Conte
 
     fun setRefreshCount(count: Long) = sharedPreference.edit().putLong(REFRESH_COUNT, count).apply()
 
+    fun getDbVersion(): Int = sharedPreference.getInt(DB_VERSION, 1)
+
+    fun setDbVersion(version: Int) = sharedPreference.edit().putInt(DB_VERSION, version).apply()
+
     companion object {
         const val APP_SHARED_PREFERENCE = "app_shared_preference"
         const val REFRESH_COUNT = "Refresh count"
+        const val DB_VERSION = "DB version"
     }
 }

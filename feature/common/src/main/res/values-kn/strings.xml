@@ -12,5 +12,6 @@
     <string name="create">ರಚಿಸಿ</string>
     <string name="last_voted">%1$s ಕೊನೆಯ ಮತದಾನ</string>
     <string name="total_votes">%1$s ಒಟ್ಟು ಮತಗಳು</string>
+    <string name="search">Search</string>
 
 </resources>

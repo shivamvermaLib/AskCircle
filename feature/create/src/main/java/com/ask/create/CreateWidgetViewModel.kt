@@ -2,6 +2,7 @@ package com.ask.create
 
 import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
+import com.ask.category.GetCategoryUseCase
 import com.ask.common.BaseViewModel
 import com.ask.common.GetAgeRemoteConfigUseCase
 import com.ask.common.GetMaxOptionRemoteConfigUseCase
@@ -19,6 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CreateWidgetViewModel @Inject constructor(
     getCountryUseCase: GetCountryUseCase,
+    getCategoriesUseCase: GetCategoryUseCase,
     getAgeRemoteConfigUseCase: GetAgeRemoteConfigUseCase,
     getMaxOptionRemoteConfigUseCase: GetMaxOptionRemoteConfigUseCase,
     analyticsLogger: AnalyticsLogger
@@ -41,8 +43,9 @@ class CreateWidgetViewModel @Inject constructor(
     private val _targetAudienceAgeRange = MutableStateFlow(Widget.TargetAudienceAgeRange())
     private val _targetAudienceLocations =
         MutableStateFlow(emptyList<Widget.TargetAudienceLocation>())
+    private val _selectedWidgetCategories = MutableStateFlow(emptyList<Widget.WidgetCategory>())
     private val _countriesFlow = getCountryUseCase()
-
+    private val _categoriesFlow = getCategoriesUseCase()
 
     fun setTitle(title: String) {
         _titleFlow.value = title
@@ -136,6 +139,10 @@ class CreateWidgetViewModel @Inject constructor(
         }.toList()
     }
 
+    fun selectCategoryWidget(widgetCategories: List<Widget.WidgetCategory>) {
+        _selectedWidgetCategories.value = widgetCategories
+    }
+
     val uiStateFlow = combine(
         _titleFlow,
         _titleErrorFlow,
@@ -147,7 +154,9 @@ class CreateWidgetViewModel @Inject constructor(
         _targetAudienceAgeRange,
         _targetAudienceLocations,
         _countriesFlow,
-    ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries ->
+        _categoriesFlow,
+        _selectedWidgetCategories
+    ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories ->
         val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size in 2..4
             && ((optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all { !it.text.isNullOrBlank() }) || (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() }))
         CreateWidgetUiState(
@@ -163,7 +172,9 @@ class CreateWidgetViewModel @Inject constructor(
             allowCreate,
             targetAudienceAgeRange = targetAudienceAgeRange,
             minAge = ageRange.min,
-            maxAge = ageRange.max
+            maxAge = ageRange.max,
+            categories = categories,
+            widgetCategories = widgetCategories
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
 }

@@ -28,5 +28,7 @@
     <string name="start_the_discussion_with_your_vote">Beginnen Sie die Diskussion mit Ihrer Stimme.</string>
     <string name="let_s_shape_the_future_vote_now">Gestalten wir die Zukunft! Jetzt abstimmen.</string>
     <string name="vote_for_your_favorite_option">Stimmen Sie für Ihre Lieblingsoption ab!</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="profile_update_in_progress">Profile Update in Progress</string>
 
 </resources>

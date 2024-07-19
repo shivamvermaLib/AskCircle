@@ -37,6 +37,8 @@ android {
 
 dependencies {
     implementation(libs.androidx.hilt.work)
+    implementation(project(":domain:user"))
+    implementation(project(":data:user"))
     kapt(libs.androidx.hilt.compiler)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.hilt.android)
@@ -44,6 +46,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(project(":data:analytics"))
+    implementation(project(":data:core"))
     implementation(project(":data:widget"))
     implementation(project(":domain:widget"))
     implementation(project(":domain:common"))

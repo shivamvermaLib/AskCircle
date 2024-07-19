@@ -12,5 +12,6 @@
     <string name="create">Erstellen</string>
     <string name="last_voted">Zuletzt abgestimmt %1$s</string>
     <string name="total_votes">%1$s Gesamtstimmen</string>
+    <string name="search">Search</string>
 
 </resources>

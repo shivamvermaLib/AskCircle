@@ -28,5 +28,7 @@
     <string name="start_the_discussion_with_your_vote">用您的投票开始讨论。</string>
     <string name="let_s_shape_the_future_vote_now">让我们塑造未来！ 现在投票。</string>
     <string name="vote_for_your_favorite_option">为您喜欢的选项投票！</string>
+    <string name="dashboard">Dashboard</string>
+    <string name="profile_update_in_progress">Profile Update in Progress</string>
 
 </resources>

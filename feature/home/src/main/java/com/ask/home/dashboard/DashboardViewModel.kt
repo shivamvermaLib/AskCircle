@@ -3,7 +3,7 @@ package com.ask.home.dashboard
 import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.common.BaseViewModel
-import com.ask.widget.FilterType
+import com.ask.widget.Filter
 import com.ask.widget.GetWidgetsUseCase
 import com.ask.widget.UpdateVoteUseCase
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
@@ -22,14 +22,14 @@ class DashboardViewModel @Inject constructor(
     getWidgetsUseCase: GetWidgetsUseCase,
     private val analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
-    private val _filterTypeFlow = MutableStateFlow(FilterType.Latest)
+    private val _filterFlow = MutableStateFlow(Filter.Latest)
     private val _errorFlow = MutableStateFlow<String?>(null)
     private val _lastVotedEmptyOptionsFlow = MutableStateFlow<List<String>>(emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiStateFlow =
         combine(
-            _filterTypeFlow.flatMapMerge { getWidgetsUseCase(it) },
+            _filterFlow.flatMapMerge { getWidgetsUseCase(it) },
             _lastVotedEmptyOptionsFlow,
             _errorFlow
         ) { widgets, lastVotedEmptyOptions, error ->
@@ -48,9 +48,9 @@ class DashboardViewModel @Inject constructor(
         _lastVotedEmptyOptionsFlow.value = list
     }
 
-    fun setFilterType(filterType: FilterType) {
-        _filterTypeFlow.value = filterType
-        analyticsLogger.widgetFilterTypeEvent(filterType.name)
+    fun setFilterType(filter: Filter) {
+        _filterFlow.value = filter
+        analyticsLogger.widgetFilterTypeEvent(filter.name)
     }
 
     fun vote(widgetId: String, optionId: String, screenName: String) {

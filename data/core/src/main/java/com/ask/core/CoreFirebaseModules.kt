@@ -60,6 +60,14 @@ object CoreFirebaseModules {
 
     @Singleton
     @Provides
+    @Named(CONFIGURATIONS)
+    fun provideConfigurationStorageReference(firebaseStorage: FirebaseStorage): StorageReference {
+        return firebaseStorage.getReference(CONFIGURATIONS)
+    }
+
+
+    @Singleton
+    @Provides
     @Named(TABLE_UPDATED_TIME)
     fun provideUpdatedTimeReference(@Named(FIREBASE_DB) databaseReference: DatabaseReference): DatabaseReference {
         return databaseReference.child(TABLE_UPDATED_TIME)

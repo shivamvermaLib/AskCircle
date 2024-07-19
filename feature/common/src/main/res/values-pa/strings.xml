@@ -12,5 +12,6 @@
     <string name="create">ਬਣਾਓ</string>
     <string name="last_voted">ਆਖਰੀ ਵੋਟ %1$s</string>
     <string name="total_votes">%1$s ਕੁੱਲ ਵੋਟਾਂ</string>
+    <string name="search">Search</string>
 
 </resources>

@@ -12,5 +12,6 @@
     <string name="create">तयार करा</string>
     <string name="last_voted">शेवटचा मतदान %1$s</string>
     <string name="total_votes">%1$s एकूण मते</string>
+    <string name="search">Search</string>
 
 </resources>

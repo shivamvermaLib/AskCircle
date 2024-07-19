@@ -5,9 +5,13 @@ import com.ask.core.DOT
 import com.ask.core.FirebaseDataSource
 import com.ask.core.FirebaseOneDataSource
 import com.ask.core.FirebaseStorageSource
+import com.ask.core.IMAGE_SPLIT_FACTOR
+import com.ask.core.ImageSizeType
+import com.ask.core.UNDERSCORE
 import com.ask.core.UpdatedTime
 import com.ask.core.checkIfUrl
 import com.ask.core.fileNameWithExtension
+import com.ask.core.getAllImages
 import com.ask.core.isUpdateRequired
 import com.ask.user.User
 import kotlinx.coroutines.CoroutineDispatcher
@@ -36,7 +40,7 @@ class WidgetRepository @Inject constructor(
     suspend fun createWidget(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
         getExtension: (String) -> String,
-        getByteArray: (String) -> ByteArray
+        getByteArrays: suspend (String) -> Map<ImageSizeType, ByteArray>,
     ): WidgetWithOptionsAndVotesForTargetAudience = withContext(dispatcher) {
         val pollId = widgetWithOptionsAndVotesForTargetAudience.widget.id
         val createdPollWithOptionsAndVotesForTargetAudience =
@@ -52,20 +56,24 @@ class WidgetRepository @Inject constructor(
                 }.map {
                     it.copy(widgetId = pollId)
                 },
-                options = widgetWithOptionsAndVotesForTargetAudience.options.map {
-                    it.copy(
-                        votes = it.votes.map { vote -> vote.copy(optionId = it.option.id) },
-                        option = it.option.copy(
+                options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
+                    optionWithVotes.copy(
+                        votes = optionWithVotes.votes.map { vote -> vote.copy(optionId = optionWithVotes.option.id) },
+                        option = optionWithVotes.option.copy(
                             widgetId = pollId,
-                            imageUrl = when (it.option.imageUrl != null && it.option.imageUrl.checkIfUrl()
+                            imageUrl = when (optionWithVotes.option.imageUrl != null && optionWithVotes.option.imageUrl.checkIfUrl()
                                 .not()) {
-                                true -> pollOptionStorageSource.upload(
-                                    "${it.option.id}$DOT${getExtension(it.option.imageUrl)}",
-                                    getByteArray(it.option.imageUrl)
-                                )
+                                true -> getByteArrays(optionWithVotes.option.imageUrl).map {
+                                    pollOptionStorageSource.upload(
+                                        "${optionWithVotes.option.id}$UNDERSCORE${it.key.name}$DOT${
+                                            getExtension(optionWithVotes.option.imageUrl)
+                                        }",
+                                        it.value
+                                    )
+                                }.joinToString(separator = IMAGE_SPLIT_FACTOR)
 
-                                else -> when (it.option.imageUrl?.checkIfUrl()) {
-                                    true -> it.option.imageUrl
+                                else -> when (optionWithVotes.option.imageUrl?.checkIfUrl()) {
+                                    true -> optionWithVotes.option.imageUrl
                                     else -> null
                                 }
                             }
@@ -87,7 +95,8 @@ class WidgetRepository @Inject constructor(
                 targetAudienceGender,
                 targetAudienceAgeRange,
                 targetAudienceLocations,
-                createdPollWithOptionsAndVotesForTargetAudience.widget.creatorId
+                createdPollWithOptionsAndVotesForTargetAudience.widget.creatorId,
+                categories
             ).map {
                 async {
                     val widgetId = widgetIdDataSource.getItemOrNull(it)
@@ -139,8 +148,7 @@ class WidgetRepository @Inject constructor(
             async {
                 widgetIdDataSource.getItemOrNull(it)
             }
-        }.awaitAll().asSequence().filterNotNull().distinct().map { it.widgetIds }.flatten()
-            .distinct()
+        }.awaitAll().asSequence().filterNotNull().distinct().map { it.widgetIds }.flatten().distinct()
 
         val widgetWithOptionsAndVotesForTargetAudiences =
             mutableListOf<WidgetWithOptionsAndVotesForTargetAudience>()
@@ -156,8 +164,7 @@ class WidgetRepository @Inject constructor(
                 )
             }
         }
-        preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.mapNotNull { it.option.imageUrl } }
-            .flatten())
+        preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.map { it.option.imageUrl.getAllImages() }.flatten() }.flatten())
         widgetDao.insertWidgets(
             widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
             widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceGender },

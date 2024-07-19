@@ -12,12 +12,15 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/data" />
             <option value="$PROJECT_DIR$/data/analytics" />
+            <option value="$PROJECT_DIR$/data/category" />
             <option value="$PROJECT_DIR$/data/core" />
             <option value="$PROJECT_DIR$/data/country" />
             <option value="$PROJECT_DIR$/data/user" />
             <option value="$PROJECT_DIR$/data/widget" />
             <option value="$PROJECT_DIR$/domain" />
+            <option value="$PROJECT_DIR$/domain/category" />
             <option value="$PROJECT_DIR$/domain/common" />
+            <option value="$PROJECT_DIR$/domain/country" />
             <option value="$PROJECT_DIR$/domain/user" />
             <option value="$PROJECT_DIR$/domain/widget" />
             <option value="$PROJECT_DIR$/feature" />

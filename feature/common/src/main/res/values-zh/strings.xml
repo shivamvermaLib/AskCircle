@@ -12,5 +12,6 @@
     <string name="create">创建</string>
     <string name="last_voted">最后投票 %1$s</string>
     <string name="total_votes">%1$s 总票数</string>
+    <string name="search">Search</string>
 
 </resources>

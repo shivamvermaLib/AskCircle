@@ -8,9 +8,14 @@ import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import com.ask.core.ALL
 import com.ask.core.EMPTY
 import com.ask.core.ID
+import com.ask.core.IMAGE_SPLIT_FACTOR
+import com.ask.core.ImageSizeType
 import com.ask.core.UNDERSCORE
+import com.ask.core.toSearchNeededField
+import com.ask.user.User
 import com.google.firebase.database.Exclude
 import kotlinx.serialization.Serializable
 import java.util.UUID
@@ -74,6 +79,7 @@ data class Widget(
         val createdAt: Long = System.currentTimeMillis(),
         val updatedAt: Long = System.currentTimeMillis()
     ) {
+
         @Serializable
         @Entity(
             tableName = TABLE_WIDGET_OPTION_VOTES, foreignKeys = [
@@ -160,6 +166,27 @@ data class Widget(
     )
 
     enum class GenderFilter { ALL, MALE, FEMALE }
+
+    @Serializable
+    @Entity(
+        tableName = TABLE_WIDGET_CATEGORIES, foreignKeys = [
+            ForeignKey(
+                entity = Widget::class,
+                parentColumns = [ID],
+                childColumns = [WIDGET_ID],
+                onDelete = ForeignKey.CASCADE
+            )
+        ],
+        indices = [Index(value = [WIDGET_ID])]
+    )
+    data class WidgetCategory(
+        @PrimaryKey val id: String = UUID.randomUUID().toString(),
+        val widgetId: String = EMPTY,
+        val category: String = EMPTY,
+        val subCategory: String = EMPTY,
+        val createdAt: Long = System.currentTimeMillis(),
+        val updatedAt: Long = System.currentTimeMillis()
+    )
 }
 
 @Serializable
@@ -193,7 +220,13 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
         entityColumn = ID
     )
     @get:Exclude
-    val user: com.ask.user.User
+    val user: User,
+    @Relation(
+        parentColumn = ID,
+        entityColumn = WIDGET_ID,
+        entity = Widget.WidgetCategory::class
+    )
+    val categories: List<Widget.WidgetCategory>
 ) {
     @get:Exclude
     @Ignore
@@ -272,15 +305,16 @@ fun generateCombinationsForWidget(
     gender: Widget.TargetAudienceGender,
     ageRange: Widget.TargetAudienceAgeRange,
     locations: List<Widget.TargetAudienceLocation>,
-    userId: String
+    userId: String,
+    widgetCategories: List<Widget.WidgetCategory>
 ): List<String> {
     val locationCombinations = mutableListOf<String>()
 
-    val genderName = gender.gender.name.lowercase()
+    val genderName = gender.gender.name.toSearchNeededField()
     for (location in locations) {
-        val country = location.country?.takeIf { it.isNotBlank() }?.lowercase()
-        val state = location.state?.takeIf { it.isNotBlank() && country != null }?.lowercase()
-        val city = location.city?.takeIf { it.isNotBlank() && state != null }?.lowercase()
+        val country = location.country.toSearchNeededField()
+        val state = location.state.toSearchNeededField { country != null }
+        val city = location.city.toSearchNeededField { state != null }
 
         if (country != null) {
             if (state != null) {
@@ -313,12 +347,34 @@ fun generateCombinationsForWidget(
 
     val genderCombination = mutableListOf<String>()
     if (ageRangeCombination.isEmpty()) {
-        genderCombination.add(genderName)
+        genderName?.let { genderCombination.add(it) }
     } else {
         ageRangeCombination.forEach {
             genderCombination.add("${it}$UNDERSCORE$genderName")
         }
     }
-    genderCombination.add(userId)
-    return genderCombination
+
+    val categoriesCombination = mutableListOf<String>()
+    widgetCategories.forEach { widgetCategory ->
+        val category = widgetCategory.category.toSearchNeededField()
+        val subCategory = widgetCategory.subCategory.toSearchNeededField()
+        genderCombination.forEach {
+            if (subCategory != null && category != null) {
+                categoriesCombination.add("$it$UNDERSCORE${category}$UNDERSCORE${subCategory}")
+                categoriesCombination.add("$it$UNDERSCORE${category}")
+            } else if (category != null) {
+                categoriesCombination.add("$it$UNDERSCORE${category}")
+            }
+        }
+        if (subCategory != null && category != null) {
+            categoriesCombination.add("$ALL$UNDERSCORE${category}$UNDERSCORE${subCategory}")
+            categoriesCombination.add("$ALL$UNDERSCORE${category}")
+        } else if (category != null) {
+            categoriesCombination.add("$ALL$UNDERSCORE${category}")
+        }
+    }
+
+    categoriesCombination.add(ALL)
+    categoriesCombination.add(userId)
+    return categoriesCombination
 }

@@ -4,6 +4,9 @@ import com.ask.core.DOT
 import com.ask.core.FirebaseDataSource
 import com.ask.core.FirebaseOneDataSource
 import com.ask.core.FirebaseStorageSource
+import com.ask.core.IMAGE_SPLIT_FACTOR
+import com.ask.core.ImageSizeType
+import com.ask.core.UNDERSCORE
 import com.ask.core.UpdatedTime
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -14,24 +17,29 @@ import javax.inject.Named
 
 class UserRepository @Inject constructor(
     private val firebaseAuthSource: FirebaseAuthSource,
-    private val userDataSource: FirebaseDataSource<UserWithLocation>,
+    private val userDataSource: FirebaseDataSource<UserWithLocationCategory>,
     private val widgetUpdateTimeOneDataSource: FirebaseOneDataSource<UpdatedTime>,
     private val userDao: UserDao,
     @Named(TABLE_USERS) private val userStorageSource: FirebaseStorageSource,
     @Named("IO") private val dispatcher: CoroutineDispatcher
 ) {
 
-    suspend fun createUser(): UserWithLocation = withContext(dispatcher) {
+    suspend fun createUser(): UserWithLocationCategory = withContext(dispatcher) {
         val user = firebaseAuthSource.getCurrentUserId()?.let {
             getCurrentUserOptional(true)
         } ?: firebaseAuthSource.signInAnonymously().let { id ->
             userDataSource.addItem(
-                UserWithLocation(
+                UserWithLocationCategory(
                     user = User(id = id),
                     userLocation = User.UserLocation(userId = id),
+                    userCategories = listOf()
                 )
             ).also {
-                userDao.insertAll(listOf(it.user), listOf(it.userLocation))
+                userDao.insertAll(
+                    listOf(it.user),
+                    listOf(it.userLocation),
+                    it.userCategories
+                )
             }.also {
                 widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
                     updatedTime.copy(profileTime = System.currentTimeMillis())
@@ -48,9 +56,11 @@ class UserRepository @Inject constructor(
         country: String? = null,
         age: Int? = null,
         profilePicExtension: String? = null,
-        profileByteArray: ByteArray? = null
-    ): UserWithLocation =
+        profileByteArray: Map<ImageSizeType, ByteArray>? = null,
+        userCategories: List<User.UserCategory>? = null,
+    ): UserWithLocationCategory =
         withContext(dispatcher) {
+            println("User repository called")
             val userDetails = getCurrentUser()
             if (name == null && email == null && gender == null && country == null && age == null && profilePicExtension == null && profileByteArray == null) {
                 return@withContext userDetails
@@ -64,10 +74,12 @@ class UserRepository @Inject constructor(
                         age = age ?: userDetails.user.age,
                         gender = gender ?: userDetails.user.gender,
                         profilePic = when (profileByteArray != null && profilePicExtension != null) {
-                            true -> userStorageSource.upload(
-                                "${userDetails.user.id}$DOT${profilePicExtension}",
-                                profileByteArray
-                            )
+                            true -> profileByteArray.map {
+                                userStorageSource.upload(
+                                    "${userDetails.user.id}$UNDERSCORE${it.key.name}$DOT${profilePicExtension}",
+                                    it.value
+                                )
+                            }.joinToString(separator = IMAGE_SPLIT_FACTOR)
 
                             else -> userDetails.user.profilePic
                         }
@@ -75,10 +87,21 @@ class UserRepository @Inject constructor(
                     userLocation = userDetails.userLocation.copy(
                         country = country?.takeIf { it.isNotBlank() }
                             ?: userDetails.userLocation.country,
-                    )
+                        updatedAt = System.currentTimeMillis()
+                    ),
+                    userCategories = (userCategories ?: userDetails.userCategories).map {
+                        it.copy(
+                            userId = getCurrentUserId(),
+                            updatedAt = System.currentTimeMillis()
+                        )
+                    }
                 )
             ).also {
-                userDao.insertAll(listOf(it.user), listOf(it.userLocation))
+                userDao.insertAll(
+                    listOf(it.user),
+                    listOf(it.userLocation),
+                    it.userCategories
+                )
             }.also {
                 widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
                     updatedTime.copy(profileTime = System.currentTimeMillis())
@@ -86,13 +109,17 @@ class UserRepository @Inject constructor(
             }
         }
 
-    suspend fun getCurrentUserOptional(refresh: Boolean = false): UserWithLocation? =
+    suspend fun getCurrentUserOptional(refresh: Boolean = false): UserWithLocationCategory? =
         withContext(dispatcher) {
             firebaseAuthSource.getCurrentUserId()?.let { id ->
                 if (refresh) {
                     userDataSource.getItem(id)
                         .also {
-                            userDao.insertAll(listOf(it.user), listOf(it.userLocation))
+                            userDao.insertAll(
+                                listOf(it.user),
+                                listOf(it.userLocation),
+                                it.userCategories
+                            )
                         }
                 } else {
                     userDao.getUserDetailsById(id) ?: userDataSource.getItem(id)
@@ -103,13 +130,13 @@ class UserRepository @Inject constructor(
             }
         }
 
-    private suspend fun getCurrentUser(refresh: Boolean = false): UserWithLocation =
+    private suspend fun getCurrentUser(refresh: Boolean = false): UserWithLocationCategory =
         getCurrentUserOptional(refresh) ?: throw Exception("Current User not found")
 
     fun getCurrentUserId() =
         firebaseAuthSource.getCurrentUserId() ?: throw Exception("User not signed in")
 
-    fun getCurrentUserLive(): Flow<UserWithLocation> =
+    fun getCurrentUserLive(): Flow<UserWithLocationCategory> =
         firebaseAuthSource.getCurrentUserId()?.let { id ->
             userDao.getUserByIdLive(id).flowOn(dispatcher)
         } ?: throw Exception("User not signed in")

@@ -5,36 +5,50 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastForEach
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
@@ -85,6 +99,101 @@ fun <T> DropDownWithSelect(
 }
 
 @Composable
+fun <T> DropDownWithSelectAndSearch(
+    list: List<T>,
+    title: String,
+    modifier: Modifier = Modifier,
+    itemString: (T) -> String,
+    onItemSelect: (T) -> Unit
+) {
+    var search by remember { mutableStateOf(EMPTY) }
+    var expanded by remember { mutableStateOf(false) }
+    val filterList = if (search.isBlank()) list else list.filter {
+        itemString(it).lowercase().contains(search.lowercase())
+    }
+    Box(modifier = modifier) {
+        AppOptionTypeSelect(
+            selected = false,
+            onSelectedChange = { expanded = true },
+            title = title,
+            icon = null
+        )
+        DropdownMenu(expanded = expanded, onDismissRequest = {
+            search = EMPTY
+            expanded = false
+        }) {
+            AppTextField(hint = stringResource(R.string.search),
+                value = search,
+                onValueChange = {
+                    search = it
+                })
+            filterList.fastForEach {
+                DropdownMenuItem(
+                    text = { Text(text = itemString(it)) },
+                    onClick = {
+//                        expanded = false
+                        onItemSelect(it)
+//                        search = EMPTY
+                    })
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun <T> SelectItemOnChipWithSearchDropDown(
+    title: String,
+    list: List<T>,
+    selectedItem: List<T>,
+    itemString: (T) -> String,
+    onSelect: (T) -> Unit,
+    onRemove: (T) -> Unit,
+) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleSmall
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        DropDownWithSelectAndSearch(
+            list,
+            stringResource(R.string.select),
+            modifier = Modifier.padding(horizontal = 4.dp),
+            itemString = itemString,
+        ) {
+            onSelect(it)
+        }
+    }
+    Spacer(modifier = Modifier.size(6.dp))
+    if (selectedItem.isNotEmpty())
+        FlowRow(
+            Modifier
+                .fillMaxWidth(1f)
+                .wrapContentHeight(align = Alignment.Top),
+            horizontalArrangement = Arrangement.Start,
+        ) {
+            selectedItem.fastForEach {
+                FilterChip(
+                    modifier = Modifier
+                        .padding(horizontal = 4.dp)
+                        .align(alignment = Alignment.CenterVertically),
+                    onClick = { /* do something*/ },
+                    label = { Text(itemString(it)) },
+                    selected = true,
+                    trailingIcon = {
+                        Icon(imageVector = Icons.Rounded.Close,
+                            contentDescription = it.toString(),
+                            modifier = Modifier
+                                .size(FilterChipDefaults.IconSize)
+                                .clickable { onRemove(it) })
+                    },
+                )
+            }
+        }
+}
+
+@Composable
 fun AppTextField(
     modifier: Modifier = Modifier,
     hint: String,
@@ -93,12 +202,27 @@ fun AppTextField(
     isError: Boolean = false,
     errorMessage: String = EMPTY,
     maxLines: Int = 1,
-    minLines: Int = 1
+    minLines: Int = 1,
+    hasMaxLength: Boolean = false,
 ) {
+    var textFieldWidth by remember { mutableIntStateOf(0) }
+    val maxLength = remember(textFieldWidth) { calculateMaxLength(textFieldWidth) }
     TextField(
         value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
+        onValueChange = {
+            if (hasMaxLength) {
+                if (it.length < maxLength) {
+                    onValueChange(it)
+                }
+            } else {
+                onValueChange(it)
+            }
+        },
+        modifier = modifier
+            .fillMaxWidth()
+            .onGloballyPositioned {
+                textFieldWidth = it.size.width
+            },
         label = { Text(text = hint) },
         isError = isError,
         maxLines = maxLines,
@@ -107,6 +231,14 @@ fun AppTextField(
             Text(if (isError) errorMessage else EMPTY, Modifier.clearAndSetSemantics {})
         },
     )
+}
+
+
+fun calculateMaxLength(width: Int): Int {
+    // Assume a monospace font for simplicity, or use the actual font metrics
+    // Adjust the character width estimation according to your font size and type
+    val characterWidth = 10 // This is an example; adjust according to your font
+    return width / characterWidth
 }
 
 
@@ -251,3 +383,5 @@ fun shimmerBrush(showShimmer: Boolean = true, targetValue: Float = 1000f): Brush
         )
     }
 }
+
+

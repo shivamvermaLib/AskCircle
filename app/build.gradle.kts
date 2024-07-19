@@ -83,6 +83,7 @@ dependencies {
 
     // Hilt
     implementation(libs.androidx.hilt.work)
+    implementation(project(":data:category"))
     kapt(libs.androidx.hilt.compiler)
 
     implementation(platform(libs.firebase.bom))

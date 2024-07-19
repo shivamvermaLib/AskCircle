@@ -3,6 +3,7 @@ package com.ask.create
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,14 +18,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,10 +48,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -56,16 +63,22 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ask.category.CategoryWithSubCategory
 import com.ask.common.AppOptionTypeSelect
 import com.ask.common.AppTextField
 import com.ask.common.DropDownWithSelect
 import com.ask.common.ImageOption
 import com.ask.common.NonLazyGrid
+import com.ask.common.SelectItemOnChipWithSearchDropDown
 import com.ask.common.TextOption
 import com.ask.common.connectivityState
+import com.ask.core.EMPTY
 import com.ask.country.Country
 import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
@@ -75,9 +88,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 @Composable
 fun CreateWidgetScreen(
-    route: String,
-    sizeClass: WindowSizeClass,
-    onBack: () -> Unit
+    route: String, sizeClass: WindowSizeClass, onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val viewModel = hiltViewModel<CreateWidgetViewModel>()
@@ -100,21 +111,23 @@ fun CreateWidgetScreen(
         viewModel::removeLocation,
         {
             CreateWidgetWorker.sendRequest(
-                context,
-                uiState.toWidgetWithOptionsAndVotesForTargetAudience()
+                context, uiState.toWidgetWithOptionsAndVotesForTargetAudience()
             )
             onBack()
         },
         {
             onBack()
         },
-        onRemoveOption = viewModel::removeOption
+        onRemoveOption = viewModel::removeOption,
+        onSelectCategoryWidget = viewModel::selectCategoryWidget,
     )
 }
 
 @OptIn(
-    ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class,
-    ExperimentalCoroutinesApi::class, ExperimentalSharedTransitionApi::class
+    ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3WindowSizeClassApi::class,
+    ExperimentalCoroutinesApi::class,
+    ExperimentalSharedTransitionApi::class
 )
 @Preview
 @Composable
@@ -126,35 +139,35 @@ private fun CreateWidgetScreen(
     onOptionTypeChanged: (CreateWidgetUiState.WidgetOptionType) -> Unit = {},
     onOptionChanged: (Int, Widget.Option) -> Unit = { _, _ -> },
     onAddOption: () -> Unit = {},
-    onGenderChanged: (com.ask.widget.Widget.GenderFilter) -> Unit = {},
+    onGenderChanged: (Widget.GenderFilter) -> Unit = {},
     onMinAgeChanged: (Int) -> Unit = {},
     onMaxAgeChanged: (Int) -> Unit = {},
     onSelectCountry: (Country) -> Unit = {},
     onRemoveCountry: (Country) -> Unit = {},
     onCreateClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    onRemoveOption: (Int) -> Unit = {}
+    onRemoveOption: (Int) -> Unit = {},
+    onSelectCategoryWidget: (List<Widget.WidgetCategory>) -> Unit = {},
 ) {
     val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     var imagePickerIndex by remember { mutableIntStateOf(-1) }
-    val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri ->
-            if (imagePickerIndex > -1) {
-                uri?.let {
-                    onOptionChanged(
-                        imagePickerIndex,
-                        createWidgetUiState.options[imagePickerIndex].copy(imageUrl = it.toString())
-                    )
+    val singlePhotoPickerLauncher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
+            onResult = { uri ->
+                if (imagePickerIndex > -1) {
+                    uri?.let {
+                        onOptionChanged(
+                            imagePickerIndex,
+                            createWidgetUiState.options[imagePickerIndex].copy(imageUrl = it.toString())
+                        )
+                    }
                 }
-            }
-        })
+            })
     LaunchedEffect(isConnected) {
         if (!isConnected) {
             snackBarHostState.showSnackbar(
-                message = "No Internet Connection",
-                duration = SnackbarDuration.Indefinite
+                message = "No Internet Connection", duration = SnackbarDuration.Indefinite
             )
         }
     }
@@ -251,9 +264,7 @@ private fun CreateWidgetScreen(
                     }
 
                     CreateWidgetUiState.WidgetOptionType.Text -> Column(
-                        verticalArrangement = Arrangement.spacedBy(
-                            6.dp
-                        )
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         createWidgetUiState.options.forEachIndexed { index, option ->
                             Row {
@@ -293,7 +304,26 @@ private fun CreateWidgetScreen(
                 GenderSelect(createWidgetUiState, onGenderChanged)
                 AgeRangeSelect(createWidgetUiState, onMinAgeChanged, onMaxAgeChanged)
                 Spacer(modifier = Modifier.size(10.dp))
-                LocationSelect(createWidgetUiState, onSelectCountry, onRemoveCountry)
+                SelectItemOnChipWithSearchDropDown(
+                    stringResource(id = R.string.location),
+                    createWidgetUiState.countries,
+                    createWidgetUiState.targetAudienceLocations.mapNotNull {
+                        it.country
+                    }.mapNotNull { country ->
+                        createWidgetUiState.countries.find { it.name == country }
+                    },
+                    {
+                        "${it.emoji} ${it.name}"
+                    },
+                    onSelectCountry,
+                    onRemoveCountry,
+                )
+                Spacer(modifier = Modifier.size(10.dp))
+                CategorySelect(
+                    createWidgetUiState.categories,
+                    createWidgetUiState.widgetCategories,
+                    onSelectCategoryWidget
+                )
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
                     onCreateClick,
@@ -308,52 +338,168 @@ private fun CreateWidgetScreen(
     }
 }
 
-
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun LocationSelect(
-    createWidgetUiState: CreateWidgetUiState,
-    onSelectCountry: (Country) -> Unit,
-    onRemoveCountry: (Country) -> Unit
+fun CategorySelect(
+    list: List<CategoryWithSubCategory>,
+    widgetCategory: List<Widget.WidgetCategory>,
+    onCategorySelect: (List<Widget.WidgetCategory>) -> Unit,
 ) {
+    var selectedList by remember { mutableStateOf(widgetCategory) }
+    var expanded by remember { mutableStateOf(false) }
+    var search by remember { mutableStateOf(EMPTY) }
+    var filterList by remember { mutableStateOf(listOf<CategoryWithSubCategory>()) }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = stringResource(R.string.location),
-            style = MaterialTheme.typography.titleSmall
-        )
+        Text(text = "Category", style = MaterialTheme.typography.titleSmall)
         Spacer(modifier = Modifier.weight(1f))
+        AppOptionTypeSelect(
+            selected = false, onSelectedChange = { expanded = true }, title = "Select", icon = null
+        )
     }
     Spacer(modifier = Modifier.size(6.dp))
-    FlowRow(
-        Modifier
-            .fillMaxWidth(1f)
-            .wrapContentHeight(align = Alignment.Top),
-        horizontalArrangement = Arrangement.Start,
-    ) {
-        createWidgetUiState.targetAudienceLocations.mapNotNull {
-            it.country
-        }.mapNotNull { country ->
-            createWidgetUiState.countries.find { it.name == country }
-        }.fastForEach {
-            FilterChip(modifier = Modifier
-                .padding(horizontal = 4.dp)
-                .align(alignment = Alignment.CenterVertically),
-                onClick = { /* do something*/ },
-                label = { Text("${it.emoji} ${it.name}") },
-                selected = true,
-                trailingIcon = {
-                    Icon(imageVector = Icons.Rounded.Close,
-                        contentDescription = it.name,
-                        modifier = Modifier
-                            .size(FilterChipDefaults.IconSize)
-                            .clickable { onRemoveCountry(it) })
-                })
+    if (widgetCategory.isNotEmpty())
+        FlowRow(
+            Modifier
+                .fillMaxWidth(1f)
+                .wrapContentHeight(align = Alignment.Top),
+            horizontalArrangement = Arrangement.Start,
+        ) {
+            widgetCategory.fastForEach {
+                FilterChip(
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    onClick = { /* do something*/ },
+                    label = { Text(it.subCategory.ifBlank { it.category }) },
+                    selected = true,
+                )
+            }
         }
-        DropDownWithSelect(createWidgetUiState.countries,
-            stringResource(R.string.select),
-            modifier = Modifier.padding(horizontal = 4.dp),
-            itemString = { "${it.emoji} ${it.name}" }) {
-            onSelectCountry(it)
+    if (expanded) {
+        filterList = list.filter { categoryWithSubCategory ->
+            categoryWithSubCategory.category.name.contains(
+                search,
+                ignoreCase = true
+            ) || categoryWithSubCategory.subCategories.fastAny {
+                it.title.contains(
+                    search,
+                    ignoreCase = true
+                )
+            }
+        }
+        Dialog(
+            onDismissRequest = {
+                expanded = false
+                onCategorySelect(selectedList)
+            },
+            properties = DialogProperties(
+                dismissOnBackPress = true, usePlatformDefaultWidth = true
+            ),
+        ) {
+            ElevatedCard(
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "Select Category",
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    TextButton(onClick = {
+                        expanded = false
+                        onCategorySelect(selectedList)
+                    }) {
+                        Text(text = "Done")
+                    }
+                }
+                AppTextField(
+                    hint = "Search",
+                    value = search,
+                    onValueChange = { search = it },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(filterList) { categoryWithSubCategory ->
+                        fun onClick(category: String, subCategory: String? = null) {
+                            selectedList =
+                                if (subCategory != null && selectedList.any { it.subCategory == subCategory }) {
+                                    selectedList.filter { it.subCategory != subCategory }
+                                } else if (subCategory == null && selectedList.any { it.category == category }) {
+                                    selectedList.filter { it.category != category }
+                                } else {
+                                    selectedList + Widget.WidgetCategory(
+                                        category = category, subCategory = subCategory ?: ""
+                                    )
+                                }
+                        }
+
+                        val categorySelected =
+                            selectedList.any { it.category == categoryWithSubCategory.category.name }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onClick(categoryWithSubCategory.category.name)
+                                },
+                        ) {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                onClick = { onClick(categoryWithSubCategory.category.name) },
+                                colors = CardDefaults.elevatedCardColors().copy(
+                                    containerColor = if (categorySelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer
+                                )
+                            ) {
+                                Spacer(modifier = Modifier.size(16.dp))
+                                Text(
+                                    text = categoryWithSubCategory.category.name,
+                                    modifier = Modifier.padding(horizontal = 16.dp),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = if (categorySelected) Color.White else Color.Black,
+
+                                    )
+                                Spacer(modifier = Modifier.size(16.dp))
+                                AnimatedVisibility(categorySelected) {
+                                    FlowRow(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalArrangement = Arrangement.spacedBy(3.dp)
+                                    ) {
+
+                                        categoryWithSubCategory.subCategories.forEach { subCategory ->
+                                            FilterChip(
+                                                selected = selectedList.any { it.subCategory == subCategory.title },
+                                                onClick = {
+                                                    onClick(
+                                                        categoryWithSubCategory.category.name,
+                                                        subCategory.title
+                                                    )
+                                                },
+                                                label = {
+                                                    Text(
+                                                        subCategory.title, color =
+                                                        if (selectedList.any { it.subCategory == subCategory.title }) Color.Black else Color.White
+                                                    )
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                                if (categorySelected)
+                                    Spacer(modifier = Modifier.size(16.dp))
+                            }
+                        }
+
+                    }
+                }
+            }
         }
     }
 }
@@ -365,7 +511,9 @@ fun AgeRangeSelect(
     onMaxAgeChanged: (Int) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = stringResource(R.string.age_range), style = MaterialTheme.typography.titleSmall)
+        Text(
+            text = stringResource(R.string.age_range), style = MaterialTheme.typography.titleSmall
+        )
         Spacer(modifier = Modifier.weight(1f))
         DropDownWithSelect(list = (createWidgetUiState.minAge..createWidgetUiState.maxAge).map { it },
             title = createWidgetUiState.targetAudienceAgeRange.min.toString(),
@@ -381,32 +529,30 @@ fun AgeRangeSelect(
 
 @Composable
 fun GenderSelect(
-    createWidgetUiState: CreateWidgetUiState,
-    onGenderChanged: (com.ask.widget.Widget.GenderFilter) -> Unit
+    createWidgetUiState: CreateWidgetUiState, onGenderChanged: (Widget.GenderFilter) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = stringResource(R.string.gender),
-            style = MaterialTheme.typography.titleSmall
+            text = stringResource(R.string.gender), style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.weight(1f))
         AppOptionTypeSelect(
-            selected = createWidgetUiState.targetAudienceGender.gender == com.ask.widget.Widget.GenderFilter.ALL,
-            onSelectedChange = { onGenderChanged(com.ask.widget.Widget.GenderFilter.ALL) },
+            selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.ALL,
+            onSelectedChange = { onGenderChanged(Widget.GenderFilter.ALL) },
             title = stringResource(R.string.all),
             icon = null
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
-            selected = createWidgetUiState.targetAudienceGender.gender == com.ask.widget.Widget.GenderFilter.MALE,
-            onSelectedChange = { onGenderChanged(com.ask.widget.Widget.GenderFilter.MALE) },
+            selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.MALE,
+            onSelectedChange = { onGenderChanged(Widget.GenderFilter.MALE) },
             title = stringResource(R.string.male),
             icon = ImageVector.vectorResource(id = R.drawable.baseline_male_24)
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
-            selected = createWidgetUiState.targetAudienceGender.gender == com.ask.widget.Widget.GenderFilter.FEMALE,
-            onSelectedChange = { onGenderChanged(com.ask.widget.Widget.GenderFilter.FEMALE) },
+            selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.FEMALE,
+            onSelectedChange = { onGenderChanged(Widget.GenderFilter.FEMALE) },
             title = stringResource(R.string.female),
             icon = ImageVector.vectorResource(id = R.drawable.baseline_female_24)
         )
@@ -419,7 +565,9 @@ fun OptionTypeSelect(
     onOptionTypeChanged: (CreateWidgetUiState.WidgetOptionType) -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = stringResource(R.string.options), style = MaterialTheme.typography.titleMedium)
+        Text(
+            text = stringResource(R.string.options), style = MaterialTheme.typography.titleMedium
+        )
         Spacer(modifier = Modifier.weight(1f))
         AppOptionTypeSelect(
             selected = createWidgetUiState.optionType == CreateWidgetUiState.WidgetOptionType.Text,
@@ -447,14 +595,14 @@ class CreateWidgetStatePreviewParameterProvider : PreviewParameterProvider<Creat
             "desc error",
             CreateWidgetUiState.WidgetOptionType.Image,
             listOf(
-                com.ask.widget.Widget.Option(
+                Widget.Option(
                     imageUrl = "https://example.com/image.jpg"
-                ), com.ask.widget.Widget.Option(
+                ), Widget.Option(
                     imageUrl = "https://example.com/image.jpg"
                 )
             ),
-            com.ask.widget.Widget.TargetAudienceGender(gender = com.ask.widget.Widget.GenderFilter.MALE),
-            listOf(com.ask.widget.Widget.TargetAudienceLocation()),
+            Widget.TargetAudienceGender(gender = Widget.GenderFilter.MALE),
+            listOf(Widget.TargetAudienceLocation()),
             listOf(
                 Country(name = "India", emoji = ""),
                 Country(name = "Australia", emoji = ""),
@@ -464,7 +612,7 @@ class CreateWidgetStatePreviewParameterProvider : PreviewParameterProvider<Creat
                 Country(name = "Brazil", emoji = ""),
                 Country(name = "Nepal", emoji = "")
             ),
-            targetAudienceAgeRange = com.ask.widget.Widget.TargetAudienceAgeRange(
+            targetAudienceAgeRange = Widget.TargetAudienceAgeRange(
                 min = 45, max = 66
             ),
         ), CreateWidgetUiState(
@@ -474,17 +622,17 @@ class CreateWidgetStatePreviewParameterProvider : PreviewParameterProvider<Creat
             "desc error",
             CreateWidgetUiState.WidgetOptionType.Text,
             listOf(
-                com.ask.widget.Widget.Option(
+                Widget.Option(
                     text = "Option 1"
-                ), com.ask.widget.Widget.Option(
+                ), Widget.Option(
                     text = "Option 2"
                 )
             ),
-            com.ask.widget.Widget.TargetAudienceGender(gender = com.ask.widget.Widget.GenderFilter.MALE),
-            targetAudienceAgeRange = com.ask.widget.Widget.TargetAudienceAgeRange(
+            Widget.TargetAudienceGender(gender = Widget.GenderFilter.MALE),
+            targetAudienceAgeRange = Widget.TargetAudienceAgeRange(
                 min = 45, max = 66
             ),
-            targetAudienceLocations = listOf(com.ask.widget.Widget.TargetAudienceLocation()),
+            targetAudienceLocations = listOf(Widget.TargetAudienceLocation()),
             countries = listOf(
                 Country(name = "India", emoji = ""),
                 Country(name = "Australia", emoji = ""),
