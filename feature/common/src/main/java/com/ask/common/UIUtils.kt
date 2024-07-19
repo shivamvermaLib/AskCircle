@@ -204,6 +204,7 @@ fun AppTextField(
     maxLines: Int = 1,
     minLines: Int = 1,
     hasMaxLength: Boolean = false,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     var textFieldWidth by remember { mutableIntStateOf(0) }
     val maxLength = remember(textFieldWidth) { calculateMaxLength(textFieldWidth) }
@@ -230,6 +231,7 @@ fun AppTextField(
         supportingText = {
             Text(if (isError) errorMessage else EMPTY, Modifier.clearAndSetSemantics {})
         },
+        trailingIcon = trailingIcon
     )
 }
 

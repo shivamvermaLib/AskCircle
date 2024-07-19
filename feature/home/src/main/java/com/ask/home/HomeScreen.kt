@@ -59,6 +59,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.ask.admin.AdminScreen
 import com.ask.common.connectivityState
 import com.ask.home.dashboard.DashboardScreen
 import com.ask.home.imageview.ImageViewModel
@@ -164,6 +165,14 @@ private fun HomeScreen(
                             }
                         }
                     }
+                    IconButton(onClick = {
+                        homeNavigationController.navigate(HomeTabScreen.Admin)
+                    }) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_supervisor_account_24),
+                            contentDescription = "Admin"
+                        )
+                    }
                 },
             )
         },
@@ -178,44 +187,54 @@ private fun HomeScreen(
             }
         },
         floatingActionButton = {
-            if (homeUiState.createWidgetStatus != WorkerStatus.Loading) ExtendedFloatingActionButton(
-                onClick = onCreateClick,
-                icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
-                text = { Text(text = stringResource(id = R.string.create)) },
-            )
+            val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+            if (homeUiState.createWidgetStatus != WorkerStatus.Loading
+                && (currentRoute?.contains("Dashboard") == true)
+            ) {
+                ExtendedFloatingActionButton(
+                    onClick = onCreateClick,
+                    icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
+                    text = { Text(text = stringResource(id = R.string.create)) },
+                )
+            }
         },
         bottomBar = {
             val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
-            NavigationBar {
-                listOf(
-                    R.string.dashboard,
-                    R.string.profile
-                ).forEach { item ->
-                    val stringResource = stringResource(id = item)
-                    NavigationBarItem(icon = {
-                        Icon(
-                            when (item) {
-                                R.string.dashboard -> Icons.Filled.Home
-                                R.string.profile -> Icons.Rounded.AccountCircle
-                                else -> Icons.Rounded.Close
-                            },
-                            contentDescription = stringResource
-                        )
-                    },
-                        label = { Text(stringResource(id = item)) },
-                        selected = currentRoute?.contains(stringResource) == true,
-                        onClick = {
-                            when (item) {
-                                R.string.dashboard -> homeNavigationController.navigate(
-                                    HomeTabScreen.Dashboard(
-                                        Filter.Latest.name
+            if (currentRoute?.contains("Dashboard") == true || currentRoute?.contains("Profile") == true) {
+                NavigationBar {
+                    listOf(
+                        R.string.dashboard,
+                        R.string.profile
+                    ).forEach { item ->
+                        val stringResource = stringResource(id = item)
+                        NavigationBarItem(icon = {
+                            Icon(
+                                when (item) {
+                                    R.string.dashboard -> Icons.Filled.Home
+                                    R.string.profile -> Icons.Rounded.AccountCircle
+                                    else -> Icons.Rounded.Close
+                                },
+                                contentDescription = stringResource
+                            )
+                        },
+                            label = { Text(stringResource(id = item)) },
+                            selected = currentRoute.contains(stringResource),
+                            onClick = {
+                                when (item) {
+                                    R.string.dashboard -> homeNavigationController.navigate(
+                                        HomeTabScreen.Dashboard(
+                                            Filter.Latest.name
+                                        )
                                     )
-                                )
 
-                                R.string.profile -> homeNavigationController.navigate(HomeTabScreen.Profile)
-                            }
-                        })
+                                    R.string.profile -> homeNavigationController.navigate(
+                                        HomeTabScreen.Profile
+                                    )
+                                }
+                            })
+                    }
                 }
             }
         }) {
@@ -288,11 +307,9 @@ fun HomeNavigation(
                     this@SharedTransitionLayout,
                     this@composable,
                     onError,
-                    {
-                        homeNavigationController.navigate(HomeTabScreen.ImageView(it))
-                    },
-
-                )
+                ) {
+                    homeNavigationController.navigate(HomeTabScreen.ImageView(it))
+                }
             }
             composable<HomeTabScreen.ImageView> {
                 val imageView = it.toRoute<HomeTabScreen.ImageView>()
@@ -309,6 +326,9 @@ fun HomeNavigation(
                 }
             }
 
+            composable<HomeTabScreen.Admin> {
+                AdminScreen()
+            }
         }
     }
 }
@@ -325,4 +345,6 @@ sealed interface HomeTabScreen {
     @Serializable
     data class ImageView(val imagePath: String) : HomeTabScreen
 
+    @Serializable
+    data object Admin : HomeTabScreen
 }
