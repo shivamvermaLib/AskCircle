@@ -11,8 +11,6 @@ import androidx.room.Relation
 import com.ask.core.ALL
 import com.ask.core.EMPTY
 import com.ask.core.ID
-import com.ask.core.IMAGE_SPLIT_FACTOR
-import com.ask.core.ImageSizeType
 import com.ask.core.UNDERSCORE
 import com.ask.core.toSearchNeededField
 import com.ask.user.User
@@ -291,7 +289,24 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
         @get:Exclude
         @Ignore
         var votesPercentFormat: String = EMPTY
+    }
 
+    fun setupData(userId: String): WidgetWithOptionsAndVotesForTargetAudience {
+        return this.copy(
+            options = options.map { optionWithVotes ->
+                optionWithVotes.apply {
+                    didUserVoted = userId in optionWithVotes.votes.map { it.userId }
+                    votesPercent =
+                        if (totalVotes > 0 && widgetTotalVotes > 0)
+                            (totalVotes.toFloat() / widgetTotalVotes.toFloat()) * 100
+                        else 0f
+                    votesPercentFormat = votesPercent.toPercentage()
+                }
+            }
+        ).apply {
+            hasVotes = options.any { it.votes.isNotEmpty() }
+            isCreatorOfTheWidget = userId == widget.creatorId
+        }
     }
 }
 

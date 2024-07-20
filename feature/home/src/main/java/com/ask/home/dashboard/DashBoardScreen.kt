@@ -17,7 +17,6 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -25,7 +24,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.ask.common.WidgetWithUserView
@@ -43,6 +41,7 @@ fun DashboardScreen(
     animatedContentScope: AnimatedContentScope,
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
+    onWidgetDetails: (Int, String) -> Unit,
 ) {
     val viewModel = hiltViewModel<DashboardViewModel>()
     val lastVotedEmptyOptions = listOf(
@@ -75,7 +74,8 @@ fun DashboardScreen(
             viewModel.vote(widgetId, optionId, route)
         },
         onOpenImage = onOpenImage,
-        onOpenIndexImage = onOpenIndexImage
+        onOpenIndexImage = onOpenIndexImage,
+        onWidgetDetails = onWidgetDetails
     )
 }
 
@@ -96,6 +96,7 @@ private fun DashBoardScreen(
     onOptionClick: (String, String) -> Unit = { _, _ -> },
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
+    onWidgetDetails: (Int, String) -> Unit,
 ) {
     var widthClass = sizeClass.widthSizeClass
     val heightClass = sizeClass.heightSizeClass
@@ -114,7 +115,8 @@ private fun DashBoardScreen(
             animatedContentScope,
             onOptionClick,
             onOpenImage,
-            onOpenIndexImage
+            onOpenIndexImage,
+            onWidgetDetails,
         )
     } else {
         val columnCount =
@@ -131,7 +133,8 @@ private fun DashBoardScreen(
             animatedContentScope,
             onOptionClick,
             onOpenImage,
-            onOpenIndexImage
+            onOpenIndexImage,
+            onWidgetDetails
         )
     }
 }
@@ -146,6 +149,7 @@ fun DashboardList(
     onOptionClick: (String, String) -> Unit,
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
+    onWidgetDetails: (Int, String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
@@ -159,7 +163,8 @@ fun DashboardList(
                     animatedContentScope,
                     onOptionClick,
                     onOpenIndexImage,
-                    onOpenImage
+                    onOpenImage,
+                    onWidgetDetails
                 )
             }
         }
@@ -180,6 +185,7 @@ fun DashboardGrid(
     onOptionClick: (String, String) -> Unit,
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
+    onWidgetDetails: (Int, String) -> Unit,
 ) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(columnCount),
@@ -194,7 +200,8 @@ fun DashboardGrid(
                     animatedContentScope,
                     onOptionClick,
                     onOpenIndexImage,
-                    onOpenImage
+                    onOpenImage,
+                    onWidgetDetails
                 )
             }
         }

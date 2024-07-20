@@ -5,7 +5,6 @@ import com.ask.category.CategoryRepository
 import com.ask.core.AppSharedPreference
 import com.ask.core.RemoteConfigRepository
 import com.ask.core.UpdatedTime
-import com.ask.core.getAllImages
 import com.ask.country.CountryRepository
 import com.ask.user.UserRepository
 import com.ask.user.generateCombinationsForUsers
@@ -70,12 +69,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         lastUpdatedTime,
                         list,
                         { userId ->
-                            userRepository.getUser(userId)
-                                .also {
-                                    if (it.profilePic.isNullOrBlank().not()) {
-                                        preloadImages(it.profilePic.getAllImages())
-                                    }
-                                }
+                            userRepository.getUser(userId,true, preloadImages)
                         },
                         preloadImages
                     ).also {

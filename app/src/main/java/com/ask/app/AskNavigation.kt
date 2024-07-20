@@ -1,4 +1,4 @@
-package com.ask.app.ui
+package com.ask.app
 
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -8,6 +8,8 @@ import androidx.compose.ui.unit.DpSize
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import com.ask.create.CreateWidgetScreen
 import com.ask.home.HomeScreen
 import com.ask.splash.SplashScreen
@@ -22,9 +24,15 @@ import kotlinx.serialization.json.Json
 fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero)) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = SplashScreen) {
-        composable<SplashScreen> {
+        composable<SplashScreen>(deepLinks = listOf(navDeepLink {
+            uriPattern = "https://ask-app-36527.web.app/widget/{widgetId}"
+        }, navDeepLink {
+            uriPattern = "ask-circle://widget/{widgetId}"
+        })) {
             SplashScreen(Json.encodeToString(SplashScreen)) {
-                navController.navigate(HomeScreen) {
+                val widgetId = it.arguments?.getString("widgetId")
+                println("WidgetID: $widgetId")
+                navController.navigate(HomeScreen(widgetId)) {
                     popUpTo(SplashScreen) {
                         inclusive = true
                     }
@@ -33,7 +41,9 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
         }
 //        composable<TestAPI> { TestAPIScreen() }
         composable<HomeScreen> {
-            HomeScreen(Json.encodeToString(HomeScreen), sizeClass) {
+            val route = it.toRoute<HomeScreen>()
+            val widgetId = route.widgetId
+            HomeScreen(Json.encodeToString(route), widgetId, sizeClass) {
                 navController.navigate(CreateScreen)
             }
         }
@@ -53,7 +63,7 @@ object SplashScreen
 object TestAPI
 
 @Serializable
-object HomeScreen
+data class HomeScreen(val widgetId: String? = null)
 
 @Serializable
 object CreateScreen

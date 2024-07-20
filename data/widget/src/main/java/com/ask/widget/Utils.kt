@@ -12,21 +12,7 @@ fun Flow<List<WidgetWithOptionsAndVotesForTargetAudience>>.mapWithCompute(userId
         widgetWithOptionsAndVotesForTargetAudiences
             .filter { it -> it.options.any { (it.option.imageUrl != null && it.option.text == null) || (it.option.imageUrl == null && it.option.text != null) } }
             .map { widgetWithOptionsAndVotesForTargetAudience ->
-                widgetWithOptionsAndVotesForTargetAudience.copy(
-                    options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
-                        optionWithVotes.apply {
-                            didUserVoted = userId in optionWithVotes.votes.map { it.userId }
-                            votesPercent =
-                                if (totalVotes > 0 && widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes > 0)
-                                    (totalVotes.toFloat() / widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes.toFloat()) * 100
-                                else 0f
-                            votesPercentFormat = votesPercent.toPercentage()
-                        }
-                    }
-                ).apply {
-                    hasVotes = options.any { it.votes.isNotEmpty() }
-                    isCreatorOfTheWidget = userId == widget.creatorId
-                }
+                widgetWithOptionsAndVotesForTargetAudience.setupData(userId)
             }
     }
 

@@ -66,51 +66,67 @@ fun WidgetWithUserView(
     onOptionClick: (String, String) -> Unit = { _, _ -> },
     onOpenIndexImage: (Int, String?) -> Unit,
     onOpenImage: (String?) -> Unit,
+    onWidgetDetails: ((Int, String) -> Unit)? = null,
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        ElevatedCard(modifier = Modifier
-            .fillMaxWidth()
-            .padding(all = 16.dp), onClick = { /*TODO*/ }) {
-            Column(
-                modifier = Modifier.padding(all = 16.dp)
-            ) {
-                WidgetUserView(
-                    index = index,
-                    user = widgetWithOptionsAndVotesForTargetAudience.user,
-                    startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat,
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedContentScope = animatedContentScope,
-                    onOpenIndexImage
-                )
-                Spacer(modifier = Modifier.size(12.dp))
-                HorizontalDivider(thickness = 1.dp)
-                Spacer(modifier = Modifier.size(6.dp))
-                Text(
-                    text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
-                        stringResource(R.string.last_voted, it)
-                    } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                    fontWeight = FontWeight.W400
-                )
-                Spacer(modifier = Modifier.size(6.dp))
-                WidgetView(
-                    widget = widgetWithOptionsAndVotesForTargetAudience,
-                    sharedTransitionScope,
-                    animatedContentScope,
-                    onOptionClick,
-                    onOpenImage
-                )
-                Spacer(modifier = Modifier.size(16.dp))
-                Text(
-                    text = stringResource(
-                        R.string.total_votes,
-                        widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
+        with(sharedTransitionScope) {
+            ElevatedCard(modifier = Modifier.Companion
+                .sharedElement(
+                    sharedTransitionScope.rememberSharedContentState(
+                        key = "$index-card-${widgetWithOptionsAndVotesForTargetAudience.widget.id}"
                     ),
-                    color = MaterialTheme.colorScheme.outline,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.W400
+                    animatedVisibilityScope = animatedContentScope
                 )
+                .fillMaxWidth()
+                .padding(all = 16.dp),
+                onClick = {
+                    onWidgetDetails?.invoke(
+                        index,
+                        widgetWithOptionsAndVotesForTargetAudience.widget.id
+                    )
+                }
+            ) {
+                Column(
+                    modifier = Modifier.padding(all = 16.dp)
+                ) {
+                    WidgetUserView(
+                        index = index,
+                        user = widgetWithOptionsAndVotesForTargetAudience.user,
+                        startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope,
+                        onOpenIndexImage
+                    )
+                    Spacer(modifier = Modifier.size(12.dp))
+                    HorizontalDivider(thickness = 1.dp)
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(
+                        text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
+                            stringResource(R.string.last_voted, it)
+                        } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline,
+                        fontWeight = FontWeight.W400
+                    )
+                    Spacer(modifier = Modifier.size(6.dp))
+                    WidgetView(
+                        widget = widgetWithOptionsAndVotesForTargetAudience,
+                        sharedTransitionScope,
+                        animatedContentScope,
+                        onOptionClick,
+                        onOpenImage
+                    )
+                    Spacer(modifier = Modifier.size(16.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.total_votes,
+                            widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
+                        ),
+                        color = MaterialTheme.colorScheme.outline,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.W400
+                    )
+                }
             }
         }
         if (widgetWithOptionsAndVotesForTargetAudience.showAdMob)

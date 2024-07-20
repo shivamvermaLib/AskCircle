@@ -191,6 +191,36 @@ class WidgetRepository @Inject constructor(
         return@withContext widgetWithOptionsAndVotesForTargetAudiences.any { it.widget.creatorId != currentUserId && it.widget.createdAt > lastUpdatedTime.widgetTime && lastUpdatedTime.widgetTime > 0 }
     }
 
+    suspend fun getWidgetDetails(
+        widgetId: String,
+        fetchUserDetails: suspend (String) -> User,
+        preloadImages: suspend (List<String>) -> Unit
+    ): WidgetWithOptionsAndVotesForTargetAudience =
+        withContext(dispatcher) {
+            widgetDao.getWidgetById(widgetId) ?: widgetDataSource.getItem(widgetId)
+                .also { widgetWithOptionsAndVotesForTargetAudience ->
+                    widgetWithOptionsAndVotesForTargetAudience.copy(
+                        user = fetchUserDetails(
+                            widgetWithOptionsAndVotesForTargetAudience.widget.creatorId
+                        )
+                    ).let { widgetWithOptionsAndVotesForTargetAudience1 ->
+                        preloadImages(
+                            widgetWithOptionsAndVotesForTargetAudience1.options.map { it.option.imageUrl.getAllImages() }
+                                .flatten()
+                        )
+                        widgetDao.insertWidget(
+                            widgetWithOptionsAndVotesForTargetAudience1.widget,
+                            widgetWithOptionsAndVotesForTargetAudience1.targetAudienceGender,
+                            widgetWithOptionsAndVotesForTargetAudience1.targetAudienceAgeRange,
+                            widgetWithOptionsAndVotesForTargetAudience1.targetAudienceLocations,
+                            widgetWithOptionsAndVotesForTargetAudience1.options.map { it.option },
+                            widgetWithOptionsAndVotesForTargetAudience1.options.map { it.votes }
+                                .flatten()
+                        )
+                    }
+                }
+        }
+
     suspend fun vote(widgetId: String, optionId: String, userId: String) =
         withContext(dispatcher) {
             var removeVote: Widget.Option.Vote? = null

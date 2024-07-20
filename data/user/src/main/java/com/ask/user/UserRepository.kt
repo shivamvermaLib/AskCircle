@@ -8,6 +8,7 @@ import com.ask.core.IMAGE_SPLIT_FACTOR
 import com.ask.core.ImageSizeType
 import com.ask.core.UNDERSCORE
 import com.ask.core.UpdatedTime
+import com.ask.core.getAllImages
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -141,11 +142,14 @@ class UserRepository @Inject constructor(
             userDao.getUserByIdLive(id).flowOn(dispatcher)
         } ?: throw Exception("User not signed in")
 
-    suspend fun getUser(userId: String, refresh: Boolean = false): User =
+    suspend fun getUser(userId: String, refresh: Boolean = false,preloadImages: suspend (List<String>) -> Unit): User =
         withContext(dispatcher) {
             return@withContext if (refresh) {
                 userDataSource.getItem(userId)
                     .also {
+                        if (it.user.profilePic.isNullOrBlank().not()) {
+                            preloadImages(it.user.profilePic.getAllImages())
+                        }
                         userDao.insertUser(it.user)
                     }.user
             } else {
