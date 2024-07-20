@@ -1,16 +1,18 @@
 package com.ask.home.dashboard
 
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
+import androidx.paging.map
 import com.ask.analytics.AnalyticsLogger
 import com.ask.common.BaseViewModel
 import com.ask.widget.Filter
 import com.ask.widget.GetWidgetsUseCase
 import com.ask.widget.UpdateVoteUseCase
-import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.stateIn
@@ -23,26 +25,13 @@ class DashboardViewModel @Inject constructor(
     private val analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
     private val _filterFlow = MutableStateFlow(Filter.Latest)
-    private val _errorFlow = MutableStateFlow<String?>(null)
     private val _lastVotedEmptyOptionsFlow = MutableStateFlow<List<String>>(emptyList())
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val uiStateFlow =
-        combine(
-            _filterFlow.flatMapMerge { getWidgetsUseCase(it) },
-            _lastVotedEmptyOptionsFlow,
-            _errorFlow
-        ) { widgets, lastVotedEmptyOptions, error ->
-            DashboardUiState(widgets.map {
-                it.apply {
-                    lastVotedAtOptional = lastVotedEmptyOptions.random()
-                }
-            }, error)
-        }.stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            DashboardUiState()
-        )
+    val widgetsFlow =
+        combine(_filterFlow, _lastVotedEmptyOptionsFlow) { filter, lastVotedEmptyOptions ->
+            filter to lastVotedEmptyOptions
+        }.flatMapMerge { getWidgetsUseCase(it.first, it.second) }.cachedIn(viewModelScope)
 
     fun setLastVotedEmptyOptions(list: List<String>) {
         _lastVotedEmptyOptionsFlow.value = list
@@ -57,12 +46,13 @@ class DashboardViewModel @Inject constructor(
         safeApiCall({}, {
             updateVoteUseCase(widgetId, optionId, screenName)
         }, {
-            _errorFlow.value = it
+//            _errorFlow.value = it
         })
     }
 }
 
+/*
 data class DashboardUiState(
-    val widgets: List<WidgetWithOptionsAndVotesForTargetAudience> = emptyList(),
     val error: String? = null
 )
+*/

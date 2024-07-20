@@ -1,5 +1,7 @@
 package com.ask.widget
 
+import androidx.paging.PagingData
+import androidx.paging.map
 import com.ask.core.RemoteConfigRepository
 import com.ask.user.UserRepository
 import kotlinx.coroutines.flow.Flow
@@ -11,19 +13,30 @@ class GetWidgetsUseCase @Inject constructor(
     private val widgetRepository: WidgetRepository,
     private val remoteConfigRepository: RemoteConfigRepository,
 ) {
-    operator fun invoke(filter: Filter): Flow<List<WidgetWithOptionsAndVotesForTargetAudience>> {
+    operator fun invoke(
+        filter: Filter,
+        lastVotedEmptyOptions: List<String>
+    ): Flow<PagingData<WidgetWithOptionsAndVotesForTargetAudience>> {
         val adMobIndexList = remoteConfigRepository.dashBoardAdMobIndexList()
         return when (filter) {
-            Filter.Latest -> widgetRepository.getWidgets()
-            Filter.Trending -> widgetRepository.getTrendingWidgets()
-            Filter.MyWidgets -> widgetRepository.getUserWidgets(userId = userRepository.getCurrentUserId())
-        }.mapWithCompute(userRepository.getCurrentUserId())
+            Filter.Latest -> widgetRepository.getWidgets(remoteConfigRepository.getDashBoardPageSize())
+            Filter.Trending -> widgetRepository.getTrendingWidgets(remoteConfigRepository.getDashBoardPageSize())
+            Filter.MyWidgets -> widgetRepository.getUserWidgets(
+                userId = userRepository.getCurrentUserId(),
+                remoteConfigRepository.getDashBoardPageSize()
+            )
+        }.mapWithComputePagingData(userRepository.getCurrentUserId())
             .map {
-                it.mapIndexed { index, widgetWithOptionsAndVotesForTargetAudience ->
+                var index = 0
+                it.map { widgetWithOptionsAndVotesForTargetAudience ->
                     widgetWithOptionsAndVotesForTargetAudience.apply {
                         showAdMob = adMobIndexList.contains(index)
+                        lastVotedAtOptional = lastVotedEmptyOptions.random()
+                    }.also {
+                        index++
                     }
                 }
             }
     }
 }
+

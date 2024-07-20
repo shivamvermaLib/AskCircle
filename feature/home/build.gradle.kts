@@ -80,6 +80,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.firebase.crashlytics)
 
+    implementation(libs.androidx.paging.runtime.ktx)
+    implementation(libs.androidx.paging.compose)
+
     implementation(project(":data:user"))
     implementation(project(":data:analytics"))
     implementation(project(":data:country"))

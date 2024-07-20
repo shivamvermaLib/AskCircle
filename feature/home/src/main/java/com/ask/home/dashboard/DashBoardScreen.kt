@@ -22,17 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.ask.common.WidgetWithUserView
 import com.ask.home.R
-import com.ask.user.User
 import com.ask.widget.Filter
-import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class)
@@ -57,7 +55,9 @@ fun DashboardScreen(
         stringResource(R.string.let_s_shape_the_future_vote_now),
         stringResource(R.string.vote_for_your_favorite_option)
     )
-    val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+//    val error by viewModel.errorFlow.collectAsStateWithLifecycle()
+    val widgets = viewModel.widgetsFlow.collectAsLazyPagingItems()
+
     LaunchedEffect(Unit) {
         viewModel.setLastVotedEmptyOptions(lastVotedEmptyOptions)
         viewModel.screenOpenEvent(route)
@@ -66,7 +66,8 @@ fun DashboardScreen(
         viewModel.setFilterType(filter)
     }
     DashBoardScreen(
-        state,
+//        error,
+        widgets,
         sizeClass,
         sharedTransitionScope,
         animatedContentScope,
@@ -87,7 +88,8 @@ fun DashboardScreen(
 )
 @Composable
 private fun DashBoardScreen(
-    @PreviewParameter(DashBoardScreenPreviewParameterProvider::class) uiState: DashboardUiState,
+//    @PreviewParameter(DashBoardScreenPreviewParameterProvider::class) uiState: String?,
+    widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
@@ -106,7 +108,8 @@ private fun DashBoardScreen(
     }
     if (widthClass == WindowWidthSizeClass.Compact) {
         DashboardList(
-            uiState,
+//            uiState,
+            widgets,
             sharedTransitionScope,
             animatedContentScope,
             onOptionClick,
@@ -121,7 +124,8 @@ private fun DashBoardScreen(
             else 2
 
         DashboardGrid(
-            uiState,
+//            uiState,
+            widgets,
             columnCount,
             sharedTransitionScope,
             animatedContentScope,
@@ -135,7 +139,8 @@ private fun DashBoardScreen(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardList(
-    uiState: DashboardUiState,
+//    uiState: DashboardUiState,
+    widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     onOptionClick: (String, String) -> Unit,
@@ -145,19 +150,21 @@ fun DashboardList(
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        itemsIndexed(uiState.widgets) { index, widget ->
-            WidgetWithUserView(
-                index,
-                widget,
-                sharedTransitionScope,
-                animatedContentScope,
-                onOptionClick,
-                onOpenIndexImage,
-                onOpenImage
-            )
+        itemsIndexed(widgets.itemSnapshotList) { index, widget ->
+            widget?.let {
+                WidgetWithUserView(
+                    index,
+                    it,
+                    sharedTransitionScope,
+                    animatedContentScope,
+                    onOptionClick,
+                    onOpenIndexImage,
+                    onOpenImage
+                )
+            }
         }
         item {
-            Box(modifier = Modifier.size(100.dp))
+            Box(modifier = Modifier.size(110.dp))
         }
     }
 }
@@ -165,7 +172,8 @@ fun DashboardList(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardGrid(
-    uiState: DashboardUiState,
+//    uiState: DashboardUiState,
+    widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
     columnCount: Int,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
@@ -177,16 +185,18 @@ fun DashboardGrid(
         columns = StaggeredGridCells.Fixed(columnCount),
         modifier = Modifier.fillMaxSize()
     ) {
-        itemsIndexed(uiState.widgets) { index, widget ->
-            WidgetWithUserView(
-                index,
-                widget,
-                sharedTransitionScope,
-                animatedContentScope,
-                onOptionClick,
-                onOpenIndexImage,
-                onOpenImage
-            )
+        itemsIndexed(widgets.itemSnapshotList) { index, widget ->
+            widget?.let {
+                WidgetWithUserView(
+                    index,
+                    it,
+                    sharedTransitionScope,
+                    animatedContentScope,
+                    onOptionClick,
+                    onOpenIndexImage,
+                    onOpenImage
+                )
+            }
         }
         item {
             Box(modifier = Modifier.size(100.dp))
@@ -194,6 +204,7 @@ fun DashboardGrid(
     }
 }
 
+/*
 class DashBoardScreenPreviewParameterProvider : PreviewParameterProvider<DashboardUiState> {
     override val values: Sequence<DashboardUiState>
         get() = sequenceOf(
@@ -222,4 +233,4 @@ class DashBoardScreenPreviewParameterProvider : PreviewParameterProvider<Dashboa
                 )
             )
         )
-}
+}*/

@@ -1,6 +1,8 @@
 package com.ask.widget
 
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.ask.core.DOT
 import com.ask.core.FirebaseDataSource
 import com.ask.core.FirebaseOneDataSource
@@ -17,7 +19,6 @@ import com.ask.user.User
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
@@ -31,11 +32,18 @@ class WidgetRepository @Inject constructor(
     @Named("IO") private val dispatcher: CoroutineDispatcher
 ) {
 
-    fun getUserWidgets(userId: String) = widgetDao.getUserWidgets(userId).flowOn(dispatcher)
+    fun getUserWidgets(userId: String, limit: Int) =
+        Pager(config = PagingConfig(pageSize = limit),
+            pagingSourceFactory = { widgetDao.getUserWidgets(userId) }
+        ).flow
 
-    fun getWidgets() = widgetDao.getWidgets().flowOn(dispatcher)
+    fun getWidgets(limit: Int) = Pager(config = PagingConfig(pageSize = limit),
+        pagingSourceFactory = { widgetDao.getWidgets() }
+    ).flow
 
-    fun getTrendingWidgets() = widgetDao.getTrendingWidgets().flowOn(dispatcher)
+    fun getTrendingWidgets(limit: Int) = Pager(config = PagingConfig(pageSize = limit),
+        pagingSourceFactory = { widgetDao.getTrendingWidgets() }
+    ).flow
 
     suspend fun createWidget(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
@@ -148,7 +156,8 @@ class WidgetRepository @Inject constructor(
             async {
                 widgetIdDataSource.getItemOrNull(it)
             }
-        }.awaitAll().asSequence().filterNotNull().distinct().map { it.widgetIds }.flatten().distinct()
+        }.awaitAll().asSequence().filterNotNull().distinct().map { it.widgetIds }.flatten()
+            .distinct()
 
         val widgetWithOptionsAndVotesForTargetAudiences =
             mutableListOf<WidgetWithOptionsAndVotesForTargetAudience>()
@@ -164,7 +173,9 @@ class WidgetRepository @Inject constructor(
                 )
             }
         }
-        preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.map { it.option.imageUrl.getAllImages() }.flatten() }.flatten())
+        preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it ->
+            it.options.map { it.option.imageUrl.getAllImages() }.flatten()
+        }.flatten())
         widgetDao.insertWidgets(
             widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
             widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceGender },

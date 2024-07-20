@@ -26,6 +26,7 @@ class RemoteConfigRepository @Inject constructor(
     fun dashBoardAdMobIndexList() =
         Json.decodeFromString<List<Int>>(remoteConfig.getString(DASHBOARD_AD_MOB_INDEXES))
 
+    fun getDashBoardPageSize() = 3
 
     companion object {
         const val AGE_RANGE_MIN = "min_age_range"

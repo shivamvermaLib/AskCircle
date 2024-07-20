@@ -52,7 +52,11 @@ dependencies {
     kapt(libs.hilt.compiler)
 
     implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.paging)
     kapt(libs.androidx.room.compiler)
+
+    implementation(libs.androidx.paging.runtime.ktx)
 
     implementation(libs.kotlinx.serialization.json)
 

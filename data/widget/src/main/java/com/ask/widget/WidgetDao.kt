@@ -1,36 +1,38 @@
 package com.ask.widget
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Upsert
-import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface WidgetDao {
     @Transaction
     @Query("select * from widgets order by createdAt desc")
-    fun getWidgets(): Flow<List<WidgetWithOptionsAndVotesForTargetAudience>>
+    fun getWidgets(): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
 
     @Transaction
     @Query("select * from widgets where creatorId = :userId order by createdAt desc")
-    fun getUserWidgets(userId: String): Flow<List<WidgetWithOptionsAndVotesForTargetAudience>>
+    fun getUserWidgets(userId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
 
     @Transaction
-    @Query("SELECT *FROM widgets\n" +
-        "LEFT JOIN (\n" +
-        "    SELECT widgetId, SUM(vote_count) AS total_votes\n" +
-        "    FROM (\n" +
-        "        SELECT optionid, COUNT(*) AS vote_count\n" +
-        "        FROM `widget-option-votes`\n" +
-        "        GROUP BY optionid\n" +
-        "    ) AS option_votes\n" +
-        "    LEFT JOIN `widgets-options` ON option_votes.optionid = `widgets-options`.id\n" +
-        "    GROUP BY widgetId\n" +
-        ") AS votes ON widgets.id = votes.widgetId\n" +
-        "ORDER BY votes.total_votes DESC;")
-    fun getTrendingWidgets(): Flow<List<WidgetWithOptionsAndVotesForTargetAudience>>
+    @Query(
+        "SELECT *FROM widgets\n" +
+            "LEFT JOIN (\n" +
+            "    SELECT widgetId, SUM(vote_count) AS total_votes\n" +
+            "    FROM (\n" +
+            "        SELECT optionid, COUNT(*) AS vote_count\n" +
+            "        FROM `widget-option-votes`\n" +
+            "        GROUP BY optionid\n" +
+            "    ) AS option_votes\n" +
+            "    LEFT JOIN `widgets-options` ON option_votes.optionid = `widgets-options`.id\n" +
+            "    GROUP BY widgetId\n" +
+            ") AS votes ON widgets.id = votes.widgetId\n" +
+            "ORDER BY votes.total_votes DESC"
+    )
+    fun getTrendingWidgets(): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
 
     @Upsert
     suspend fun insertWidget(
