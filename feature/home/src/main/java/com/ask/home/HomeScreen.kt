@@ -1,6 +1,7 @@
 package com.ask.home
 
 import android.Manifest
+import android.content.Intent
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -51,6 +52,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -274,6 +276,7 @@ fun HomeNavigation(
     dashboard: HomeTabScreen.Dashboard,
     onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
 ) {
+    val context = LocalContext.current
     SharedTransitionLayout {
         NavHost(
             navController = homeNavigationController, startDestination = dashboard
@@ -302,6 +305,14 @@ fun HomeNavigation(
                                 dashboardWidgetId
                             )
                         )
+                    },
+                    onShareClick = {
+                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                            putExtra(Intent.EXTRA_TEXT, "https://ask-app-36527.web.app/widget/$it")
+                            type = "text/plain"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, null)
+                        startActivity(context, shareIntent, null)
                     }
                 )
             }

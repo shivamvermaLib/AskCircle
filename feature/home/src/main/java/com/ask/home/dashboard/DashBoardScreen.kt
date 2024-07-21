@@ -42,6 +42,7 @@ fun DashboardScreen(
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
     onWidgetDetails: (Int, String) -> Unit,
+    onShareClick: (String) -> Unit,
 ) {
     val viewModel = hiltViewModel<DashboardViewModel>()
     val lastVotedEmptyOptions = listOf(
@@ -75,7 +76,8 @@ fun DashboardScreen(
         },
         onOpenImage = onOpenImage,
         onOpenIndexImage = onOpenIndexImage,
-        onWidgetDetails = onWidgetDetails
+        onWidgetDetails = onWidgetDetails,
+        onShareClick = onShareClick
     )
 }
 
@@ -97,6 +99,7 @@ private fun DashBoardScreen(
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
     onWidgetDetails: (Int, String) -> Unit,
+    onShareClick: (String) -> Unit,
 ) {
     var widthClass = sizeClass.widthSizeClass
     val heightClass = sizeClass.heightSizeClass
@@ -117,6 +120,7 @@ private fun DashBoardScreen(
             onOpenImage,
             onOpenIndexImage,
             onWidgetDetails,
+            onShareClick
         )
     } else {
         val columnCount =
@@ -134,7 +138,8 @@ private fun DashBoardScreen(
             onOptionClick,
             onOpenImage,
             onOpenIndexImage,
-            onWidgetDetails
+            onWidgetDetails,
+            onShareClick
         )
     }
 }
@@ -150,6 +155,7 @@ fun DashboardList(
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
     onWidgetDetails: (Int, String) -> Unit,
+    onShareClick: (String) -> Unit,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
@@ -164,7 +170,8 @@ fun DashboardList(
                     onOptionClick,
                     onOpenIndexImage,
                     onOpenImage,
-                    onWidgetDetails
+                    onWidgetDetails,
+                    onShareClick
                 )
             }
         }
@@ -186,6 +193,7 @@ fun DashboardGrid(
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
     onWidgetDetails: (Int, String) -> Unit,
+    onShareClick: (String) -> Unit,
 ) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(columnCount),
@@ -201,7 +209,8 @@ fun DashboardGrid(
                     onOptionClick,
                     onOpenIndexImage,
                     onOpenImage,
-                    onWidgetDetails
+                    onWidgetDetails,
+                    onShareClick
                 )
             }
         }

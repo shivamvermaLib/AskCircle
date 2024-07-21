@@ -67,25 +67,25 @@ fun WidgetWithUserView(
     onOpenIndexImage: (Int, String?) -> Unit,
     onOpenImage: (String?) -> Unit,
     onWidgetDetails: ((Int, String) -> Unit)? = null,
+    onShareClick: (String) -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         with(sharedTransitionScope) {
-            ElevatedCard(modifier = Modifier.Companion
-                .sharedElement(
-                    sharedTransitionScope.rememberSharedContentState(
-                        key = "$index-card-${widgetWithOptionsAndVotesForTargetAudience.widget.id}"
-                    ),
-                    animatedVisibilityScope = animatedContentScope
-                )
-                .fillMaxWidth()
-                .padding(all = 16.dp),
+            ElevatedCard(
+                modifier = Modifier
+                    .sharedElement(
+                        sharedTransitionScope.rememberSharedContentState(
+                            key = "$index-card-${widgetWithOptionsAndVotesForTargetAudience.widget.id}"
+                        ), animatedVisibilityScope = animatedContentScope
+                    )
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
                 onClick = {
                     onWidgetDetails?.invoke(
-                        index,
-                        widgetWithOptionsAndVotesForTargetAudience.widget.id
+                        index, widgetWithOptionsAndVotesForTargetAudience.widget.id
                     )
-                }
-            ) {
+                })
+            {
                 Column(
                     modifier = Modifier.padding(all = 16.dp)
                 ) {
@@ -100,14 +100,12 @@ fun WidgetWithUserView(
                     Spacer(modifier = Modifier.size(12.dp))
                     HorizontalDivider(thickness = 1.dp)
                     Spacer(modifier = Modifier.size(6.dp))
-                    Text(
-                        text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
-                            stringResource(R.string.last_voted, it)
-                        } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
+                    Text(text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
+                        stringResource(R.string.last_voted, it)
+                    } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.outline,
-                        fontWeight = FontWeight.W400
-                    )
+                        fontWeight = FontWeight.W400)
                     Spacer(modifier = Modifier.size(6.dp))
                     WidgetView(
                         widget = widgetWithOptionsAndVotesForTargetAudience,
@@ -116,7 +114,26 @@ fun WidgetWithUserView(
                         onOptionClick,
                         onOpenImage
                     )
-                    Spacer(modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.size(18.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                    ) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.share),
+                            contentDescription = "Share",
+                            modifier = Modifier
+                                .size(24.dp)
+                                .clickable { onShareClick(widgetWithOptionsAndVotesForTargetAudience.widget.id) }
+                        )
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.round_bookmark_border_24),
+                            contentDescription = "Bookmark",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.size(12.dp))
                     Text(
                         text = stringResource(
                             R.string.total_votes,
@@ -129,8 +146,7 @@ fun WidgetWithUserView(
                 }
             }
         }
-        if (widgetWithOptionsAndVotesForTargetAudience.showAdMob)
-            AppAdmobBanner(modifier = Modifier.fillMaxWidth())
+        if (widgetWithOptionsAndVotesForTargetAudience.showAdMob) AppAdmobBanner(modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -148,26 +164,22 @@ fun WidgetUserView(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (user.profilePic.isNullOrBlank()) {
-            AppImage(
-                url = user.profilePic.getImage(ImageSizeType.SIZE_100),
+            AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_100),
                 contentDescription = user.name,
                 contentScale = ContentScale.Crop,
                 placeholder = R.drawable.baseline_account_circle_24,
                 error = R.drawable.baseline_account_circle_24,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(30.dp)
                     .clip(CircleShape)
                     .clickable {
                         onOpenImage(
-                            index,
-                            user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
+                            index, user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
                         )
-                    }
-            )
+                    })
         } else {
             with(sharedTransitionScope) {
-                AppImage(
-                    url = user.profilePic.getImage(ImageSizeType.SIZE_100),
+                AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_100),
                     contentDescription = user.name,
                     contentScale = ContentScale.Crop,
                     placeholder = R.drawable.baseline_account_circle_24,
@@ -176,25 +188,26 @@ fun WidgetUserView(
                         .sharedElement(
                             sharedTransitionScope.rememberSharedContentState(
                                 key = "$index${user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY}"
-                            ),
-                            animatedVisibilityScope = animatedContentScope
+                            ), animatedVisibilityScope = animatedContentScope
                         )
-                        .size(40.dp)
+                        .size(30.dp)
                         .clip(CircleShape)
                         .clickable {
                             onOpenImage(
-                                index,
-                                user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
+                                index, user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
                             )
-                        }
-                )
+                        })
             }
         }
-        Text(text = user.name, modifier = Modifier.padding(horizontal = 6.dp))
+        Column(
+            horizontalAlignment = Alignment.Start,
+            modifier = Modifier.padding(horizontal = 6.dp)
+        ) {
+            Text(text = user.name)
+            Spacer(modifier = Modifier.size(3.dp))
+            Text(text = startedAtFormat, style = MaterialTheme.typography.bodySmall)
+        }
         Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = startedAtFormat, style = MaterialTheme.typography.bodySmall
-        )
     }
 }
 
@@ -242,15 +255,13 @@ fun WidgetView(
     } else if (widget.isTextOnly) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             widget.options.forEachIndexed { index, widgetOption ->
-                TextOption(
-                    index = index,
+                TextOption(index = index,
                     widgetOption = widgetOption,
                     didUserVoted = widgetOption.didUserVoted,
                     hasVotes = widget.hasVotes,
                     onOptionClick = {
                         onOptionClick(widget.widget.id, it)
-                    }
-                )
+                    })
             }
         }
     }
@@ -275,24 +286,23 @@ fun TextOption(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.let {
-                    if (didUserVoted) {
-                        it.primary
-                    } else {
-                        it.primaryContainer
-                    }
-                })
+            .background(shape = RoundedCornerShape(28.dp), color = MaterialTheme.colorScheme.let {
+                if (didUserVoted) {
+                    it.primary
+                } else {
+                    it.primaryContainer
+                }
+            })
             .padding(all = 5.dp)
             .clickable {
                 onOptionClick(option.id)
-            },
-        verticalAlignment = Alignment.CenterVertically
+            }, verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .background(shape = CircleShape, color = MaterialTheme.colorScheme.surface)
+                .background(
+                    shape = CircleShape, color = MaterialTheme.colorScheme.surface
+                )
                 .size(36.dp)
         ) {
             Text(
@@ -327,31 +337,27 @@ fun TextOption(
                 },
                 maxLines = 1,
             )
-            if (hasVotes)
-                Text(
-                    text = "${widgetOption.votesPercentFormat}%",
-                    color = if (didUserVoted) {
-                        if (isSystemInDarkTheme()) Color.Black else Color.White
-                    } else {
-                        if (isSystemInDarkTheme()) Color.White else Color.Black
-                    },
-                )
+            if (hasVotes) Text(
+                text = "${widgetOption.votesPercentFormat}%",
+                color = if (didUserVoted) {
+                    if (isSystemInDarkTheme()) Color.Black else Color.White
+                } else {
+                    if (isSystemInDarkTheme()) Color.White else Color.Black
+                },
+            )
         }
         Spacer(modifier = Modifier.size(5.dp))
         if (isInput) {
-            Icon(
-                Icons.Rounded.Close,
+            Icon(Icons.Rounded.Close,
                 stringResource(R.string.clear, option.text ?: EMPTY),
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onClearIconClick() })
-            Icon(
-                Icons.Rounded.Delete,
+            Icon(Icons.Rounded.Delete,
                 stringResource(R.string.delete, option.text ?: EMPTY),
                 modifier = Modifier
                     .size(20.dp)
-                    .clickable { onDeleteIconClick(index) }
-            )
+                    .clickable { onDeleteIconClick(index) })
         }
         Spacer(modifier = Modifier.size(5.dp))
     }
@@ -425,15 +431,12 @@ fun ImageOption(
                 },
                 shape = roundedCornerShape,
             )
-            .combinedClickable(
-                onClick = { onImageClick(option.id) },
-                onLongClick = { onOpenImage(option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL)) }
-            ),
+            .combinedClickable(onClick = { onImageClick(option.id) },
+                onLongClick = { onOpenImage(option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL)) }),
     ) {
         if (sharedTransitionScope != null && animatedContentScope != null) {
             with(sharedTransitionScope) {
-                AppImage(
-                    url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
+                AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
                     contentDescription = option.id,
                     contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                     placeholder = R.drawable.baseline_image_24,
@@ -442,18 +445,15 @@ fun ImageOption(
                         .sharedElement(
                             sharedTransitionScope.rememberSharedContentState(
                                 key = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY
-                            ),
-                            animatedVisibilityScope = animatedContentScope
+                            ), animatedVisibilityScope = animatedContentScope
                         )
                         .clip(roundedCornerShape)
                         .fillMaxSize()
                         .align(Alignment.Center)
-                        .onGloballyPositioned { sizeImage = it.size }
-                )
+                        .onGloballyPositioned { sizeImage = it.size })
             }
         } else {
-            AppImage(
-                url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
+            AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
                 contentDescription = option.id,
                 contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                 placeholder = R.drawable.baseline_image_24,
@@ -462,8 +462,7 @@ fun ImageOption(
                     .clip(roundedCornerShape)
                     .fillMaxSize()
                     .align(Alignment.Center)
-                    .onGloballyPositioned { sizeImage = it.size }
-            )
+                    .onGloballyPositioned { sizeImage = it.size })
         }
         Box(
             modifier = Modifier
@@ -508,14 +507,13 @@ fun ImageOption(
                     )
                 }
             }
-            if (hasVotes)
-                Text(
-                    text = "${optionWithVotes.votesPercentFormat}%",
-                    textAlign = TextAlign.Center,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.align(Alignment.BottomEnd),
-                    color = Color.White
-                )
+            if (hasVotes) Text(
+                text = "${optionWithVotes.votesPercentFormat}%",
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.SemiBold,
+                modifier = Modifier.align(Alignment.BottomEnd),
+                color = Color.White
+            )
         }
     }
 }
