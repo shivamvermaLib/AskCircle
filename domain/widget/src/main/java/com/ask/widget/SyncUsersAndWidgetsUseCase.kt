@@ -23,6 +23,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(
+        isFromSplash: Boolean = false,
         isConnected: Boolean = true,
         preloadImages: suspend (List<String>) -> Unit
     ): Boolean {
@@ -37,8 +38,9 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         var refreshNeeded = false
         val lastUpdatedTime = sharedPreference.getUpdatedTime()
         val lastDbVersion = sharedPreference.getDbVersion()
-
-        if (refreshCountServer != refreshCountLocal || lastDbVersion != dbVersion) {
+        if (userRepository.getCurrentUserOptional() == null) {
+            refreshNeeded = true
+        } else if (refreshCountServer != refreshCountLocal || lastDbVersion != dbVersion) {
             refreshNeeded = true
             widgetRepository.clearAll()
             userRepository.clearAll()
@@ -65,11 +67,12 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     userWithLocation.userCategories
                 ).let { list ->
                     widgetRepository.syncWidgetsFromServer(
+                        initPageSize = if (isFromSplash) remoteConfigRepository.getInitWidgetDataSize() else 0,
                         userRepository.getCurrentUserId(),
                         lastUpdatedTime,
                         list,
                         { userId ->
-                            userRepository.getUser(userId,true, preloadImages)
+                            userRepository.getUser(userId, true, preloadImages)
                         },
                         preloadImages
                     ).also {
@@ -81,13 +84,15 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             val duration = System.currentTimeMillis() - time
             analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
             sharedPreference.setRefreshCount(refreshCountServer)
-            sharedPreference.setUpdatedTime(
-                UpdatedTime(
-                    widgetTime = System.currentTimeMillis(),
-                    voteTime = System.currentTimeMillis(),
-                    profileTime = System.currentTimeMillis()
+            if (!isFromSplash) {
+                sharedPreference.setUpdatedTime(
+                    UpdatedTime(
+                        widgetTime = System.currentTimeMillis(),
+                        voteTime = System.currentTimeMillis(),
+                        profileTime = System.currentTimeMillis()
+                    )
                 )
-            )
+            }
             return sendNotification
         } else {
             println("Sync not required")

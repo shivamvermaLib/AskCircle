@@ -24,7 +24,7 @@ class SplashViewModel @Inject constructor(
         safeApiCall({
             _uiStateFlow.value = SplashUIState.Loading
         }, {
-            syncUsersAndWidgetsUseCase.invoke(isConnected, preloadImages)
+            syncUsersAndWidgetsUseCase.invoke(true, isConnected, preloadImages)
             _uiStateFlow.value = SplashUIState.Success(
                 remoteConfigRepository.getSyncTimeInMinutes()
             )

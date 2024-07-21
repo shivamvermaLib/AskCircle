@@ -146,18 +146,22 @@ class WidgetRepository @Inject constructor(
     }
 
     suspend fun syncWidgetsFromServer(
+        initPageSize: Int = 0,
         currentUserId: String,
         lastUpdatedTime: UpdatedTime,
         searchCombinations: Set<String>,
         fetchUserDetails: suspend (String) -> User,
         preloadImages: suspend (List<String>) -> Unit
     ) = withContext(dispatcher) {
-        val widgetIds = searchCombinations.map {
+        var widgetIds = searchCombinations.map {
             async {
                 widgetIdDataSource.getItemOrNull(it)
             }
         }.awaitAll().asSequence().filterNotNull().distinct().map { it.widgetIds }.flatten()
             .distinct()
+        if (initPageSize > 0) {
+            widgetIds = widgetIds.take(initPageSize)
+        }
 
         val widgetWithOptionsAndVotesForTargetAudiences =
             mutableListOf<WidgetWithOptionsAndVotesForTargetAudience>()

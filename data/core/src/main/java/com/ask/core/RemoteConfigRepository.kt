@@ -26,7 +26,8 @@ class RemoteConfigRepository @Inject constructor(
     fun dashBoardAdMobIndexList() =
         Json.decodeFromString<List<Int>>(remoteConfig.getString(DASHBOARD_AD_MOB_INDEXES))
 
-    fun getDashBoardPageSize() = 3
+    fun getDashBoardPageSize() = remoteConfig.getLong(DASHBOARD_PAGE_SIZE).toInt()
+    fun getInitWidgetDataSize() = remoteConfig.getLong(INIT_WIDGET_DATA_SIZE).toInt()
 
     companion object {
         const val AGE_RANGE_MIN = "min_age_range"
@@ -35,6 +36,9 @@ class RemoteConfigRepository @Inject constructor(
         const val MAX_OPTION_SIZE = "max_option_size"
         const val FULL_REFRESH = "full_refresh"
         const val DASHBOARD_AD_MOB_INDEXES = "dashboard_ad_mob_index"
+        const val DASHBOARD_PAGE_SIZE = "dashboard_page_size"
+        const val INIT_WIDGET_DATA_SIZE = "init_widget_data_size"
+
     }
 
 
