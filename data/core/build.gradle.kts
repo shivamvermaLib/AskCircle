@@ -46,6 +46,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.crashlytics)
     implementation(libs.firebase.config)
+    implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

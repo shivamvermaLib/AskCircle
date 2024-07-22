@@ -20,11 +20,15 @@ class WidgetViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow(WidgetUiState())
     val uiStateFlow = _uiStateFlow.asStateFlow()
 
-    fun init(widgetId: String, preloadImages: suspend (List<String>) -> Unit) {
+    fun init(
+        widgetId: String,
+        lastVotedEmptyOptions: List<String>,
+        preloadImages: suspend (List<String>) -> Unit
+    ) {
         safeApiCall({
             _uiStateFlow.value = _uiStateFlow.value.copy(loading = true)
         }, {
-            getWidgetDetailsUseCase.invoke(widgetId, preloadImages).let {
+            getWidgetDetailsUseCase.invoke(widgetId, lastVotedEmptyOptions, preloadImages).let {
                 _uiStateFlow.value = _uiStateFlow.value.copy(
                     loading = false,
                     widgetWithOptionsAndVotesForTargetAudience = it

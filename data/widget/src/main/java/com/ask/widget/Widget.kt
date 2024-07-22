@@ -22,7 +22,7 @@ import java.util.UUID
 @Entity(
     tableName = TABLE_WIDGETS, foreignKeys = [
         ForeignKey(
-            entity = com.ask.user.User::class,
+            entity = User::class,
             parentColumns = [ID],
             childColumns = [CREATOR_ID],
             onDelete = ForeignKey.CASCADE
@@ -224,7 +224,9 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
         entityColumn = WIDGET_ID,
         entity = Widget.WidgetCategory::class
     )
-    val categories: List<Widget.WidgetCategory>
+    val categories: List<Widget.WidgetCategory>,
+    @get:Exclude
+    var isBookmarked: Boolean
 ) {
     @get:Exclude
     @Ignore
@@ -291,7 +293,11 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
         var votesPercentFormat: String = EMPTY
     }
 
-    fun setupData(userId: String): WidgetWithOptionsAndVotesForTargetAudience {
+    fun setupData(
+        userId: String,
+        showAds: Boolean,
+        lastVotedOption: String
+    ): WidgetWithOptionsAndVotesForTargetAudience {
         return this.copy(
             options = options.map { optionWithVotes ->
                 optionWithVotes.apply {
@@ -306,6 +312,11 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
         ).apply {
             hasVotes = options.any { it.votes.isNotEmpty() }
             isCreatorOfTheWidget = userId == widget.creatorId
+            hasVotes = options.any { it.votes.isNotEmpty() }
+            isCreatorOfTheWidget = userId == widget.creatorId
+//                isBookmarked = widgetBookmarks.contains(widget.id)
+            showAdMob = showAds
+            lastVotedAtOptional = lastVotedOption
         }
     }
 }

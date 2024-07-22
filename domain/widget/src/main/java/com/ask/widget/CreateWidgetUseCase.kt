@@ -50,6 +50,7 @@ class CreateWidgetUseCase @Inject constructor(
                     creatorId = userRepository.getCurrentUserId()
                 )
             ),
+            userRepository.getCurrentUserId(),
             getExtension,
             getByteArray
         ).also {

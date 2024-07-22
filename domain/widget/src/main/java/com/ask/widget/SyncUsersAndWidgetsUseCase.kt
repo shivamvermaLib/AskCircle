@@ -3,11 +3,14 @@ package com.ask.widget
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.CategoryRepository
 import com.ask.core.AppSharedPreference
+import com.ask.core.DISPATCHER_DEFAULT
 import com.ask.core.RemoteConfigRepository
 import com.ask.core.UpdatedTime
 import com.ask.country.CountryRepository
 import com.ask.user.UserRepository
 import com.ask.user.generateCombinationsForUsers
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -19,19 +22,20 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
     private val sharedPreference: AppSharedPreference,
     private val remoteConfigRepository: RemoteConfigRepository,
     private val categoryRepository: CategoryRepository,
-    @Named("db_version") private val dbVersion: Int
+    @Named("db_version") private val dbVersion: Int,
+    @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
 
     suspend operator fun invoke(
         isFromSplash: Boolean = false,
         isConnected: Boolean = true,
         preloadImages: suspend (List<String>) -> Unit
-    ): Boolean {
+    ): Boolean = withContext(dispatcher) {
         if (!isConnected) {
             if (userRepository.getCurrentUserOptional() == null) {
                 throw Exception("User not signed in")
             }
-            return false
+            return@withContext false
         }
         val refreshCountServer = remoteConfigRepository.refreshCountServer()
         val refreshCountLocal = sharedPreference.getRefreshCount()
@@ -93,10 +97,10 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     )
                 )
             }
-            return sendNotification
+            return@withContext sendNotification
         } else {
             println("Sync not required")
-            return false
+            return@withContext false
         }
     }
 }

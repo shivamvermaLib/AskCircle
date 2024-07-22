@@ -3,6 +3,7 @@ package com.ask.widget
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import com.ask.core.DISPATCHER_IO
 import com.ask.core.DOT
 import com.ask.core.FirebaseDataSource
 import com.ask.core.FirebaseOneDataSource
@@ -29,7 +30,7 @@ class WidgetRepository @Inject constructor(
     private val widgetUpdateTimeOneDataSource: FirebaseOneDataSource<UpdatedTime>,
     private val widgetDao: WidgetDao,
     @Named(TABLE_WIDGETS) private val pollOptionStorageSource: FirebaseStorageSource,
-    @Named("IO") private val dispatcher: CoroutineDispatcher
+    @Named(DISPATCHER_IO) private val dispatcher: CoroutineDispatcher
 ) {
 
     fun getUserWidgets(userId: String, limit: Int) =
@@ -37,16 +38,19 @@ class WidgetRepository @Inject constructor(
             pagingSourceFactory = { widgetDao.getUserWidgets(userId) }
         ).flow
 
-    fun getWidgets(limit: Int) = Pager(config = PagingConfig(pageSize = limit),
-        pagingSourceFactory = { widgetDao.getWidgets() }
-    ).flow
+    fun getWidgets(currentUserId: String, limit: Int) =
+        Pager(config = PagingConfig(pageSize = limit),
+            pagingSourceFactory = { widgetDao.getWidgets(currentUserId) }
+        ).flow
 
-    fun getTrendingWidgets(limit: Int) = Pager(config = PagingConfig(pageSize = limit),
-        pagingSourceFactory = { widgetDao.getTrendingWidgets() }
-    ).flow
+    fun getTrendingWidgets(currentUserId: String, limit: Int) =
+        Pager(config = PagingConfig(pageSize = limit),
+            pagingSourceFactory = { widgetDao.getTrendingWidgets(currentUserId) }
+        ).flow
 
     suspend fun createWidget(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
+        currentUserId: String,
         getExtension: (String) -> String,
         getByteArrays: suspend (String) -> Map<ImageSizeType, ByteArray>,
     ): WidgetWithOptionsAndVotesForTargetAudience = withContext(dispatcher) {
@@ -121,7 +125,8 @@ class WidgetRepository @Inject constructor(
             updatedTime.copy(widgetTime = System.currentTimeMillis())
         }
 
-        widgetDao.getWidgetById(pollId) ?: throw Exception("Unable to get created Poll from Local")
+        widgetDao.getWidgetById(pollId, currentUserId)
+            ?: throw Exception("Unable to get created Poll from Local")
     }
 
     suspend fun deleteWidget(widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience) =
@@ -197,11 +202,12 @@ class WidgetRepository @Inject constructor(
 
     suspend fun getWidgetDetails(
         widgetId: String,
+        currentUserId: String,
         fetchUserDetails: suspend (String) -> User,
         preloadImages: suspend (List<String>) -> Unit
     ): WidgetWithOptionsAndVotesForTargetAudience =
         withContext(dispatcher) {
-            widgetDao.getWidgetById(widgetId) ?: widgetDataSource.getItem(widgetId)
+            widgetDao.getWidgetById(widgetId, currentUserId) ?: widgetDataSource.getItem(widgetId)
                 .also { widgetWithOptionsAndVotesForTargetAudience ->
                     widgetWithOptionsAndVotesForTargetAudience.copy(
                         user = fetchUserDetails(

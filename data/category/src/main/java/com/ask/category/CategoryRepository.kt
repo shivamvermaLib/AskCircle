@@ -1,11 +1,11 @@
 package com.ask.category
 
+import com.ask.core.DISPATCHER_IO
 import com.ask.core.FirebaseStorageSource
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -16,7 +16,7 @@ import javax.inject.Named
 class CategoryRepository @Inject constructor(
     private val categoryDao: CategoryDao,
     @Named(TABLE_CATEGORY) private val categoryFirebaseSource: FirebaseStorageSource,
-    @Named("IO") private val dispatcher: CoroutineDispatcher
+    @Named(DISPATCHER_IO) private val dispatcher: CoroutineDispatcher
 ) {
 
     fun getAllCategories() = categoryDao.getAllCategories().flowOn(dispatcher)

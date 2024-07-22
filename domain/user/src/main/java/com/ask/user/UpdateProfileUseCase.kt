@@ -19,6 +19,7 @@ class UpdateProfileUseCase @Inject constructor(
         profilePic: String?,
         country: String?,
         userCategories: List<User.UserCategory>?,
+        widgetBookmarks: List<User.UserWidgetBookmarks>?,
         getExtension: (String) -> String?,
         getBytes: suspend (String) -> Map<ImageSizeType, ByteArray>,
         preloadImage: suspend (List<String>) -> Unit
@@ -34,7 +35,7 @@ class UpdateProfileUseCase @Inject constructor(
             path.takeIf { it.isNotBlank() && it.checkIfUrl().not() }
                 ?.let { getExtension(it) }
         }
-        println("name = [${name}], email = [${email}], gender = [${gender}], age = [${age}], profilePic = [${profilePic}], country = [${country}], userCategories = [${userCategories}], getExtension = [${getExtension}], getBytes = [${getBytes}], preloadImage = [${preloadImage}]")
+
         userRepository.updateUser(
             name = name,
             email = email,
@@ -42,6 +43,7 @@ class UpdateProfileUseCase @Inject constructor(
             age = age,
             country = country,
             userCategories = userCategories,
+            widgetBookmarks = widgetBookmarks,
             profilePicExtension = extension,
             profileByteArray = profilePic?.takeIf { it.checkIfUrl().not() }
                 ?.let { path -> getBytes(path) },

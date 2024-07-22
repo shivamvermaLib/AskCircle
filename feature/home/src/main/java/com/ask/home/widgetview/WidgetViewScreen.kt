@@ -26,6 +26,7 @@ fun WidgetViewScreen(
     widgetView: HomeTabScreen.WidgetView,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
+    lastVotedEmptyOptions: List<String>,
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
 ) {
@@ -33,8 +34,8 @@ fun WidgetViewScreen(
     val viewModel = hiltViewModel<WidgetViewModel>()
     val context = LocalContext.current
     val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
-    LaunchedEffect(widgetId) {
-        viewModel.init(widgetId) {
+    LaunchedEffect(widgetId, lastVotedEmptyOptions) {
+        viewModel.init(widgetId, lastVotedEmptyOptions) {
             context.preLoadImages(it)
         }
     }

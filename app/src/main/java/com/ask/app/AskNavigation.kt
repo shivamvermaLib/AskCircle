@@ -94,7 +94,8 @@ class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :
                 targetAudienceAgeRange = Widget.TargetAudienceAgeRange(),
                 targetAudienceLocations = listOf(Widget.TargetAudienceLocation()),
                 user = com.ask.user.User(name = "Shivam"),
-                categories = listOf(Widget.WidgetCategory(category = "Health"))
+                categories = listOf(Widget.WidgetCategory(category = "Health")),
+                isBookmarked = false
             ),
             WidgetWithOptionsAndVotesForTargetAudience(
                 widget = Widget(title = "Who will win the IPL?"),
@@ -117,7 +118,8 @@ class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :
                 targetAudienceAgeRange = Widget.TargetAudienceAgeRange(),
                 targetAudienceLocations = listOf(Widget.TargetAudienceLocation()),
                 user = com.ask.user.User(name = "Shivam"),
-                categories = listOf(Widget.WidgetCategory(category = "Health"))
+                categories = listOf(Widget.WidgetCategory(category = "Health")),
+                isBookmarked = true
             )
         )
 }

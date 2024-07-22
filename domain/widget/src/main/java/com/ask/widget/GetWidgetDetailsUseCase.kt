@@ -10,12 +10,18 @@ class GetWidgetDetailsUseCase @Inject constructor(
 
     suspend operator fun invoke(
         widgetId: String,
+        lastVotedEmptyOptions: List<String>,
         preloadImages: suspend (List<String>) -> Unit
     ): WidgetWithOptionsAndVotesForTargetAudience {
-        return widgetRepository.getWidgetDetails(widgetId, { userId ->
-            userRepository.getUser(userId, true, preloadImages)
-        }, preloadImages)
-            .setupData(userRepository.getCurrentUserId())
+        return widgetRepository.getWidgetDetails(
+            widgetId,
+            userRepository.getCurrentUserId(),
+            { userId ->
+                userRepository.getUser(userId, true, preloadImages)
+            },
+            preloadImages
+        )
+            .setupData(userRepository.getCurrentUserId(), true, lastVotedEmptyOptions.random())
     }
 
 }

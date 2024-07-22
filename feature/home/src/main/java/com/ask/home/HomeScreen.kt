@@ -277,6 +277,16 @@ fun HomeNavigation(
     onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
+    val lastVotedEmptyOptions = listOf(
+        stringResource(R.string.your_voice_matters_vote_now),
+        stringResource(R.string.shape_the_outcome_cast_your_vote),
+        stringResource(R.string.join_the_conversation_vote_today),
+        stringResource(R.string.be_a_trendsetter_vote_first),
+        stringResource(R.string.get_involved_make_your_vote_count),
+        stringResource(R.string.start_the_discussion_with_your_vote),
+        stringResource(R.string.let_s_shape_the_future_vote_now),
+        stringResource(R.string.vote_for_your_favorite_option)
+    )
     SharedTransitionLayout {
         NavHost(
             navController = homeNavigationController, startDestination = dashboard
@@ -306,6 +316,7 @@ fun HomeNavigation(
                             )
                         )
                     },
+                    lastVotedEmptyOptions = lastVotedEmptyOptions,
                     onShareClick = {
                         val sendIntent = Intent(Intent.ACTION_SEND).apply {
                             putExtra(Intent.EXTRA_TEXT, "https://ask-app-36527.web.app/widget/$it")
@@ -313,7 +324,7 @@ fun HomeNavigation(
                         }
                         val shareIntent = Intent.createChooser(sendIntent, null)
                         startActivity(context, shareIntent, null)
-                    }
+                    },
                 )
             }
             composable<HomeTabScreen.Profile> {
@@ -348,11 +359,13 @@ fun HomeNavigation(
                             homeNavigationController.navigate(HomeTabScreen.ImageView(it))
                         }
                     },
+                    lastVotedEmptyOptions = lastVotedEmptyOptions,
                     onOpenIndexImage = { index, url ->
                         url?.let {
                             homeNavigationController.navigate(HomeTabScreen.ImageView(it, index))
                         }
-                    })
+                    },
+                )
             }
         }
     }

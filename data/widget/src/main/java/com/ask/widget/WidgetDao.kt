@@ -10,16 +10,16 @@ import androidx.room.Upsert
 @Dao
 interface WidgetDao {
     @Transaction
-    @Query("select * from widgets order by createdAt desc")
-    fun getWidgets(): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
+    @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :currentUserId) AS isBookmarked from widgets order by createdAt desc")
+    fun getWidgets(currentUserId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
 
     @Transaction
-    @Query("select * from widgets where creatorId = :userId order by createdAt desc")
+    @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :userId) AS isBookmarked from widgets where creatorId = :userId order by createdAt desc")
     fun getUserWidgets(userId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
 
     @Transaction
     @Query(
-        "SELECT *FROM widgets\n" +
+        "SELECT *, id in (select widgetId from `user-widget-bookmark` where userId = :userId) AS isBookmarked FROM widgets\n" +
             "LEFT JOIN (\n" +
             "    SELECT widgetId, SUM(vote_count) AS total_votes\n" +
             "    FROM (\n" +
@@ -32,7 +32,7 @@ interface WidgetDao {
             ") AS votes ON widgets.id = votes.widgetId\n" +
             "ORDER BY votes.total_votes DESC"
     )
-    fun getTrendingWidgets(): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
+    fun getTrendingWidgets(userId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
 
     @Upsert
     suspend fun insertWidget(
@@ -61,8 +61,11 @@ interface WidgetDao {
     suspend fun deleteVote(vote: Widget.Option.Vote)
 
     @Transaction
-    @Query("select * from widgets where id = :id")
-    suspend fun getWidgetById(id: String): WidgetWithOptionsAndVotesForTargetAudience?
+    @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :currentUserId) AS isBookmarked from widgets where id = :id")
+    suspend fun getWidgetById(
+        id: String,
+        currentUserId: String
+    ): WidgetWithOptionsAndVotesForTargetAudience?
 
     @Delete
     suspend fun deleteWidget(widget: Widget)

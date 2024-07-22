@@ -151,6 +151,7 @@ class ProfileViewModel @Inject constructor(
                 profile.profilePic,
                 profile.country,
                 profile.userCategories,
+                null,
                 getExtension,
                 getBytes,
                 preloadImage

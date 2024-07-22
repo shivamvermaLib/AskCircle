@@ -53,6 +53,7 @@ class UpdateProfileWorker @AssistedInject constructor(
                 profilePic,
                 country,
                 userCategories,
+                null,
                 applicationContext::getExtension,
                 applicationContext::getResizedImageByteArray,
                 applicationContext::preLoadImages

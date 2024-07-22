@@ -7,10 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -39,25 +37,16 @@ fun DashboardScreen(
     filter: Filter,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
+    lastVotedEmptyOptions: List<String>,
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
     onWidgetDetails: (Int, String) -> Unit,
     onShareClick: (String) -> Unit,
 ) {
     val viewModel = hiltViewModel<DashboardViewModel>()
-    val lastVotedEmptyOptions = listOf(
-        stringResource(R.string.your_voice_matters_vote_now),
-        stringResource(R.string.shape_the_outcome_cast_your_vote),
-        stringResource(R.string.join_the_conversation_vote_today),
-        stringResource(R.string.be_a_trendsetter_vote_first),
-        stringResource(R.string.get_involved_make_your_vote_count),
-        stringResource(R.string.start_the_discussion_with_your_vote),
-        stringResource(R.string.let_s_shape_the_future_vote_now),
-        stringResource(R.string.vote_for_your_favorite_option)
-    )
 //    val error by viewModel.errorFlow.collectAsStateWithLifecycle()
     val widgets = viewModel.widgetsFlow.collectAsLazyPagingItems()
-
+    println("Widgets> ${widgets.loadState}")
     LaunchedEffect(Unit) {
         viewModel.setLastVotedEmptyOptions(lastVotedEmptyOptions)
         viewModel.screenOpenEvent(route)
@@ -66,7 +55,6 @@ fun DashboardScreen(
         viewModel.setFilterType(filter)
     }
     DashBoardScreen(
-//        error,
         widgets,
         sizeClass,
         sharedTransitionScope,
@@ -77,7 +65,8 @@ fun DashboardScreen(
         onOpenImage = onOpenImage,
         onOpenIndexImage = onOpenIndexImage,
         onWidgetDetails = onWidgetDetails,
-        onShareClick = onShareClick
+        onShareClick = onShareClick,
+        onBookmarkClick = viewModel::onBookmarkClick
     )
 }
 
@@ -90,7 +79,6 @@ fun DashboardScreen(
 )
 @Composable
 private fun DashBoardScreen(
-//    @PreviewParameter(DashBoardScreenPreviewParameterProvider::class) uiState: String?,
     widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     sharedTransitionScope: SharedTransitionScope,
@@ -100,6 +88,7 @@ private fun DashBoardScreen(
     onOpenIndexImage: (Int, String?) -> Unit,
     onWidgetDetails: (Int, String) -> Unit,
     onShareClick: (String) -> Unit,
+    onBookmarkClick: (String) -> Unit = {}
 ) {
     var widthClass = sizeClass.widthSizeClass
     val heightClass = sizeClass.heightSizeClass
@@ -112,7 +101,6 @@ private fun DashBoardScreen(
     }
     if (widthClass == WindowWidthSizeClass.Compact) {
         DashboardList(
-//            uiState,
             widgets,
             sharedTransitionScope,
             animatedContentScope,
@@ -120,7 +108,8 @@ private fun DashBoardScreen(
             onOpenImage,
             onOpenIndexImage,
             onWidgetDetails,
-            onShareClick
+            onShareClick,
+            onBookmarkClick
         )
     } else {
         val columnCount =
@@ -130,7 +119,6 @@ private fun DashBoardScreen(
             else 2
 
         DashboardGrid(
-//            uiState,
             widgets,
             columnCount,
             sharedTransitionScope,
@@ -139,7 +127,8 @@ private fun DashBoardScreen(
             onOpenImage,
             onOpenIndexImage,
             onWidgetDetails,
-            onShareClick
+            onShareClick,
+            onBookmarkClick
         )
     }
 }
@@ -147,7 +136,6 @@ private fun DashBoardScreen(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardList(
-//    uiState: DashboardUiState,
     widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
@@ -156,11 +144,13 @@ fun DashboardList(
     onOpenIndexImage: (Int, String?) -> Unit,
     onWidgetDetails: (Int, String) -> Unit,
     onShareClick: (String) -> Unit,
+    onBookmarkClick: (String) -> Unit = {}
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        itemsIndexed(widgets.itemSnapshotList) { index, widget ->
+        items(widgets.itemCount) { index ->
+            val widget = widgets[index]
             widget?.let {
                 WidgetWithUserView(
                     index,
@@ -171,7 +161,8 @@ fun DashboardList(
                     onOpenIndexImage,
                     onOpenImage,
                     onWidgetDetails,
-                    onShareClick
+                    onShareClick,
+                    onBookmarkClick
                 )
             }
         }
@@ -184,7 +175,6 @@ fun DashboardList(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardGrid(
-//    uiState: DashboardUiState,
     widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
     columnCount: Int,
     sharedTransitionScope: SharedTransitionScope,
@@ -194,12 +184,14 @@ fun DashboardGrid(
     onOpenIndexImage: (Int, String?) -> Unit,
     onWidgetDetails: (Int, String) -> Unit,
     onShareClick: (String) -> Unit,
+    onBookmarkClick: (String) -> Unit = {}
 ) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(columnCount),
         modifier = Modifier.fillMaxSize()
     ) {
-        itemsIndexed(widgets.itemSnapshotList) { index, widget ->
+        items(widgets.itemCount) { index ->
+            val widget = widgets[index]
             widget?.let {
                 WidgetWithUserView(
                     index,
@@ -210,7 +202,8 @@ fun DashboardGrid(
                     onOpenIndexImage,
                     onOpenImage,
                     onWidgetDetails,
-                    onShareClick
+                    onShareClick,
+                    onBookmarkClick
                 )
             }
         }

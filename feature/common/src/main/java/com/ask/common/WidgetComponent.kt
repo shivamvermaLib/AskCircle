@@ -67,7 +67,8 @@ fun WidgetWithUserView(
     onOpenIndexImage: (Int, String?) -> Unit,
     onOpenImage: (String?) -> Unit,
     onWidgetDetails: ((Int, String) -> Unit)? = null,
-    onShareClick: (String) -> Unit = {}
+    onShareClick: (String) -> Unit = {},
+    onBookmarkClick: (String) -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         with(sharedTransitionScope) {
@@ -123,14 +124,18 @@ fun WidgetWithUserView(
                             imageVector = ImageVector.vectorResource(id = R.drawable.share),
                             contentDescription = "Share",
                             modifier = Modifier
-                                .size(24.dp)
+                                .size(28.dp)
                                 .clickable { onShareClick(widgetWithOptionsAndVotesForTargetAudience.widget.id) }
                         )
                         Spacer(modifier = Modifier.weight(1f))
                         Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.round_bookmark_border_24),
+                            imageVector = ImageVector.vectorResource(id = if (widgetWithOptionsAndVotesForTargetAudience.isBookmarked) R.drawable.baseline_bookmark_24 else R.drawable.round_bookmark_border_24),
                             contentDescription = "Bookmark",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clickable {
+                                    onBookmarkClick(widgetWithOptionsAndVotesForTargetAudience.widget.id)
+                                }
                         )
                     }
                     Spacer(modifier = Modifier.size(12.dp))

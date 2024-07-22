@@ -1,42 +1,48 @@
 package com.ask.widget
 
 import androidx.paging.PagingData
-import androidx.paging.map
+import com.ask.core.DISPATCHER_DEFAULT
 import com.ask.core.RemoteConfigRepository
 import com.ask.user.UserRepository
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
+import javax.inject.Named
 
 class GetWidgetsUseCase @Inject constructor(
     private val userRepository: UserRepository,
     private val widgetRepository: WidgetRepository,
     private val remoteConfigRepository: RemoteConfigRepository,
+    @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
-    operator fun invoke(
-        filter: Filter,
-        lastVotedEmptyOptions: List<String>
-    ): Flow<PagingData<WidgetWithOptionsAndVotesForTargetAudience>> {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    operator fun invoke(filterWithLastVotedEmptyOptionsFlow: Flow<Pair<Filter, List<String>>>): Flow<PagingData<WidgetWithOptionsAndVotesForTargetAudience>> {
         val adMobIndexList = remoteConfigRepository.dashBoardAdMobIndexList()
-        return when (filter) {
-            Filter.Latest -> widgetRepository.getWidgets(remoteConfigRepository.getDashBoardPageSize())
-            Filter.Trending -> widgetRepository.getTrendingWidgets(remoteConfigRepository.getDashBoardPageSize())
-            Filter.MyWidgets -> widgetRepository.getUserWidgets(
-                userId = userRepository.getCurrentUserId(),
-                remoteConfigRepository.getDashBoardPageSize()
-            )
-        }.mapWithComputePagingData(userRepository.getCurrentUserId())
-            .map {
-                var index = 0
-                it.map { widgetWithOptionsAndVotesForTargetAudience ->
-                    widgetWithOptionsAndVotesForTargetAudience.apply {
-                        showAdMob = adMobIndexList.contains(index)
-                        lastVotedAtOptional = lastVotedEmptyOptions.random()
-                    }.also {
-                        index++
-                    }
-                }
-            }
+        return filterWithLastVotedEmptyOptionsFlow.flatMapLatest { filterWithLastVotedEmptyOptions ->
+            when (filterWithLastVotedEmptyOptions.first) {
+                Filter.Latest -> widgetRepository.getWidgets(
+                    userRepository.getCurrentUserId(),
+                    remoteConfigRepository.getDashBoardPageSize()
+                )
+
+                Filter.Trending -> widgetRepository.getTrendingWidgets(
+                    userRepository.getCurrentUserId(),
+                    remoteConfigRepository.getDashBoardPageSize()
+                )
+
+                Filter.MyWidgets -> widgetRepository.getUserWidgets(
+                    userId = userRepository.getCurrentUserId(),
+                    remoteConfigRepository.getDashBoardPageSize()
+                )
+            }.mapWithComputePagingData(
+                userRepository.getCurrentUserId(),
+                adMobIndexList,
+                filterWithLastVotedEmptyOptions
+            ).flowOn(dispatcher)
+        }
     }
 }
 

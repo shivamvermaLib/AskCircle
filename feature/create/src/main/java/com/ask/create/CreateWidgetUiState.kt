@@ -46,7 +46,8 @@ data class CreateWidgetUiState(
             targetAudienceLocations,
             targetAudienceAgeRange,
             User(),
-            widgetCategories
+            widgetCategories,
+            false
         )
 
 }
