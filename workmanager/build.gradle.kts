@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kspPlugin)
     alias(libs.plugins.kotlinx.serialization)
 }
 
@@ -39,10 +39,10 @@ dependencies {
     implementation(libs.androidx.hilt.work)
     implementation(project(":domain:user"))
     implementation(project(":data:user"))
-    kapt(libs.androidx.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(libs.kotlinx.serialization.json)
 
     implementation(project(":data:analytics"))

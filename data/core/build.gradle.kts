@@ -1,7 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kspPlugin)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kotlinx.serialization)
 }
@@ -49,10 +49,10 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
 
     implementation(libs.androidx.room.ktx)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
 
     implementation(libs.kotlinx.serialization.json)
 

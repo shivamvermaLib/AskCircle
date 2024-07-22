@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.hilt)
     alias(libs.plugins.google.services)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kspPlugin)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.firebase.crashlytics)
 }
@@ -81,11 +81,6 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.ui.text.google.fonts)
 
-    // Hilt
-    implementation(libs.androidx.hilt.work)
-    implementation(project(":data:category"))
-    kapt(libs.androidx.hilt.compiler)
-
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.auth)
@@ -98,25 +93,29 @@ dependencies {
 
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
-    kapt(libs.androidx.room.compiler)
+    ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.paging)
 
     implementation(libs.coil.compose)
     implementation(libs.kotlinx.serialization.json)
 
+    // Hilt
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.work)
+    ksp(libs.androidx.hilt.compiler)
 
     // For instrumentation tests
     androidTestImplementation(libs.hilt.android.testing)
-    kaptAndroidTest(libs.hilt.compiler)
+    kspAndroidTest(libs.hilt.compiler)
 
     // For local unit tests
     testImplementation(libs.hilt.android.testing)
-    kaptTest(libs.hilt.compiler)
+    kspTest(libs.hilt.compiler)
 
     implementation(libs.play.services.ads)
 
+    implementation(project(":data:category"))
     implementation(project(":data:widget"))
     implementation(project(":data:country"))
     implementation(project(":data:core"))
@@ -138,9 +137,4 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-}
-
-// Allow references to generated code
-kapt {
-    correctErrorTypes = true
 }
