@@ -66,13 +66,12 @@ class UserRepository @Inject constructor(
     ): UserWithLocationCategory = withContext(dispatcher) {
         println("User repository called")
         val profilePic =
-            if (profileByteArray != null && profilePicExtension != null)
-                profileByteArray.map {
-                    userStorageSource.upload(
-                        "${getCurrentUserId()}$UNDERSCORE${it.key.name}$DOT${profilePicExtension}",
-                        it.value
-                    )
-                }.joinToString(separator = IMAGE_SPLIT_FACTOR)
+            if (profileByteArray != null && profilePicExtension != null) profileByteArray.map {
+                userStorageSource.upload(
+                    "${getCurrentUserId()}$UNDERSCORE${it.key.name}$DOT${profilePicExtension}",
+                    it.value
+                )
+            }.joinToString(separator = IMAGE_SPLIT_FACTOR)
             else null
 
         userDataSource.updateItemFromTransaction(getCurrentUserId()) { userDetails ->
@@ -91,7 +90,7 @@ class UserRepository @Inject constructor(
                     it.copy(
                         userId = getCurrentUserId(), updatedAt = System.currentTimeMillis()
                     )
-                } ?: userDetails.userCategories),
+                }) ?: userDetails.userCategories,
                 userWidgetBookmarks = (widgetBookmarks?.map {
                     it.copy(
                         userId = getCurrentUserId(), updatedAt = System.currentTimeMillis()

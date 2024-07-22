@@ -88,7 +88,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             val duration = System.currentTimeMillis() - time
             analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
             sharedPreference.setRefreshCount(refreshCountServer)
-            if (!isFromSplash) {
+//            if (!isFromSplash) {
                 sharedPreference.setUpdatedTime(
                     UpdatedTime(
                         widgetTime = System.currentTimeMillis(),
@@ -96,7 +96,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         profileTime = System.currentTimeMillis()
                     )
                 )
-            }
+//            }
             return@withContext sendNotification
         } else {
             println("Sync not required")
