@@ -34,6 +34,10 @@ interface WidgetDao {
     )
     fun getTrendingWidgets(userId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
 
+    @Transaction
+    @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :userId) AS isBookmarked from widgets where id in (select widgetId from `user-widget-bookmark` where userId = :userId) order by createdAt desc")
+    fun getBookmarkedWidgets(userId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
+
     @Upsert
     suspend fun insertWidget(
         widget: Widget,

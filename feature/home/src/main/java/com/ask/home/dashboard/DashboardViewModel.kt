@@ -34,12 +34,6 @@ class DashboardViewModel @Inject constructor(
 
     val widgetsFlow = getWidgetsUseCase(_filterWithLastVotedEmptyOptionsFlow)
         .cachedIn(viewModelScope)
-        .onEach { pagingData ->
-            println("MAP> $pagingData")
-            pagingData.map {
-                println("BOOK>${it.isBookmarked} > ${it.widget.title}")
-            }
-        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), PagingData.empty())
 
     fun setLastVotedEmptyOptions(list: List<String>) {

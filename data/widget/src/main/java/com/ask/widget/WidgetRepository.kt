@@ -48,6 +48,11 @@ class WidgetRepository @Inject constructor(
             pagingSourceFactory = { widgetDao.getTrendingWidgets(currentUserId) }
         ).flow
 
+    fun getBookmarkedWidgets(currentUserId: String, limit: Int) =
+        Pager(config = PagingConfig(pageSize = limit),
+            pagingSourceFactory = { widgetDao.getBookmarkedWidgets(currentUserId) }
+        ).flow
+
     suspend fun createWidget(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
         currentUserId: String,
@@ -254,15 +259,7 @@ class WidgetRepository @Inject constructor(
                 })
             }.also { widgetWithOptionsAndVotesForTargetAudience ->
                 removeVote?.let { widgetDao.deleteVote(it) }
-                widgetDao.insertWidget(
-                    widgetWithOptionsAndVotesForTargetAudience.widget,
-                    widgetWithOptionsAndVotesForTargetAudience.targetAudienceGender,
-                    widgetWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange,
-                    widgetWithOptionsAndVotesForTargetAudience.targetAudienceLocations,
-                    widgetWithOptionsAndVotesForTargetAudience.options.map { it.option },
-                    widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }
-                        .flatten()
-                )
+                widgetDao.insertVotes(widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }.flatten())
             }.also {
                 widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
                     updatedTime.copy(voteTime = System.currentTimeMillis())

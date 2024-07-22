@@ -162,7 +162,7 @@ private fun HomeScreen(
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             Filter.entries.forEach {
                                 DropdownMenuItem(
-                                    text = { Text(text = it.name) },
+                                    text = { Text(text = it.title) },
                                     onClick = {
                                         homeNavigationController.navigate(HomeTabScreen.Dashboard(it.name))
                                         showMenu = false

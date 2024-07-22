@@ -46,7 +46,7 @@ fun DashboardScreen(
     val viewModel = hiltViewModel<DashboardViewModel>()
 //    val error by viewModel.errorFlow.collectAsStateWithLifecycle()
     val widgets = viewModel.widgetsFlow.collectAsLazyPagingItems()
-    println("Widgets> ${widgets.loadState}")
+
     LaunchedEffect(Unit) {
         viewModel.setLastVotedEmptyOptions(lastVotedEmptyOptions)
         viewModel.screenOpenEvent(route)

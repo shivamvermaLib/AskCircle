@@ -37,6 +37,11 @@ class GetWidgetsUseCase @Inject constructor(
                     userId = userRepository.getCurrentUserId(),
                     remoteConfigRepository.getDashBoardPageSize()
                 )
+
+                Filter.BookmarkedWidget -> widgetRepository.getBookmarkedWidgets(
+                    userRepository.getCurrentUserId(),
+                    remoteConfigRepository.getDashBoardPageSize()
+                )
             }.mapWithComputePagingData(
                 userRepository.getCurrentUserId(),
                 adMobIndexList,
