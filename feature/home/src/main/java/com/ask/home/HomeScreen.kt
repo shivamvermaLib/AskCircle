@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -126,6 +127,7 @@ private fun HomeScreen(
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     val homeNavigationController = rememberNavController()
     val dashboardFirst = HomeTabScreen.Dashboard(Filter.Latest.name, widgetId = widgetId)
+    var selectedFilter by remember { mutableStateOf(Filter.Latest) }
     LaunchedEffect(isConnected) {
         if (!isConnected) {
             snackBarHostState.showSnackbar(
@@ -164,12 +166,17 @@ private fun HomeScreen(
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             Filter.entries.forEach {
+                                val modifier = if (selectedFilter == it) Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
+                                    else Modifier
+
                                 DropdownMenuItem(
                                     text = { Text(text = it.title) },
                                     onClick = {
+                                        selectedFilter = it
                                         homeNavigationController.navigate(HomeTabScreen.Dashboard(it.name))
                                         showMenu = false
                                     },
+                                    modifier = modifier
                                 )
                             }
                         }
