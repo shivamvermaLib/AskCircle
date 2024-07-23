@@ -1,14 +1,17 @@
 package com.ask.user
 
 import com.ask.analytics.AnalyticsLogger
+import com.ask.core.AppSharedPreference
 import com.ask.core.ImageSizeType
 import com.ask.core.checkIfUrl
 import com.ask.core.getAllImages
+import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
 
 class UpdateProfileUseCase @Inject constructor(
     private val userRepository: UserRepository,
-    private val analyticsLogger: AnalyticsLogger
+    private val analyticsLogger: AnalyticsLogger,
+    private val sharedPreference: AppSharedPreference
 ) {
 
     suspend operator fun invoke(
@@ -23,7 +26,7 @@ class UpdateProfileUseCase @Inject constructor(
         getExtension: (String) -> String?,
         getBytes: suspend (String) -> Map<ImageSizeType, ByteArray>,
         preloadImage: suspend (List<String>) -> Unit
-    ) {
+    ) = coroutineScope {
         analyticsLogger.updateProfileEvent(
             gender,
             age,
@@ -50,6 +53,12 @@ class UpdateProfileUseCase @Inject constructor(
         ).also {
             it.user.profilePic?.let { it1 -> preloadImage(it1.getAllImages()) }
         }.also {
+            val lastUpdatedTime = sharedPreference.getUpdatedTime()
+            sharedPreference.setUpdatedTime(
+                lastUpdatedTime.copy(
+                    profileTime = System.currentTimeMillis(),
+                )
+            )
             analyticsLogger.profileUpdatedEvent(
                 gender,
                 age,

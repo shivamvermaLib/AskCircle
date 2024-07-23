@@ -28,7 +28,7 @@ fun Flow<List<WidgetWithOptionsAndVotesForTargetAudience>>.mapWithCompute(
 fun Flow<PagingData<WidgetWithOptionsAndVotesForTargetAudience>>.mapWithComputePagingData(
     userId: String,
     adMobIndexList: List<Int>,
-    filterWithLastVotedEmptyOptions: Pair<Any, List<String>>
+    lastVotedEmptyOptions: List<String>
 ) = this.map { widgetWithOptionsAndVotesForTargetAudiences ->
     var index = 0
     widgetWithOptionsAndVotesForTargetAudiences
@@ -37,7 +37,7 @@ fun Flow<PagingData<WidgetWithOptionsAndVotesForTargetAudience>>.mapWithComputeP
             widgetWithOptionsAndVotesForTargetAudience.setupData(
                 userId,
                 adMobIndexList.contains(index),
-                filterWithLastVotedEmptyOptions.second.random()
+                lastVotedEmptyOptions.random()
             ).also { index++ }
         }
 }

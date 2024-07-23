@@ -10,8 +10,11 @@ import androidx.room.Upsert
 @Dao
 interface WidgetDao {
     @Transaction
-    @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :currentUserId) AS isBookmarked from widgets order by createdAt desc")
-    fun getWidgets(currentUserId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
+    @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :currentUserId) AS isBookmarked from widgets where startAt < :currentTime order by createdAt desc")
+    fun getWidgets(
+        currentUserId: String,
+        currentTime: Long
+    ): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
 
     @Transaction
     @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :userId) AS isBookmarked from widgets where creatorId = :userId order by createdAt desc")
@@ -32,7 +35,41 @@ interface WidgetDao {
             ") AS votes ON widgets.id = votes.widgetId\n" +
             "ORDER BY votes.total_votes DESC"
     )
+    fun getMostVotedWidgets(userId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
+
+    @Transaction
+    @Query(
+        "SELECT" +
+            "    widgets.*," +
+            "    widgets.id IN (SELECT widgetId FROM `user-widget-bookmark` WHERE userId = :userId) AS isBookmarked," +
+            "    votes.total_votes " +
+            "FROM" +
+            "    widgets " +
+            "LEFT JOIN (" +
+            "    SELECT " +
+            "        `widgets-options`.widgetId," +
+            "        SUM(option_votes.vote_count) AS total_votes" +
+            "    FROM (" +
+            "        SELECT " +
+            "            optionid, " +
+            "            COUNT(*) AS vote_count" +
+            "        FROM " +
+            "            `widget-option-votes`" +
+            "        WHERE" +
+            "            createdAt = (SELECT MAX(createdAt) FROM `widget-option-votes` WHERE optionid = `widget-option-votes`.optionid)" +
+            "        GROUP BY " +
+            "            optionid" +
+            "    ) AS option_votes" +
+            "    LEFT JOIN " +
+            "        `widgets-options` ON option_votes.optionid = `widgets-options`.id" +
+            "    GROUP BY " +
+            "        widgetId" +
+            ") AS votes ON widgets.id = votes.widgetId " +
+            "ORDER BY " +
+            "    votes.total_votes DESC;"
+    )
     fun getTrendingWidgets(userId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
+
 
     @Transaction
     @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :userId) AS isBookmarked from widgets where id in (select widgetId from `user-widget-bookmark` where userId = :userId) order by createdAt desc")
@@ -47,6 +84,9 @@ interface WidgetDao {
         options: List<Widget.Option>,
         voteList: List<Widget.Option.Vote>
     )
+
+    @Upsert
+    suspend fun insertWidget(widget: Widget)
 
     @Upsert
     suspend fun insertWidgets(

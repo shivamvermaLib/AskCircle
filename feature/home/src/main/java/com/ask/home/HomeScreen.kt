@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -25,6 +27,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -195,11 +198,13 @@ private fun HomeScreen(
             }
         },
         floatingActionButton = {
-            if (homeUiState.createWidgetStatus != WorkerStatus.Loading) ExtendedFloatingActionButton(
-                onClick = onCreateClick,
-                icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
-                text = { Text(text = stringResource(id = R.string.create)) },
-            )
+            AnimatedVisibility(visible = homeUiState.createWidgetStatus != WorkerStatus.Loading) {
+                ExtendedFloatingActionButton(
+                    onClick = onCreateClick,
+                    icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
+                    text = { Text(text = stringResource(id = R.string.create)) },
+                )
+            }
         },
         bottomBar = {
             val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
@@ -248,21 +253,31 @@ private fun HomeScreen(
                     dismissSnackBar()
                 }
             }
-            if (homeUiState.createWidgetStatus == WorkerStatus.Loading) {
-                ElevatedCard(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(all = 16.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(text = stringResource(R.string.creating))
-                        Spacer(modifier = Modifier.weight(1f))
-                        CircularProgressIndicator()
-                    }
-                }
+            CreatingCard(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                homeUiState.createWidgetStatus == WorkerStatus.Loading
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun CreatingCard(modifier: Modifier = Modifier, visible: Boolean = true) {
+    AnimatedVisibility(visible = visible, modifier = modifier) {
+        ElevatedCard(
+            modifier = Modifier.padding(all = 16.dp),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(text = stringResource(R.string.creating))
+                Spacer(modifier = Modifier.weight(1f))
+                CircularProgressIndicator()
             }
         }
     }
@@ -293,7 +308,8 @@ fun HomeNavigation(
         ) {
             composable<HomeTabScreen.Dashboard> { backStackEntry ->
                 val route = backStackEntry.toRoute<HomeTabScreen.Dashboard>()
-                DashboardScreen(Json.encodeToString(route),
+                DashboardScreen(
+                    Json.encodeToString(route),
                     sizeClass,
                     Filter.valueOf(route.filter),
                     this@SharedTransitionLayout,

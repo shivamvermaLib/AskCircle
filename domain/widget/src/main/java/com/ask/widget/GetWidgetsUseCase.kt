@@ -6,9 +6,13 @@ import com.ask.core.RemoteConfigRepository
 import com.ask.user.UserRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -19,18 +23,28 @@ class GetWidgetsUseCase @Inject constructor(
     @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(filterWithLastVotedEmptyOptionsFlow: Flow<Pair<Filter, List<String>>>): Flow<PagingData<WidgetWithOptionsAndVotesForTargetAudience>> {
+    operator fun invoke(filterWithLastVotedEmptyOptionsFlow: Flow<Triple<Filter, List<String>, Long>>): Flow<PagingData<WidgetWithOptionsAndVotesForTargetAudience>> {
         val adMobIndexList = remoteConfigRepository.dashBoardAdMobIndexList()
-        return filterWithLastVotedEmptyOptionsFlow.flatMapLatest { filterWithLastVotedEmptyOptions ->
-            when (filterWithLastVotedEmptyOptions.first) {
+        val currentTimeFlow = flow {
+            while (true) {
+                emit(System.currentTimeMillis())
+                delay(TimeUnit.MINUTES.toMillis(remoteConfigRepository.getRefreshTimerInMinutesForDashboard()))
+            }
+        }
+        return combine(
+            filterWithLastVotedEmptyOptionsFlow, currentTimeFlow
+        ) { filterWithLastVotedEmptyOptions, currentTime ->
+            filterWithLastVotedEmptyOptions to if (filterWithLastVotedEmptyOptions.third > currentTime) filterWithLastVotedEmptyOptions.third else currentTime
+        }.flatMapLatest { filterWithLastVotedEmptyOptionsWithCurrentTime ->
+            when (filterWithLastVotedEmptyOptionsWithCurrentTime.first.first) {
                 Filter.Latest -> widgetRepository.getWidgets(
                     userRepository.getCurrentUserId(),
+                    filterWithLastVotedEmptyOptionsWithCurrentTime.second,
                     remoteConfigRepository.getDashBoardPageSize()
                 )
 
-                Filter.Trending -> widgetRepository.getTrendingWidgets(
-                    userRepository.getCurrentUserId(),
-                    remoteConfigRepository.getDashBoardPageSize()
+                Filter.MostVoted -> widgetRepository.getMostVotedWidgets(
+                    userRepository.getCurrentUserId(), remoteConfigRepository.getDashBoardPageSize()
                 )
 
                 Filter.MyWidgets -> widgetRepository.getUserWidgets(
@@ -39,13 +53,16 @@ class GetWidgetsUseCase @Inject constructor(
                 )
 
                 Filter.BookmarkedWidget -> widgetRepository.getBookmarkedWidgets(
-                    userRepository.getCurrentUserId(),
-                    remoteConfigRepository.getDashBoardPageSize()
+                    userRepository.getCurrentUserId(), remoteConfigRepository.getDashBoardPageSize()
+                )
+
+                Filter.Trending -> widgetRepository.getTrendingWidgets(
+                    userRepository.getCurrentUserId(), remoteConfigRepository.getDashBoardPageSize()
                 )
             }.mapWithComputePagingData(
                 userRepository.getCurrentUserId(),
                 adMobIndexList,
-                filterWithLastVotedEmptyOptions
+                filterWithLastVotedEmptyOptionsWithCurrentTime.first.second
             ).flowOn(dispatcher)
         }
     }

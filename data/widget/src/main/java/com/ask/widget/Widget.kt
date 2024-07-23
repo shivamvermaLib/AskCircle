@@ -13,6 +13,7 @@ import com.ask.core.EMPTY
 import com.ask.core.ID
 import com.ask.core.UNDERSCORE
 import com.ask.core.toSearchNeededField
+import com.ask.core.toTimeAgo
 import com.ask.user.User
 import com.google.firebase.database.Exclude
 import kotlinx.serialization.Serializable
@@ -42,18 +43,9 @@ data class Widget(
     val updatedAt: Long = System.currentTimeMillis()
 ) {
 
-    fun isCreatorOfTheWidget(userId: String): Boolean {
-        return userId == creatorId
-    }
-
     @get:Exclude
     @Ignore
-    var startAtFormat: String = DateUtils.getRelativeTimeSpanString(
-        startAt,
-        System.currentTimeMillis(),
-        DateUtils.MINUTE_IN_MILLIS,
-        DateUtils.FORMAT_ABBREV_RELATIVE
-    ).toString()
+    var startAtFormat: String = startAt.toTimeAgo()
 
     enum class WidgetType { Poll, Quiz }
 
@@ -267,6 +259,14 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
     @get:Exclude
     @Ignore
     var showAdMob = false
+
+    @get:Exclude
+    @Ignore
+    val isAllowedVoting: Boolean = widget.startAt < System.currentTimeMillis() && (widget.endAt == null || widget.endAt > System.currentTimeMillis())
+
+    @get:Exclude
+    @Ignore
+    val isWidgetNotStarted: Boolean = widget.startAt > System.currentTimeMillis()
 
     @Serializable
     data class OptionWithVotes(

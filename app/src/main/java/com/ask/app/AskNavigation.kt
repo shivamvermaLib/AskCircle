@@ -39,7 +39,6 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                 }
             }
         }
-//        composable<TestAPI> { TestAPIScreen() }
         composable<HomeScreen> {
             val route = it.toRoute<HomeScreen>()
             val widgetId = route.widgetId

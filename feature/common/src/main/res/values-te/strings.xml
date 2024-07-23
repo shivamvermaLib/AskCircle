@@ -13,5 +13,9 @@
     <string name="last_voted">చివరిసారి ఓటు వేయబడింది %1$s</string>
     <string name="total_votes">%1$s మొత్తం ఓట్లు</string>
     <string name="search">Search</string>
+    <string name="start">START</string>
+    <string name="end">END</string>
+    <string name="share">Share</string>
+    <string name="bookmark">Bookmark</string>
 
 </resources>

@@ -16,5 +16,10 @@
     <string name="gender">Sexe</string>
     <string name="male">Homme</string>
     <string name="female">Femme</string>
+    <string name="manual">Manual</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="end_at">End At</string>
+    <string name="start_at">Start At</string>
 
 </resources>

@@ -16,4 +16,9 @@
     <string name="gender">ലിംഗം</string>
     <string name="male">പുരുഷൻ</string>
     <string name="female">സ്ത്രീ</string>
+    <string name="manual">Manual</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="end_at">End At</string>
+    <string name="start_at">Start At</string>
 </resources>

@@ -16,5 +16,10 @@
     <string name="gender">లింగం</string>
     <string name="male">పురుషుడు</string>
     <string name="female">స్త్రీ</string>
+    <string name="manual">Manual</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="end_at">End At</string>
+    <string name="start_at">Start At</string>
 
 </resources>
