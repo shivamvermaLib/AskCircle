@@ -27,7 +27,6 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(
-        isFromSplash: Boolean = false,
         isConnected: Boolean = true,
         preloadImages: suspend (List<String>) -> Unit
     ): Boolean = withContext(dispatcher) {
@@ -37,6 +36,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             }
             return@withContext false
         }
+        remoteConfigRepository.fetchInit()
         val refreshCountServer = remoteConfigRepository.refreshCountServer()
         val refreshCountLocal = sharedPreference.getRefreshCount()
         var refreshNeeded = false
@@ -71,7 +71,6 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     userWithLocation.userCategories
                 ).let { list ->
                     widgetRepository.syncWidgetsFromServer(
-                        initPageSize = if (isFromSplash) remoteConfigRepository.getInitWidgetDataSize() else 0,
                         userRepository.getCurrentUserId(),
                         lastUpdatedTime,
                         list,
@@ -88,7 +87,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             val duration = System.currentTimeMillis() - time
             analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
             sharedPreference.setRefreshCount(refreshCountServer)
-//            if (!isFromSplash) {
+            sharedPreference.setDbVersion(dbVersion)
                 sharedPreference.setUpdatedTime(
                     UpdatedTime(
                         widgetTime = System.currentTimeMillis(),
@@ -96,7 +95,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         profileTime = System.currentTimeMillis()
                     )
                 )
-//            }
+
             return@withContext sendNotification
         } else {
             println("Sync not required")

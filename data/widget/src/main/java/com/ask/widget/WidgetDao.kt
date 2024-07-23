@@ -66,7 +66,7 @@ interface WidgetDao {
             "        widgetId" +
             ") AS votes ON widgets.id = votes.widgetId " +
             "ORDER BY " +
-            "    votes.total_votes DESC;"
+            "    votes.total_votes DESC"
     )
     fun getTrendingWidgets(userId: String): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
 

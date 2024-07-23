@@ -160,7 +160,6 @@ class WidgetRepository @Inject constructor(
     }
 
     suspend fun syncWidgetsFromServer(
-        initPageSize: Int = 0,
         currentUserId: String,
         lastUpdatedTime: UpdatedTime,
         searchCombinations: Set<String>,
@@ -173,9 +172,6 @@ class WidgetRepository @Inject constructor(
             }
         }.awaitAll().asSequence().filterNotNull().distinct().map { it.widgetIds }.flatten()
             .distinct()
-        if (initPageSize > 0) {
-            widgetIds = widgetIds.take(initPageSize)
-        }
 
         val widgetWithOptionsAndVotesForTargetAudiences =
             mutableListOf<WidgetWithOptionsAndVotesForTargetAudience>()
