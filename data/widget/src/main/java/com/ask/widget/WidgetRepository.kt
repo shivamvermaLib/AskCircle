@@ -263,7 +263,7 @@ class WidgetRepository @Inject constructor(
 
     suspend fun vote(widgetId: String, optionId: String, userId: String) =
         withContext(dispatcher) {
-            widgetDao.getWidgetById(widgetId, userId)?.let { widgetWithOptionsAndVotesForTargetAudience ->
+            /*widgetDao.getWidgetById(widgetId, userId)?.let { widgetWithOptionsAndVotesForTargetAudience ->
                     var removeVote: Widget.Option.Vote? = null
                     widgetWithOptionsAndVotesForTargetAudience.copy(
                         options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
@@ -287,7 +287,7 @@ class WidgetRepository @Inject constructor(
                         removeVote?.let { widgetDao.deleteVote(it) }
                         widgetDao.insertVotes(widgetWithOptionsAndVotesForTargetAudience1.options.map { it.votes }.flatten())
                     }
-                }
+                }*/
 
             var removeVote: Widget.Option.Vote? = null
             widgetDataSource.updateItemFromTransaction(widgetId) { widgetWithOptionsAndVotesForTargetAudience ->
