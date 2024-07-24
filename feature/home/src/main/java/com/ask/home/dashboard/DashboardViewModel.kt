@@ -3,7 +3,6 @@ package com.ask.home.dashboard
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import androidx.paging.map
 import androidx.work.WorkInfo
 import com.ask.analytics.AnalyticsLogger
 import com.ask.common.BaseViewModel
@@ -18,9 +17,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -44,15 +41,9 @@ class DashboardViewModel @Inject constructor(
         ) { filter, lastVotedEmptyOptions, triggerRefresh ->
             Triple(filter, lastVotedEmptyOptions, triggerRefresh)
         }
-    private val _lastVoteWidgetId = MutableStateFlow<String?>(null)
+
+
     val widgetsFlow = getWidgetsUseCase(_filterWithLastVotedEmptyOptionsFlow)
-        .map { pagingData ->
-            pagingData.map {
-                it.apply {
-                    it.isLastVotedWidget = _lastVoteWidgetId.value == it.widget.id
-                }
-            }
-        }
         .cachedIn(viewModelScope)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), PagingData.empty())
 
@@ -67,7 +58,6 @@ class DashboardViewModel @Inject constructor(
 
     fun vote(widgetId: String, optionId: String, screenName: String) {
         safeApiCall({}, {
-            _lastVoteWidgetId.value = widgetId
             updateVoteUseCase(widgetId, optionId, screenName)
         }, {
 //            _errorFlow.value = it
