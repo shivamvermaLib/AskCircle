@@ -1,6 +1,5 @@
 package com.ask.home.dashboard
 
-import android.widget.Space
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -16,6 +15,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.ask.common.WidgetWithUserView
@@ -95,8 +96,7 @@ fun DashboardScreen(
 @Preview(name = "pixel4", device = "id:pixel_4")
 @Preview(name = "tablet", device = "spec:shape=Normal,width=1280,height=800,unit=dp,dpi=480")
 @OptIn(
-    ExperimentalMaterial3WindowSizeClassApi::class,
-    ExperimentalSharedTransitionApi::class
+    ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalSharedTransitionApi::class
 )
 @Composable
 private fun DashBoardScreen(
@@ -122,7 +122,11 @@ private fun DashBoardScreen(
     if (width in 840f..850f) {
         widthClass = WindowWidthSizeClass.Medium
     }
-    if (widgets.itemCount == 0) {
+    if (widgets.loadState.refresh == LoadState.Loading) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
+    } else if (widgets.itemCount == 0) {
         EmptyDashboardList(
             stringResource(R.string.widget_collection_empty),
             stringResource(R.string.start_creating_widgets)
@@ -188,7 +192,8 @@ fun EmptyDashboardList(title: String, subTitle: String) {
         )
         Spacer(modifier = Modifier.size(10.dp))
         Text(
-            text = subTitle, style = MaterialTheme.typography.bodyMedium,
+            text = subTitle,
+            style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
@@ -210,9 +215,15 @@ fun DashboardList(
     onStopVoteClick: (String) -> Unit = {},
     onStartVoteClick: (String) -> Unit = {}
 ) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(widgets) {
+        val index = widgets.itemSnapshotList.indexOfFirst { it?.isLastVotedWidget == true }
+        if (index > -1) {
+            listState.scrollToItem(index)
+        }
+    }
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        state = rememberLazyListState()
+        modifier = Modifier.fillMaxSize(), state = listState
     ) {
         items(widgets.itemCount) { index ->
             val widget = widgets[index]
@@ -222,7 +233,10 @@ fun DashboardList(
                     it,
                     sharedTransitionScope,
                     animatedContentScope,
-                    onOptionClick,
+                    { widgetId, optionId ->
+                        println("widgetId = [${widgetId}], optionId = [${optionId}]")
+                        onOptionClick(widgetId, optionId)
+                    },
                     onOpenIndexImage,
                     onOpenImage,
                     onWidgetDetails,

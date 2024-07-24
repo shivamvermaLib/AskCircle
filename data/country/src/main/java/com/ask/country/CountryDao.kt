@@ -15,7 +15,10 @@ interface CountryDao {
     suspend fun hasCountries(): Boolean
 
     @Query("select * from countries")
-    fun getAlCountries(): Flow<List<Country>>
+    fun getAllCountriesFlow(): Flow<List<Country>>
+
+    @Query("select * from countries")
+    fun getCountryList() : List<Country>
 
     @Query("delete from countries")
     suspend fun deleteAll()
