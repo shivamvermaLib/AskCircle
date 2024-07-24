@@ -1,5 +1,6 @@
 package com.ask.country
 
+import com.ask.core.DISPATCHER_IO
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -10,7 +11,7 @@ import javax.inject.Named
 class CountryRepository @Inject constructor(
     @Named(TABLE_COUNTRIES) private val countryStorageSource: com.ask.core.FirebaseStorageSource,
     private val countryDao: CountryDao,
-    @Named("IO") private val dispatcher: CoroutineDispatcher
+    @Named(DISPATCHER_IO) private val dispatcher: CoroutineDispatcher
 ) {
 
     suspend fun syncCountries() = withContext(dispatcher) {

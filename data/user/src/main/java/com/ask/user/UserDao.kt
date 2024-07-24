@@ -17,7 +17,8 @@ interface UserDao {
     suspend fun insertAll(
         users: List<User>,
         userLocations: List<User.UserLocation>,
-        userCategories: List<User.UserCategory>
+        userCategories: List<User.UserCategory>,
+        userWidgetBookmarks: List<User.UserWidgetBookmarks>
     )
 
     @Upsert
@@ -42,4 +43,10 @@ interface UserDao {
 
     @Query("DELETE FROM users")
     suspend fun deleteAll()
+
+    @Query("delete from `user-widget-bookmark`")
+    suspend fun deleteWidgetBookmarks()
+
+    @Query("delete from `user-categories`")
+    suspend fun deleteCategories()
 }

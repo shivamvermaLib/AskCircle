@@ -11,10 +11,9 @@ import androidx.room.Relation
 import com.ask.core.ALL
 import com.ask.core.EMPTY
 import com.ask.core.ID
-import com.ask.core.IMAGE_SPLIT_FACTOR
-import com.ask.core.ImageSizeType
 import com.ask.core.UNDERSCORE
 import com.ask.core.toSearchNeededField
+import com.ask.core.toTimeAgo
 import com.ask.user.User
 import com.google.firebase.database.Exclude
 import kotlinx.serialization.Serializable
@@ -24,7 +23,7 @@ import java.util.UUID
 @Entity(
     tableName = TABLE_WIDGETS, foreignKeys = [
         ForeignKey(
-            entity = com.ask.user.User::class,
+            entity = User::class,
             parentColumns = [ID],
             childColumns = [CREATOR_ID],
             onDelete = ForeignKey.CASCADE
@@ -44,18 +43,9 @@ data class Widget(
     val updatedAt: Long = System.currentTimeMillis()
 ) {
 
-    fun isCreatorOfTheWidget(userId: String): Boolean {
-        return userId == creatorId
-    }
-
     @get:Exclude
     @Ignore
-    var startAtFormat: String = DateUtils.getRelativeTimeSpanString(
-        startAt,
-        System.currentTimeMillis(),
-        DateUtils.MINUTE_IN_MILLIS,
-        DateUtils.FORMAT_ABBREV_RELATIVE
-    ).toString()
+    var startAtFormat: String = startAt.toTimeAgo()
 
     enum class WidgetType { Poll, Quiz }
 
@@ -226,7 +216,9 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
         entityColumn = WIDGET_ID,
         entity = Widget.WidgetCategory::class
     )
-    val categories: List<Widget.WidgetCategory>
+    val categories: List<Widget.WidgetCategory>,
+    @get:Exclude
+    var isBookmarked: Boolean
 ) {
     @get:Exclude
     @Ignore
@@ -268,6 +260,14 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
     @Ignore
     var showAdMob = false
 
+    @get:Exclude
+    @Ignore
+    val isAllowedVoting: Boolean = widget.startAt < System.currentTimeMillis() && (widget.endAt == null || widget.endAt > System.currentTimeMillis())
+
+    @get:Exclude
+    @Ignore
+    val isWidgetNotStarted: Boolean = widget.startAt > System.currentTimeMillis()
+
     @Serializable
     data class OptionWithVotes(
         @Embedded val option: Widget.Option,
@@ -291,7 +291,33 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
         @get:Exclude
         @Ignore
         var votesPercentFormat: String = EMPTY
+    }
 
+    fun setupData(
+        userId: String,
+        showAds: Boolean,
+        lastVotedOption: String
+    ): WidgetWithOptionsAndVotesForTargetAudience {
+        return this.copy(
+            options = options.map { optionWithVotes ->
+                optionWithVotes.apply {
+                    didUserVoted = userId in optionWithVotes.votes.map { it.userId }
+                    votesPercent =
+                        if (totalVotes > 0 && widgetTotalVotes > 0)
+                            (totalVotes.toFloat() / widgetTotalVotes.toFloat()) * 100
+                        else 0f
+                    votesPercentFormat = votesPercent.toPercentage()
+                }
+            }
+        ).apply {
+            hasVotes = options.any { it.votes.isNotEmpty() }
+            isCreatorOfTheWidget = userId == widget.creatorId
+            hasVotes = options.any { it.votes.isNotEmpty() }
+            isCreatorOfTheWidget = userId == widget.creatorId
+//                isBookmarked = widgetBookmarks.contains(widget.id)
+            showAdMob = showAds
+            lastVotedAtOptional = lastVotedOption
+        }
     }
 }
 

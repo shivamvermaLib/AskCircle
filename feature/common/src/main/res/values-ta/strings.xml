@@ -13,4 +13,8 @@
     <string name="last_voted">%1$s கடைசி வாக்கியம்</string>
     <string name="total_votes">%1$s மொத்த வாக்குகள்</string>
     <string name="search">Search</string>
+    <string name="start">START</string>
+    <string name="end">END</string>
+    <string name="share">Share</string>
+    <string name="bookmark">Bookmark</string>
 </resources>

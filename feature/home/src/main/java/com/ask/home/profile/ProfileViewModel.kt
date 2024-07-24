@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
 import com.ask.common.BaseViewModel
-import com.ask.common.GetAgeRemoteConfigUseCase
+import com.ask.common.GetCreateWidgetRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
 import com.ask.core.ImageSizeType
@@ -28,7 +28,7 @@ class ProfileViewModel @Inject constructor(
     getCurrentProfileUseCase: GetCurrentProfileUseCase,
     private val updateProfileUseCase: UpdateProfileUseCase,
     getCountryUseCase: GetCountryUseCase,
-    getAgeRemoteConfigUseCase: GetAgeRemoteConfigUseCase,
+    getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
     getCategoryUseCase: GetCategoryUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
@@ -40,7 +40,7 @@ class ProfileViewModel @Inject constructor(
             _errorFlow.value = it.message
         }
     private val _countriesFlow = getCountryUseCase()
-    private val _ageRange = getAgeRemoteConfigUseCase()
+    private val _ageRange = getCreateWidgetRemoteConfigUseCase()
     private val _categories = getCategoryUseCase()
 
     private val _userNameFlow = MutableStateFlow(EMPTY)
@@ -84,8 +84,8 @@ class ProfileViewModel @Inject constructor(
             allowUpdate = allowUpdate,
             profileLoading = profileLoading,
             error = error,
-            minAgeRange = _ageRange.min,
-            maxAgeRange = _ageRange.max,
+            minAgeRange = _ageRange.minAge,
+            maxAgeRange = _ageRange.maxAge,
             userCategories = userCategories,
             categories = categories
         )
@@ -151,6 +151,7 @@ class ProfileViewModel @Inject constructor(
                 profile.profilePic,
                 profile.country,
                 profile.userCategories,
+                null,
                 getExtension,
                 getBytes,
                 preloadImage

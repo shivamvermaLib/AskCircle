@@ -1,25 +1,30 @@
 [versions]
-agp = "8.5.0"
+agp = "8.5.1"
+datastorePreferences = "1.1.1"
 hiltAndroidVersion = "2.51.1"
 hiltWork = "1.2.0"
 kotlin = "2.0.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
-junitVersion = "1.2.0"
-espressoCore = "3.6.0"
-lifecycleRuntimeKtx = "2.8.2"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
+lifecycleRuntimeKtx = "2.8.3"
 activityCompose = "1.9.0"
 composeBom = "2024.06.00"
 google-services = "4.4.2"
-firebaseBom = "33.1.1"
-hiltCompiler = "2.46.1"
+firebaseBom = "33.1.2"
 #com-google-devtools-ksp = "2.0.0-1.0.21"
 hiltNavigationCompose = "1.2.0"
-navigationCompose = "2.8.0-beta03"
-coilCompose = "2.2.2"
+multidex = "2.0.1"
+navigationCompose = "2.8.0-beta05"
+coilCompose = "2.6.0"
+pagingCompose = "3.3.0"
+pagingRuntimeKtx = "3.3.0"
 playServicesAds = "23.2.0"
 roomKtx = "2.6.1"
 kotlinxSerializationJson = "1.6.3"
+roomPaging = "2.6.1"
+roomRuntime = "2.6.1"
 uiTextGoogleFonts = "1.6.8"
 workRuntimeKtx = "2.9.0"
 firebaseCrashlytics = "3.0.2"
@@ -28,13 +33,20 @@ material = "1.12.0"
 uiTooling = "1.6.8"
 playServicesAdsLite = "23.2.0"
 sqliteKtx = "2.4.0"
+kspVersion = "2.0.0-1.0.21"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
 androidx-material3-window-size = { module = "androidx.compose.material3:material3-window-size-class" }
+androidx-multidex = { module = "androidx.multidex:multidex", version.ref = "multidex" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
+androidx-paging-runtime-ktx = { module = "androidx.paging:paging-runtime-ktx", version.ref = "pagingRuntimeKtx" }
+androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "roomPaging" }
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 firebase-config = { module = "com.google.firebase:firebase-config" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
@@ -79,7 +91,6 @@ material = { group = "com.google.android.material", name = "material", version.r
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "uiTooling" }
 play-services-ads-lite = { group = "com.google.android.gms", name = "play-services-ads-lite", version.ref = "playServicesAdsLite" }
-androidx-sqlite-ktx = { group = "androidx.sqlite", name = "sqlite-ktx", version.ref = "sqliteKtx" }
 
 
 [plugins]
@@ -93,3 +104,4 @@ kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+kspPlugin = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }

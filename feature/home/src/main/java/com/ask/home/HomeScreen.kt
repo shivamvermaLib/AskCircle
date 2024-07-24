@@ -1,11 +1,14 @@
 package com.ask.home
 
 import android.Manifest
+import android.content.Intent
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +19,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -24,6 +28,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -51,6 +56,7 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -64,6 +70,7 @@ import com.ask.home.dashboard.DashboardScreen
 import com.ask.home.imageview.ImageViewModel
 import com.ask.home.imageview.ImageViewScreen
 import com.ask.home.profile.ProfileScreen
+import com.ask.home.widgetview.WidgetViewScreen
 import com.ask.widget.Filter
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
@@ -75,7 +82,7 @@ import kotlinx.serialization.json.Json
 
 @Composable
 fun HomeScreen(
-    route: String, sizeClass: WindowSizeClass, navigateToCreate: () -> Unit
+    route: String, widgetId: String?, sizeClass: WindowSizeClass, navigateToCreate: () -> Unit
 ) {
     val context = LocalContext.current
     val workerFlow = CreateWidgetWorker.getWorkerFlow(context)
@@ -99,17 +106,19 @@ fun HomeScreen(
     }
 
     val uiState by homeViewModel.uiStateFlow.collectAsStateWithLifecycle()
-    HomeScreen(uiState, sizeClass, navigateToCreate)
+    HomeScreen(uiState, widgetId, sizeClass, navigateToCreate)
 }
 
 @OptIn(
-    ExperimentalMaterial3WindowSizeClassApi::class, ExperimentalCoroutinesApi::class,
+    ExperimentalMaterial3WindowSizeClassApi::class,
+    ExperimentalCoroutinesApi::class,
     ExperimentalMaterial3Api::class
 )
 @Preview
 @Composable
 private fun HomeScreen(
     homeUiState: HomeUiState = HomeUiState(),
+    widgetId: String? = null,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     onCreateClick: () -> Unit = {},
 ) {
@@ -117,12 +126,18 @@ private fun HomeScreen(
     val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     val homeNavigationController = rememberNavController()
-    val dashboardFirst = HomeTabScreen.Dashboard(Filter.Latest.name)
+    val dashboardFirst = HomeTabScreen.Dashboard(Filter.Latest.name, widgetId = widgetId)
+    var selectedFilter by remember { mutableStateOf(Filter.Latest) }
     LaunchedEffect(isConnected) {
         if (!isConnected) {
             snackBarHostState.showSnackbar(
                 message = "No Internet Connection", duration = SnackbarDuration.Indefinite
             )
+        }
+    }
+    LaunchedEffect(widgetId) {
+        widgetId?.let {
+            homeNavigationController.navigate(HomeTabScreen.WidgetView(0, it))
         }
     }
     Scaffold(
@@ -149,22 +164,34 @@ private fun HomeScreen(
                                 contentDescription = stringResource(R.string.filter)
                             )
                         }
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
+                        DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             Filter.entries.forEach {
+                                val modifier = if (selectedFilter == it) Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
+                                    else Modifier
+
                                 DropdownMenuItem(
-                                    text = { Text(text = it.name) },
+                                    text = { Text(text = it.title) },
                                     onClick = {
+                                        selectedFilter = it
                                         homeNavigationController.navigate(HomeTabScreen.Dashboard(it.name))
                                         showMenu = false
                                     },
+                                    modifier = modifier
                                 )
                             }
                         }
                     }
                 },
+                navigationIcon = {
+                    if (currentRoute?.contains("WidgetView") == true || currentRoute?.contains("ImageView") == true) {
+                        IconButton(onClick = { homeNavigationController.popBackStack() }) {
+                            Icon(
+                                imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                }
             )
         },
         snackbarHost = {
@@ -178,19 +205,20 @@ private fun HomeScreen(
             }
         },
         floatingActionButton = {
-            if (homeUiState.createWidgetStatus != WorkerStatus.Loading) ExtendedFloatingActionButton(
-                onClick = onCreateClick,
-                icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
-                text = { Text(text = stringResource(id = R.string.create)) },
-            )
+            AnimatedVisibility(visible = homeUiState.createWidgetStatus != WorkerStatus.Loading) {
+                ExtendedFloatingActionButton(
+                    onClick = onCreateClick,
+                    icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
+                    text = { Text(text = stringResource(id = R.string.create)) },
+                )
+            }
         },
         bottomBar = {
             val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
             NavigationBar {
                 listOf(
-                    R.string.dashboard,
-                    R.string.profile
+                    R.string.dashboard, R.string.profile
                 ).forEach { item ->
                     val stringResource = stringResource(id = item)
                     NavigationBarItem(icon = {
@@ -199,8 +227,7 @@ private fun HomeScreen(
                                 R.string.dashboard -> Icons.Filled.Home
                                 R.string.profile -> Icons.Rounded.AccountCircle
                                 else -> Icons.Rounded.Close
-                            },
-                            contentDescription = stringResource
+                            }, contentDescription = stringResource
                         )
                     },
                         label = { Text(stringResource(id = item)) },
@@ -226,30 +253,38 @@ private fun HomeScreen(
         ) {
             val scope = rememberCoroutineScope()
             HomeNavigation(
-                homeNavigationController,
-                sizeClass,
-                dashboardFirst
+                homeNavigationController, sizeClass, dashboardFirst
             ) { msg, dismissSnackBar ->
                 scope.launch {
                     snackBarHostState.showSnackbar(msg)
                     dismissSnackBar()
                 }
             }
-            if (homeUiState.createWidgetStatus == WorkerStatus.Loading) {
-                ElevatedCard(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(all = 16.dp),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(text = stringResource(R.string.creating))
-                        Spacer(modifier = Modifier.weight(1f))
-                        CircularProgressIndicator()
-                    }
-                }
+            CreatingCard(
+                modifier = Modifier.align(Alignment.BottomCenter),
+                homeUiState.createWidgetStatus == WorkerStatus.Loading
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun CreatingCard(modifier: Modifier = Modifier, visible: Boolean = true) {
+    AnimatedVisibility(visible = visible, modifier = modifier) {
+        ElevatedCard(
+            modifier = Modifier.padding(all = 16.dp),
+            colors = CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+            )
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(text = stringResource(R.string.creating))
+                Spacer(modifier = Modifier.weight(1f))
+                CircularProgressIndicator()
             }
         }
     }
@@ -263,10 +298,20 @@ fun HomeNavigation(
     dashboard: HomeTabScreen.Dashboard,
     onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
 ) {
+    val context = LocalContext.current
+    val lastVotedEmptyOptions = listOf(
+        stringResource(R.string.your_voice_matters_vote_now),
+        stringResource(R.string.shape_the_outcome_cast_your_vote),
+        stringResource(R.string.join_the_conversation_vote_today),
+        stringResource(R.string.be_a_trendsetter_vote_first),
+        stringResource(R.string.get_involved_make_your_vote_count),
+        stringResource(R.string.start_the_discussion_with_your_vote),
+        stringResource(R.string.let_s_shape_the_future_vote_now),
+        stringResource(R.string.vote_for_your_favorite_option)
+    )
     SharedTransitionLayout {
         NavHost(
-            navController = homeNavigationController,
-            startDestination = dashboard
+            navController = homeNavigationController, startDestination = dashboard
         ) {
             composable<HomeTabScreen.Dashboard> { backStackEntry ->
                 val route = backStackEntry.toRoute<HomeTabScreen.Dashboard>()
@@ -285,7 +330,24 @@ fun HomeNavigation(
                         url?.let {
                             homeNavigationController.navigate(HomeTabScreen.ImageView(it, index))
                         }
-                    }
+                    },
+                    onWidgetDetails = { index, dashboardWidgetId ->
+                        homeNavigationController.navigate(
+                            HomeTabScreen.WidgetView(
+                                index,
+                                dashboardWidgetId
+                            )
+                        )
+                    },
+                    lastVotedEmptyOptions = lastVotedEmptyOptions,
+                    onShareClick = {
+                        val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                            putExtra(Intent.EXTRA_TEXT, "https://ask-app-36527.web.app/widget/$it")
+                            type = "text/plain"
+                        }
+                        val shareIntent = Intent.createChooser(sendIntent, null)
+                        startActivity(context, shareIntent, null)
+                    },
                 )
             }
             composable<HomeTabScreen.Profile> {
@@ -305,14 +367,29 @@ fun HomeNavigation(
                     imageViewModel.onImageOpen(imageView.imagePath)
                 }
                 ImageViewScreen(
-                    imageView,
-                    this@SharedTransitionLayout,
-                    this@composable
-                ) {
-                    homeNavigationController.popBackStack()
-                }
+                    imageView, this@SharedTransitionLayout, this@composable
+                )
             }
-
+            composable<HomeTabScreen.WidgetView> { navBackStackEntry ->
+                val route = navBackStackEntry.toRoute<HomeTabScreen.WidgetView>()
+                WidgetViewScreen(
+                    Json.encodeToString(route),
+                    widgetView = route,
+                    this@SharedTransitionLayout,
+                    this@composable,
+                    onOpenImage = {
+                        it?.let {
+                            homeNavigationController.navigate(HomeTabScreen.ImageView(it))
+                        }
+                    },
+                    lastVotedEmptyOptions = lastVotedEmptyOptions,
+                    onOpenIndexImage = { index, url ->
+                        url?.let {
+                            homeNavigationController.navigate(HomeTabScreen.ImageView(it, index))
+                        }
+                    },
+                )
+            }
         }
     }
 }
@@ -321,7 +398,7 @@ fun HomeNavigation(
 @Serializable
 sealed interface HomeTabScreen {
     @Serializable
-    data class Dashboard(val filter: String) : HomeTabScreen
+    data class Dashboard(val filter: String, val widgetId: String? = null) : HomeTabScreen
 
     @Serializable
     data object Profile : HomeTabScreen
@@ -329,4 +406,6 @@ sealed interface HomeTabScreen {
     @Serializable
     data class ImageView(val imagePath: String, val index: Int = -1) : HomeTabScreen
 
+    @Serializable
+    data class WidgetView(val index: Int, val widgetId: String)
 }

@@ -1,8 +1,10 @@
 package com.ask.common
 
 import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
@@ -12,8 +14,10 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,11 +29,14 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,16 +47,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ask.core.EMPTY
 import com.ask.core.ImageSizeType
 import com.ask.core.getImage
@@ -66,55 +76,141 @@ fun WidgetWithUserView(
     onOptionClick: (String, String) -> Unit = { _, _ -> },
     onOpenIndexImage: (Int, String?) -> Unit,
     onOpenImage: (String?) -> Unit,
+    onWidgetDetails: ((Int, String) -> Unit)? = null,
+    onShareClick: (String) -> Unit = {},
+    onBookmarkClick: (String) -> Unit = {},
+    onStopVoteClick: (String) -> Unit = {},
+    onStartVoteClick: (String) -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
-        ElevatedCard(modifier = Modifier
-            .fillMaxWidth()
-            .padding(all = 16.dp), onClick = { /*TODO*/ }) {
-            Column(
-                modifier = Modifier.padding(all = 16.dp)
-            ) {
-                WidgetUserView(
-                    index = index,
-                    user = widgetWithOptionsAndVotesForTargetAudience.user,
-                    startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat,
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedContentScope = animatedContentScope,
-                    onOpenIndexImage
+        with(sharedTransitionScope) {
+            ElevatedCard(modifier = Modifier
+                .sharedElement(
+                    sharedTransitionScope.rememberSharedContentState(
+                        key = "$index-card-${widgetWithOptionsAndVotesForTargetAudience.widget.id}"
+                    ), animatedVisibilityScope = animatedContentScope
                 )
-                Spacer(modifier = Modifier.size(12.dp))
-                HorizontalDivider(thickness = 1.dp)
-                Spacer(modifier = Modifier.size(6.dp))
-                Text(
-                    text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
+                .fillMaxWidth()
+                .padding(all = 16.dp), onClick = {
+                onWidgetDetails?.invoke(
+                    index, widgetWithOptionsAndVotesForTargetAudience.widget.id
+                )
+            }) {
+                Column(
+                    modifier = Modifier.padding(all = 16.dp)
+                ) {
+                    WidgetUserView(
+                        index = index,
+                        user = widgetWithOptionsAndVotesForTargetAudience.user,
+                        startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope,
+                        onOpenIndexImage
+                    )
+                    Spacer(modifier = Modifier.size(12.dp))
+                    HorizontalDivider(thickness = 1.dp)
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
                         stringResource(R.string.last_voted, it)
                     } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                    fontWeight = FontWeight.W400
-                )
-                Spacer(modifier = Modifier.size(6.dp))
-                WidgetView(
-                    widget = widgetWithOptionsAndVotesForTargetAudience,
-                    sharedTransitionScope,
-                    animatedContentScope,
-                    onOptionClick,
-                    onOpenImage
-                )
-                Spacer(modifier = Modifier.size(16.dp))
-                Text(
-                    text = stringResource(
-                        R.string.total_votes,
-                        widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
-                    ),
-                    color = MaterialTheme.colorScheme.outline,
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.W400
-                )
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline,
+                        fontWeight = FontWeight.W400)
+                    Spacer(modifier = Modifier.size(6.dp))
+                    WidgetView(
+                        widget = widgetWithOptionsAndVotesForTargetAudience,
+                        sharedTransitionScope,
+                        animatedContentScope,
+                        { widgetId, optionId ->
+                            if (widgetWithOptionsAndVotesForTargetAudience.isAllowedVoting) onOptionClick(
+                                widgetId,
+                                optionId
+                            )
+                        },
+                        onOpenImage
+                    )
+                    Spacer(modifier = Modifier.size(18.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier
+                    ) {
+                        IconButton(
+                            title = stringResource(R.string.start),
+                            show = widgetWithOptionsAndVotesForTargetAudience.isCreatorOfTheWidget && widgetWithOptionsAndVotesForTargetAudience.isWidgetNotStarted,
+                            height = 30.dp,
+                            width = 52.dp,
+                            onClick = {
+                                onStartVoteClick(
+                                    widgetWithOptionsAndVotesForTargetAudience.widget.id
+                                )
+                            })
+
+                        IconButton(
+                            title = stringResource(R.string.end),
+                            show = widgetWithOptionsAndVotesForTargetAudience.isCreatorOfTheWidget && widgetWithOptionsAndVotesForTargetAudience.widget.endAt == null && widgetWithOptionsAndVotesForTargetAudience.isAllowedVoting,
+                            height = 29.dp,
+                            width = 44.dp,
+                            onClick = {
+                                onStopVoteClick(
+                                    widgetWithOptionsAndVotesForTargetAudience.widget.id
+                                )
+                            })
+
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.share),
+                            contentDescription = "Share",
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clickable { onShareClick(widgetWithOptionsAndVotesForTargetAudience.widget.id) })
+                        Spacer(modifier = Modifier.weight(1f))
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = if (widgetWithOptionsAndVotesForTargetAudience.isBookmarked) R.drawable.baseline_bookmark_24 else R.drawable.round_bookmark_border_24),
+                            contentDescription = stringResource(R.string.bookmark),
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clickable {
+                                    onBookmarkClick(widgetWithOptionsAndVotesForTargetAudience.widget.id)
+                                })
+                    }
+                    Spacer(modifier = Modifier.size(12.dp))
+                    Text(
+                        text = stringResource(
+                            R.string.total_votes,
+                            widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
+                        ),
+                        color = MaterialTheme.colorScheme.outline,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.W400
+                    )
+                }
             }
         }
-        if (widgetWithOptionsAndVotesForTargetAudience.showAdMob)
-            AppAdmobBanner(modifier = Modifier.fillMaxWidth())
+        if (widgetWithOptionsAndVotesForTargetAudience.showAdMob) AppAdmobBanner(modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+fun IconButton(title: String, show: Boolean, height: Dp, width: Dp, onClick: () -> Unit) {
+    AnimatedVisibility(visible = show) {
+        OutlinedButton(
+            onClick = onClick,
+            contentPadding = PaddingValues(),
+            shape = RoundedCornerShape(10.dp),
+            modifier = Modifier.defaultMinSize(
+                minHeight = height, minWidth = width
+            ),
+            colors = ButtonDefaults.textButtonColors(
+                containerColor = if (isSystemInDarkTheme()) Color.White else Color.Black
+            ),
+            border = BorderStroke(2.dp, if (isSystemInDarkTheme()) Color.White else Color.Black)
+        ) {
+            Text(
+                text = title,
+                fontWeight = FontWeight.SemiBold,
+                color = if (isSystemInDarkTheme()) Color.Black else Color.White
+            )
+        }
     }
 }
 
@@ -132,26 +228,22 @@ fun WidgetUserView(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (user.profilePic.isNullOrBlank()) {
-            AppImage(
-                url = user.profilePic.getImage(ImageSizeType.SIZE_100),
+            AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_100),
                 contentDescription = user.name,
                 contentScale = ContentScale.Crop,
                 placeholder = R.drawable.baseline_account_circle_24,
                 error = R.drawable.baseline_account_circle_24,
                 modifier = Modifier
-                    .size(40.dp)
+                    .size(30.dp)
                     .clip(CircleShape)
                     .clickable {
                         onOpenImage(
-                            index,
-                            user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
+                            index, user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
                         )
-                    }
-            )
+                    })
         } else {
             with(sharedTransitionScope) {
-                AppImage(
-                    url = user.profilePic.getImage(ImageSizeType.SIZE_100),
+                AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_100),
                     contentDescription = user.name,
                     contentScale = ContentScale.Crop,
                     placeholder = R.drawable.baseline_account_circle_24,
@@ -160,25 +252,25 @@ fun WidgetUserView(
                         .sharedElement(
                             sharedTransitionScope.rememberSharedContentState(
                                 key = "$index${user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY}"
-                            ),
-                            animatedVisibilityScope = animatedContentScope
+                            ), animatedVisibilityScope = animatedContentScope
                         )
-                        .size(40.dp)
+                        .size(30.dp)
                         .clip(CircleShape)
                         .clickable {
                             onOpenImage(
-                                index,
-                                user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
+                                index, user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
                             )
-                        }
-                )
+                        })
             }
         }
-        Text(text = user.name, modifier = Modifier.padding(horizontal = 6.dp))
+        Column(
+            horizontalAlignment = Alignment.Start, modifier = Modifier.padding(horizontal = 6.dp)
+        ) {
+            Text(text = user.name)
+            Spacer(modifier = Modifier.size(3.dp))
+            Text(text = startedAtFormat, style = MaterialTheme.typography.bodySmall)
+        }
         Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = startedAtFormat, style = MaterialTheme.typography.bodySmall
-        )
     }
 }
 
@@ -194,9 +286,7 @@ fun WidgetView(
 ) {
     Text(text = widget.widget.title, style = MaterialTheme.typography.titleMedium)
     widget.widget.description?.let {
-        Text(
-            text = it, style = MaterialTheme.typography.bodySmall
-        )
+        Text(text = it, style = MaterialTheme.typography.bodySmall)
     }
     Spacer(modifier = Modifier.size(10.dp))
     if (widget.isImageOnly) {
@@ -214,8 +304,7 @@ fun WidgetView(
                 optionWithVotes = widgetOption,
                 hasVotes = widget.hasVotes,
                 didUserVoted = widgetOption.didUserVoted,
-
-                onImageClick = {
+                onOptionClick = {
                     onOptionClick(widget.widget.id, it)
                 },
                 sharedTransitionScope = sharedTransitionScope,
@@ -233,7 +322,7 @@ fun WidgetView(
                     hasVotes = widget.hasVotes,
                     onOptionClick = {
                         onOptionClick(widget.widget.id, it)
-                    }
+                    },
                 )
             }
         }
@@ -253,30 +342,25 @@ fun TextOption(
     onOptionClick: (String) -> Unit = {},
     onDeleteIconClick: (Int) -> Unit = {}
 ) {
-    val density = LocalDensity.current
-//    var maxHeightOfText by remember { mutableStateOf(36.dp) }
     val (option, _) = widgetOption
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(
-                shape = RoundedCornerShape(28.dp),
-                color = MaterialTheme.colorScheme.let {
-                    if (didUserVoted) {
-                        it.primary
-                    } else {
-                        it.primaryContainer
-                    }
-                })
-            .padding(all = 5.dp)
-            .clickable {
-                onOptionClick(option.id)
-            },
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+    TextButton(modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(all = 5.dp),
+        shape = RoundedCornerShape(28.dp),
+        colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.let {
+            if (didUserVoted) {
+                it.primary
+            } else {
+                it.primaryContainer
+            }
+        }),
+        onClick = {
+            onOptionClick(option.id)
+        }) {
         Box(
             modifier = Modifier
-                .background(shape = CircleShape, color = MaterialTheme.colorScheme.surface)
+                .background(
+                    shape = CircleShape, color = MaterialTheme.colorScheme.surface
+                )
                 .size(36.dp)
         ) {
             Text(
@@ -294,15 +378,18 @@ fun TextOption(
                 onValueChange = onValueChange,
                 modifier = Modifier.weight(1f),
                 singleLine = true,
+                textStyle = TextStyle(
+                    color = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                ),
+                cursorBrush = SolidColor(
+                    if (isSystemInDarkTheme()) Color.White else Color.Black
+                )
             )
         } else {
             Text(
                 text = option.text ?: EMPTY,
                 modifier = Modifier
                     .weight(1f)
-//                    .onGloballyPositioned { coordinates ->
-//                        with(density) { maxHeightOfText = coordinates.size.height.toDp() }
-//                    }
                     .basicMarquee(),
                 color = if (didUserVoted) {
                     if (isSystemInDarkTheme()) Color.Black else Color.White
@@ -310,32 +397,29 @@ fun TextOption(
                     if (isSystemInDarkTheme()) Color.White else Color.Black
                 },
                 maxLines = 1,
+                fontSize = 16.sp
             )
-            if (hasVotes)
-                Text(
-                    text = "${widgetOption.votesPercentFormat}%",
-                    color = if (didUserVoted) {
-                        if (isSystemInDarkTheme()) Color.Black else Color.White
-                    } else {
-                        if (isSystemInDarkTheme()) Color.White else Color.Black
-                    },
-                )
+            if (hasVotes) Text(
+                text = "${widgetOption.votesPercentFormat}%",
+                color = if (didUserVoted) {
+                    if (isSystemInDarkTheme()) Color.Black else Color.White
+                } else {
+                    if (isSystemInDarkTheme()) Color.White else Color.Black
+                },
+            )
         }
         Spacer(modifier = Modifier.size(5.dp))
         if (isInput) {
-            Icon(
-                Icons.Rounded.Close,
+            Icon(Icons.Rounded.Close,
                 stringResource(R.string.clear, option.text ?: EMPTY),
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onClearIconClick() })
-            Icon(
-                Icons.Rounded.Delete,
+            Icon(Icons.Rounded.Delete,
                 stringResource(R.string.delete, option.text ?: EMPTY),
                 modifier = Modifier
                     .size(20.dp)
-                    .clickable { onDeleteIconClick(index) }
-            )
+                    .clickable { onDeleteIconClick(index) })
         }
         Spacer(modifier = Modifier.size(5.dp))
     }
@@ -354,7 +438,7 @@ fun ImageOption(
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedContentScope: AnimatedContentScope? = null,
     onDeleteIconClick: (Int) -> Unit = {},
-    onImageClick: (String) -> Unit,
+    onOptionClick: (String) -> Unit,
     onOpenImage: (String?) -> Unit,
 ) {
     var sizeImage by remember { mutableStateOf(IntSize.Zero) }
@@ -409,15 +493,12 @@ fun ImageOption(
                 },
                 shape = roundedCornerShape,
             )
-            .combinedClickable(
-                onClick = { onImageClick(option.id) },
-                onLongClick = { onOpenImage(option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL)) }
-            ),
+            .combinedClickable(onClick = { onOptionClick(option.id) },
+                onLongClick = { onOpenImage(option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL)) }),
     ) {
         if (sharedTransitionScope != null && animatedContentScope != null) {
             with(sharedTransitionScope) {
-                AppImage(
-                    url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
+                AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
                     contentDescription = option.id,
                     contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                     placeholder = R.drawable.baseline_image_24,
@@ -426,18 +507,15 @@ fun ImageOption(
                         .sharedElement(
                             sharedTransitionScope.rememberSharedContentState(
                                 key = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY
-                            ),
-                            animatedVisibilityScope = animatedContentScope
+                            ), animatedVisibilityScope = animatedContentScope
                         )
                         .clip(roundedCornerShape)
                         .fillMaxSize()
                         .align(Alignment.Center)
-                        .onGloballyPositioned { sizeImage = it.size }
-                )
+                        .onGloballyPositioned { sizeImage = it.size })
             }
         } else {
-            AppImage(
-                url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
+            AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
                 contentDescription = option.id,
                 contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                 placeholder = R.drawable.baseline_image_24,
@@ -446,8 +524,7 @@ fun ImageOption(
                     .clip(roundedCornerShape)
                     .fillMaxSize()
                     .align(Alignment.Center)
-                    .onGloballyPositioned { sizeImage = it.size }
-            )
+                    .onGloballyPositioned { sizeImage = it.size })
         }
         Box(
             modifier = Modifier
@@ -479,6 +556,9 @@ fun ImageOption(
             if (isInput) {
                 Box(
                     modifier = Modifier
+                        .background(
+                            color = Color.White.copy(alpha = 0.8f), shape = CircleShape
+                        )
                         .padding(bottom = 6.dp, end = 6.dp)
                         .align(Alignment.BottomEnd)
                 ) {
@@ -492,7 +572,7 @@ fun ImageOption(
                     )
                 }
             }
-            if (hasVotes)
+            if (hasVotes) {
                 Text(
                     text = "${optionWithVotes.votesPercentFormat}%",
                     textAlign = TextAlign.Center,
@@ -500,6 +580,7 @@ fun ImageOption(
                     modifier = Modifier.align(Alignment.BottomEnd),
                     color = Color.White
                 )
+            }
         }
     }
 }

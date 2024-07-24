@@ -29,13 +29,17 @@ data class CreateWidgetUiState(
         min = minAge, max = maxAge
     ),
     val widgetCategories: List<Widget.WidgetCategory> = emptyList(),
-    val categories: List<CategoryWithSubCategory> = emptyList()
+    val categories: List<CategoryWithSubCategory> = emptyList(),
+    val startTime: Long = System.currentTimeMillis(),
+    val endTime: Long? = null,
+    val error: String? = null,
+    val maxYearAllowed: Int = 0,
 ) {
     enum class WidgetOptionType { Text, Image }
 
     fun toWidgetWithOptionsAndVotesForTargetAudience() =
         WidgetWithOptionsAndVotesForTargetAudience(
-            Widget(title = title, description = desc),
+            Widget(title = title, description = desc, startAt = startTime, endAt = endTime),
             options.map {
                 WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                     it,
@@ -46,7 +50,8 @@ data class CreateWidgetUiState(
             targetAudienceLocations,
             targetAudienceAgeRange,
             User(),
-            widgetCategories
+            widgetCategories,
+            false
         )
 
 }

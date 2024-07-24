@@ -61,6 +61,9 @@ object UserFirebaseModules {
                         .getValue(User.UserLocation::class.java)!!,
                     dataSnapshot.child(USER_CATEGORY).children.map {
                         it.getValue(User.UserCategory::class.java)!!
+                    },
+                    dataSnapshot.child(USER_WIDGET_BOOKMARK).children.map {
+                        it.getValue(User.UserWidgetBookmarks::class.java)!!
                     }
                 )
             }
@@ -73,6 +76,9 @@ object UserFirebaseModules {
                     mutableData.child(USER_LOCATION).getValue(User.UserLocation::class.java)!!,
                     mutableData.child(USER_CATEGORY).children.map {
                         it.getValue(User.UserCategory::class.java)!!
+                    },
+                    mutableData.child(USER_WIDGET_BOOKMARK).children.map {
+                        it.getValue(User.UserWidgetBookmarks::class.java)!!
                     }
                 )
             }

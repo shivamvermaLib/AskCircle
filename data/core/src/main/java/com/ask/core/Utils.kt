@@ -1,5 +1,7 @@
 package com.ask.core
 
+import android.text.format.DateFormat
+import android.text.format.DateUtils
 import java.util.Locale
 
 fun String.checkIfUrl(): Boolean {
@@ -31,5 +33,18 @@ fun String?.getImage(imageSizeType: ImageSizeType): String? {
     if (images.size == 1) {
         return images[0]
     }
-    return images.find { it.contains(imageSizeType.name) } ?: images.find { it.contains(ImageSizeType.SIZE_ORIGINAL.name) } ?: images[0]
+    return images.find { it.contains(imageSizeType.name) } ?: images.find {
+        it.contains(
+            ImageSizeType.SIZE_ORIGINAL.name
+        )
+    } ?: images[0]
 }
+
+fun Long.toTimeAgo() = DateUtils.getRelativeTimeSpanString(
+    this,
+    System.currentTimeMillis(),
+    DateUtils.MINUTE_IN_MILLIS,
+    DateUtils.FORMAT_ABBREV_RELATIVE
+).toString()
+
+fun Long.toDate() = DateFormat.format("dd/MM/yyyy", this).toString()

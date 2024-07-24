@@ -1,6 +1,7 @@
 package com.ask.widget
 
 import com.ask.analytics.AnalyticsLogger
+import com.ask.core.AppSharedPreference
 import com.ask.core.ImageSizeType
 import com.ask.user.UserRepository
 import javax.inject.Inject
@@ -9,6 +10,7 @@ class CreateWidgetUseCase @Inject constructor(
     private val userRepository: UserRepository,
     private val widgetRepository: WidgetRepository,
     private val analyticsLogger: AnalyticsLogger,
+    private val sharedPreference: AppSharedPreference
 ) {
 
     private fun createWidgetEvent(w: WidgetWithOptionsAndVotesForTargetAudience) {
@@ -50,9 +52,16 @@ class CreateWidgetUseCase @Inject constructor(
                     creatorId = userRepository.getCurrentUserId()
                 )
             ),
+            userRepository.getCurrentUserId(),
             getExtension,
             getByteArray
         ).also {
+            val lastUpdatedTime = sharedPreference.getUpdatedTime()
+            sharedPreference.setUpdatedTime(
+                lastUpdatedTime.copy(
+                    widgetTime = System.currentTimeMillis(),
+                )
+            )
             createdWidgetEvent(it)
         }
     }

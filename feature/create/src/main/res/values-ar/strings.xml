@@ -16,5 +16,10 @@
     <string name="gender">النوع</string>
     <string name="male">ذكر</string>
     <string name="female">أنثى</string>
+    <string name="manual">Manual</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="end_at">End At</string>
+    <string name="start_at">Start At</string>
 
 </resources>

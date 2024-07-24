@@ -13,4 +13,8 @@
     <string name="last_voted">%1$s അവസാന വോട്ട്</string>
     <string name="total_votes">%1$s ആകെ വോട്ടുകൾ</string>
     <string name="search">Search</string>
+    <string name="start">START</string>
+    <string name="end">END</string>
+    <string name="share">Share</string>
+    <string name="bookmark">Bookmark</string>
 </resources>
