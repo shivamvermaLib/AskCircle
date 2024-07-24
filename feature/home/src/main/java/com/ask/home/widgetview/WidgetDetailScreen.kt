@@ -134,7 +134,6 @@ private fun WidgetDetailScreen(
                     title = "Result",
                     resultData = widgetUiState.widgetDetailsWithResult.widgetResults
                 )
-                Spacer(modifier = Modifier.size(10.dp))
                 widgetUiState.widgetDetailsWithResult.widgetOptionResults.forEach {
                     PieChartGroup(
                         showAds = true,
@@ -154,8 +153,8 @@ fun PieChartGroup(showAds: Boolean, title: String, resultData: Map<String, List<
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        if (showAds)
-            AppAdmobBanner(modifier = Modifier.fillMaxWidth())
+//        if (showAds)
+//            AppAdmobBanner(modifier = Modifier.fillMaxWidth())
         var visible by remember { mutableStateOf(false) }
         Row(
             modifier = Modifier
