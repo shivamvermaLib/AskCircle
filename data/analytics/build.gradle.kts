@@ -1,8 +1,8 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.kotlin.kapt)
     alias(libs.plugins.hilt)
+    alias(libs.plugins.kspPlugin)
 }
 
 android {
@@ -36,7 +36,7 @@ android {
 
 dependencies {
     implementation(libs.hilt.android)
-    kapt(libs.hilt.compiler)
+    ksp(libs.hilt.compiler)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
 

@@ -4,8 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
 import com.ask.common.BaseViewModel
-import com.ask.common.GetAgeRemoteConfigUseCase
-import com.ask.common.GetMaxOptionRemoteConfigUseCase
+import com.ask.common.GetCreateWidgetRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
 import com.ask.country.Country
@@ -15,19 +14,18 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
 class CreateWidgetViewModel @Inject constructor(
     getCountryUseCase: GetCountryUseCase,
     getCategoriesUseCase: GetCategoryUseCase,
-    getAgeRemoteConfigUseCase: GetAgeRemoteConfigUseCase,
-    getMaxOptionRemoteConfigUseCase: GetMaxOptionRemoteConfigUseCase,
+    getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
     private val minOptions = 2
-    private val maxOptions = getMaxOptionRemoteConfigUseCase()
-    private val ageRange = getAgeRemoteConfigUseCase()
+    private val maxOptions = getCreateWidgetRemoteConfigUseCase().maxOptionSize
     private val _titleFlow = MutableStateFlow(EMPTY)
     private val _titleErrorFlow = MutableStateFlow(EMPTY)
     private val _descFlow = MutableStateFlow(EMPTY)
@@ -46,6 +44,9 @@ class CreateWidgetViewModel @Inject constructor(
     private val _selectedWidgetCategories = MutableStateFlow(emptyList<Widget.WidgetCategory>())
     private val _countriesFlow = getCountryUseCase()
     private val _categoriesFlow = getCategoriesUseCase()
+    private val _startAtFlow = MutableStateFlow(System.currentTimeMillis())
+    private val _endAtFlow = MutableStateFlow<Long?>(null)
+    private val _errorFlow = MutableStateFlow<String?>(null)
 
     fun setTitle(title: String) {
         _titleFlow.value = title
@@ -143,6 +144,32 @@ class CreateWidgetViewModel @Inject constructor(
         _selectedWidgetCategories.value = widgetCategories
     }
 
+    fun onStartTimeChange(startAt: Long) {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        if (startAt >= calendar.timeInMillis) {
+            _startAtFlow.value = startAt
+            if (_endAtFlow.value != null && _endAtFlow.value!! < startAt) {
+                val calendar2 = Calendar.getInstance().apply {
+                    timeInMillis = startAt
+                    add(Calendar.DATE, 1)
+                }
+                _endAtFlow.value = calendar2.timeInMillis
+            }
+        }
+    }
+
+    fun onEndTimeChange(endAt: Long?) {
+        if (endAt == null) {
+            _endAtFlow.value = null
+        } else if (endAt >= _startAtFlow.value) {
+            _endAtFlow.value = endAt
+        }
+    }
+
     val uiStateFlow = combine(
         _titleFlow,
         _titleErrorFlow,
@@ -155,8 +182,11 @@ class CreateWidgetViewModel @Inject constructor(
         _targetAudienceLocations,
         _countriesFlow,
         _categoriesFlow,
-        _selectedWidgetCategories
-    ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories ->
+        _selectedWidgetCategories,
+        _startAtFlow,
+        _endAtFlow,
+        _errorFlow,
+    ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories, startAt, endAt, error ->
         val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size in 2..4
             && ((optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all { !it.text.isNullOrBlank() }) || (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() }))
         CreateWidgetUiState(
@@ -171,10 +201,13 @@ class CreateWidgetViewModel @Inject constructor(
             countries,
             allowCreate,
             targetAudienceAgeRange = targetAudienceAgeRange,
-            minAge = ageRange.min,
-            maxAge = ageRange.max,
+            minAge = getCreateWidgetRemoteConfigUseCase().minAge,
+            maxAge = getCreateWidgetRemoteConfigUseCase().maxAge,
             categories = categories,
-            widgetCategories = widgetCategories
+            widgetCategories = widgetCategories,
+            startTime = startAt,
+            endTime = endAt,
+            error = error
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
 }

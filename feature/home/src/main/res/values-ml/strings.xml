@@ -29,5 +29,8 @@
     <string name="let_s_shape_the_future_vote_now">ഭാവിയെ രൂപപ്പെടുത്താം! ഇപ്പോൾ വോട്ടു ചെയ്യുക.</string>
     <string name="vote_for_your_favorite_option">നിങ്ങളുടെ ഇഷ്ടപ്പെട്ട ഓപ്ഷനിലേക്ക് വോട്ടു ചെയ്യുക!</string>
     <string name="dashboard">Dashboard</string>
+    <string name="profile_update_in_progress">Profile Update in Progress</string>
+    <string name="widget_collection_empty">Widget collection is empty</string>
+    <string name="start_creating_widgets">Start creating widgets by clicking the ‘+ Create’ button.</string>
 
 </resources>

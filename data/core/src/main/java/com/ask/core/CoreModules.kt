@@ -15,6 +15,12 @@ object CoreModules {
 
     @Provides
     @Singleton
-    @Named("IO")
+    @Named(DISPATCHER_IO)
     fun provideDispatcherIO(): CoroutineDispatcher = Dispatchers.IO
+
+    @Provides
+    @Singleton
+    @Named(DISPATCHER_DEFAULT)
+    fun provideDispatcherDefault(): CoroutineDispatcher = Dispatchers.Default
 }
+

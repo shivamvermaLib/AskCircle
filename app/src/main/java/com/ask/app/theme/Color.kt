@@ -1,4 +1,4 @@
-package com.ask.app.ui.theme
+package com.ask.app.theme
 
 import androidx.compose.ui.graphics.Color
 

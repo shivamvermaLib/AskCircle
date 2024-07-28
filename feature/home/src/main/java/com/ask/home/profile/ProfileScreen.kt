@@ -71,14 +71,14 @@ import com.ask.common.AppOptionTypeSelect
 import com.ask.common.AppTextField
 import com.ask.common.DropDownWithSelect
 import com.ask.common.connectivityState
-import com.ask.common.getByteArray
-import com.ask.common.getExtension
-import com.ask.common.preLoadImages
 import com.ask.common.shimmerBrush
 import com.ask.core.EMPTY
+import com.ask.core.ImageSizeType
+import com.ask.core.getImage
 import com.ask.home.R
 import com.ask.user.Gender
 import com.ask.user.User
+import com.ask.workmanager.UpdateProfileWorker
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -89,7 +89,7 @@ fun ProfileScreen(
     route: String,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
-    onError: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
+    onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
     onOpenImage: (String) -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -98,7 +98,7 @@ fun ProfileScreen(
     LaunchedEffect(Unit) {
         launch {
             viewModel.uiStateFlow.mapNotNull { it.error }.collect {
-                onError(it) {
+                onMessage(it) {
                     viewModel.setError(null)
                 }
             }
@@ -115,13 +115,24 @@ fun ProfileScreen(
         viewModel::setCountry,
         viewModel::setAge,
         {
-            viewModel.onUpdate({
-                context.getExtension(it)
-            }, {
-                context.getByteArray(it)
-            }, {
-                context.preLoadImages(listOf(it))
-            })
+            UpdateProfileWorker.sendRequest(
+                context,
+                profileUiState.name,
+                profileUiState.email,
+                profileUiState.gender,
+                profileUiState.age,
+                profileUiState.profilePic,
+                profileUiState.country,
+                profileUiState.userCategories,
+            )
+            onMessage(context.getString(R.string.profile_update_in_progress)) {}
+            /*{
+            context.getExtension(it)
+        }, {
+            context.getResizedImageByteArray(it)
+        }, {
+            context.preLoadImages(it)
+        }*/
         },
         viewModel::onImageClick,
         onOpenImage,
@@ -131,8 +142,7 @@ fun ProfileScreen(
 
 @Preview
 @OptIn(
-    ExperimentalCoroutinesApi::class,
-    ExperimentalSharedTransitionApi::class
+    ExperimentalCoroutinesApi::class, ExperimentalSharedTransitionApi::class
 )
 @Composable
 private fun ProfileScreen(
@@ -157,11 +167,11 @@ private fun ProfileScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         val isConnected by connectivityState()
-        val singlePhotoPickerLauncher =
-            rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
-                onResult = { uri ->
-                    uri?.let { onImageClick(it.toString()) }
-                })
+        val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickVisualMedia(),
+            onResult = { uri ->
+                uri?.let { onImageClick(it.toString()) }
+            })
         Box {
             if (profile.profileLoading) {
                 Box(
@@ -171,8 +181,7 @@ private fun ProfileScreen(
                 )
             } else {
                 with(sharedTransitionScope) {
-                    AppImage(
-                        url = profile.profilePic,
+                    AppImage(url = profile.profilePic.getImage(ImageSizeType.SIZE_500),
                         contentDescription = profile.name,
                         contentScale = ContentScale.Fit,
                         placeholder = R.drawable.baseline_account_box_24,
@@ -180,14 +189,19 @@ private fun ProfileScreen(
                         modifier = Modifier.Companion
                             .sharedElement(
                                 sharedTransitionScope.rememberSharedContentState(
-                                    key = profile.profilePic ?: EMPTY
-                                ),
-                                animatedVisibilityScope = animatedContentScope
+                                    key = profile.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
+                                        ?: EMPTY
+                                ), animatedVisibilityScope = animatedContentScope
                             )
                             .height(160.dp)
                             .clip(RoundedCornerShape(20.dp))
-                            .clickable { profile.profilePic?.let { onOpenImage(it) } }
-                    )
+                            .clickable {
+                                profile.profilePic?.let {
+                                    onOpenImage(
+                                        it.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY
+                                    )
+                                }
+                            })
                 }
             }
             FilledIconButton(onClick = {
@@ -198,8 +212,7 @@ private fun ProfileScreen(
                 )
             }, modifier = Modifier.align(Alignment.TopEnd)) {
                 Icon(
-                    Icons.Outlined.Edit,
-                    contentDescription = stringResource(R.string.edit_image)
+                    Icons.Outlined.Edit, contentDescription = stringResource(R.string.edit_image)
                 )
             }
         }
@@ -281,8 +294,7 @@ private fun ProfileScreen(
         Spacer(modifier = Modifier.size(8.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = stringResource(R.string.age),
-                style = MaterialTheme.typography.titleSmall
+                text = stringResource(R.string.age), style = MaterialTheme.typography.titleSmall
             )
             Spacer(modifier = Modifier.weight(1f))
             if (profile.profileLoading) {
@@ -315,13 +327,11 @@ private fun ProfileScreen(
                         .background(shimmerBrush())
                 )
             } else {
-                DropDownWithSelect(
-                    list = profile.countries,
+                DropDownWithSelect(list = profile.countries,
                     title = profile.countries.find { it.name == profile.country }?.let {
                         "${it.emoji} ${it.name}"
                     } ?: stringResource(id = R.string.select),
-                    modifier = Modifier
-                        .padding(horizontal = 4.dp),
+                    modifier = Modifier.padding(horizontal = 4.dp),
                     itemString = { "${it.emoji} ${it.name}" }) {
                     setCountry(it.name)
                 }
@@ -329,10 +339,7 @@ private fun ProfileScreen(
         }
         Spacer(modifier = Modifier.size(8.dp))
         CategorySelect(
-            profile.profileLoading,
-            profile.categories,
-            profile.userCategories,
-            onCategorySelect
+            profile.profileLoading, profile.categories, profile.userCategories, onCategorySelect
         )
         Spacer(modifier = Modifier.size(20.dp))
         ElevatedButton(
@@ -401,12 +408,10 @@ fun CategorySelect(
     if (expanded) {
         filterList = list.filter { categoryWithSubCategory ->
             categoryWithSubCategory.category.name.contains(
-                search,
-                ignoreCase = true
+                search, ignoreCase = true
             ) || categoryWithSubCategory.subCategories.fastAny {
                 it.title.contains(
-                    search,
-                    ignoreCase = true
+                    search, ignoreCase = true
                 )
             }
         }
@@ -499,8 +504,7 @@ fun CategorySelect(
                                     ) {
 
                                         categoryWithSubCategory.subCategories.forEach { subCategory ->
-                                            FilterChip(
-                                                selected = selectedList.any { it.subCategory == subCategory.title },
+                                            FilterChip(selected = selectedList.any { it.subCategory == subCategory.title },
                                                 onClick = {
                                                     onClick(
                                                         categoryWithSubCategory.category.name,
@@ -509,16 +513,14 @@ fun CategorySelect(
                                                 },
                                                 label = {
                                                     Text(
-                                                        subCategory.title, color =
-                                                        if (selectedList.any { it.subCategory == subCategory.title }) Color.Black else Color.White
+                                                        subCategory.title,
+                                                        color = if (selectedList.any { it.subCategory == subCategory.title }) Color.Black else Color.White
                                                     )
-                                                }
-                                            )
+                                                })
                                         }
                                     }
                                 }
-                                if (categorySelected)
-                                    Spacer(modifier = Modifier.size(16.dp))
+                                if (categorySelected) Spacer(modifier = Modifier.size(16.dp))
                             }
                         }
 

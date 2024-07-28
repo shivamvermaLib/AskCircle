@@ -1,19 +1,25 @@
 package com.ask.widget
 
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import com.ask.core.DISPATCHER_IO
 import com.ask.core.DOT
 import com.ask.core.FirebaseDataSource
 import com.ask.core.FirebaseOneDataSource
 import com.ask.core.FirebaseStorageSource
+import com.ask.core.IMAGE_SPLIT_FACTOR
+import com.ask.core.ImageSizeType
+import com.ask.core.UNDERSCORE
 import com.ask.core.UpdatedTime
 import com.ask.core.checkIfUrl
 import com.ask.core.fileNameWithExtension
+import com.ask.core.getAllImages
 import com.ask.core.isUpdateRequired
 import com.ask.user.User
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
@@ -24,19 +30,39 @@ class WidgetRepository @Inject constructor(
     private val widgetUpdateTimeOneDataSource: FirebaseOneDataSource<UpdatedTime>,
     private val widgetDao: WidgetDao,
     @Named(TABLE_WIDGETS) private val pollOptionStorageSource: FirebaseStorageSource,
-    @Named("IO") private val dispatcher: CoroutineDispatcher
+    @Named(DISPATCHER_IO) private val dispatcher: CoroutineDispatcher
 ) {
 
-    fun getUserWidgets(userId: String) = widgetDao.getUserWidgets(userId).flowOn(dispatcher)
+    fun getUserWidgets(userId: String, limit: Int) =
+        Pager(config = PagingConfig(pageSize = limit),
+            pagingSourceFactory = { widgetDao.getUserWidgets(userId) }
+        ).flow
 
-    fun getWidgets() = widgetDao.getWidgets().flowOn(dispatcher)
+    fun getWidgets(currentUserId: String, currentTime: Long, limit: Int) =
+        Pager(config = PagingConfig(pageSize = limit),
+            pagingSourceFactory = { widgetDao.getWidgets(currentUserId, currentTime) }
+        ).flow
 
-    fun getTrendingWidgets() = widgetDao.getTrendingWidgets().flowOn(dispatcher)
+    fun getMostVotedWidgets(currentUserId: String, limit: Int) =
+        Pager(config = PagingConfig(pageSize = limit),
+            pagingSourceFactory = { widgetDao.getMostVotedWidgets(currentUserId) }
+        ).flow
+
+    fun getTrendingWidgets(currentUserId: String, limit: Int) =
+        Pager(config = PagingConfig(pageSize = limit),
+            pagingSourceFactory = { widgetDao.getTrendingWidgets(currentUserId) }
+        ).flow
+
+    fun getBookmarkedWidgets(currentUserId: String, limit: Int) =
+        Pager(config = PagingConfig(pageSize = limit),
+            pagingSourceFactory = { widgetDao.getBookmarkedWidgets(currentUserId) }
+        ).flow
 
     suspend fun createWidget(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
+        currentUserId: String,
         getExtension: (String) -> String,
-        getByteArray: (String) -> ByteArray
+        getByteArrays: suspend (String) -> Map<ImageSizeType, ByteArray>,
     ): WidgetWithOptionsAndVotesForTargetAudience = withContext(dispatcher) {
         val pollId = widgetWithOptionsAndVotesForTargetAudience.widget.id
         val createdPollWithOptionsAndVotesForTargetAudience =
@@ -52,20 +78,23 @@ class WidgetRepository @Inject constructor(
                 }.map {
                     it.copy(widgetId = pollId)
                 },
-                options = widgetWithOptionsAndVotesForTargetAudience.options.map {
-                    it.copy(
-                        votes = it.votes.map { vote -> vote.copy(optionId = it.option.id) },
-                        option = it.option.copy(
+                options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
+                    optionWithVotes.copy(
+                        votes = optionWithVotes.votes.map { vote -> vote.copy(optionId = optionWithVotes.option.id) },
+                        option = optionWithVotes.option.copy(
                             widgetId = pollId,
-                            imageUrl = when (it.option.imageUrl != null && it.option.imageUrl.checkIfUrl()
-                                .not()) {
-                                true -> pollOptionStorageSource.upload(
-                                    "${it.option.id}$DOT${getExtension(it.option.imageUrl)}",
-                                    getByteArray(it.option.imageUrl)
-                                )
+                            imageUrl = when (optionWithVotes.option.imageUrl != null && !optionWithVotes.option.imageUrl.checkIfUrl()) {
+                                true -> getByteArrays(optionWithVotes.option.imageUrl).map {
+                                    pollOptionStorageSource.upload(
+                                        "${optionWithVotes.option.id}$UNDERSCORE${it.key.name}$DOT${
+                                            getExtension(optionWithVotes.option.imageUrl)
+                                        }",
+                                        it.value
+                                    )
+                                }.joinToString(separator = IMAGE_SPLIT_FACTOR)
 
-                                else -> when (it.option.imageUrl?.checkIfUrl()) {
-                                    true -> it.option.imageUrl
+                                else -> when (optionWithVotes.option.imageUrl?.checkIfUrl()) {
+                                    true -> optionWithVotes.option.imageUrl
                                     else -> null
                                 }
                             }
@@ -105,7 +134,8 @@ class WidgetRepository @Inject constructor(
             updatedTime.copy(widgetTime = System.currentTimeMillis())
         }
 
-        widgetDao.getWidgetById(pollId) ?: throw Exception("Unable to get created Poll from Local")
+        widgetDao.getWidgetById(pollId, currentUserId)
+            ?: throw Exception("Unable to get created Poll from Local")
     }
 
     suspend fun deleteWidget(widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience) =
@@ -136,7 +166,7 @@ class WidgetRepository @Inject constructor(
         fetchUserDetails: suspend (String) -> User,
         preloadImages: suspend (List<String>) -> Unit
     ) = withContext(dispatcher) {
-        val widgetIds = searchCombinations.map {
+        var widgetIds = searchCombinations.map {
             async {
                 widgetIdDataSource.getItemOrNull(it)
             }
@@ -157,8 +187,9 @@ class WidgetRepository @Inject constructor(
                 )
             }
         }
-        preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.mapNotNull { it.option.imageUrl } }
-            .flatten())
+        preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it ->
+            it.options.map { it.option.imageUrl.getAllImages() }.flatten()
+        }.flatten())
         widgetDao.insertWidgets(
             widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
             widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceGender },
@@ -173,6 +204,37 @@ class WidgetRepository @Inject constructor(
         )
         return@withContext widgetWithOptionsAndVotesForTargetAudiences.any { it.widget.creatorId != currentUserId && it.widget.createdAt > lastUpdatedTime.widgetTime && lastUpdatedTime.widgetTime > 0 }
     }
+
+    suspend fun getWidgetDetails(
+        widgetId: String,
+        currentUserId: String,
+        fetchUserDetails: suspend (String) -> User,
+        preloadImages: suspend (List<String>) -> Unit
+    ): WidgetWithOptionsAndVotesForTargetAudience =
+        withContext(dispatcher) {
+            widgetDao.getWidgetById(widgetId, currentUserId) ?: widgetDataSource.getItem(widgetId)
+                .also { widgetWithOptionsAndVotesForTargetAudience ->
+                    widgetWithOptionsAndVotesForTargetAudience.copy(
+                        user = fetchUserDetails(
+                            widgetWithOptionsAndVotesForTargetAudience.widget.creatorId
+                        )
+                    ).let { widgetWithOptionsAndVotesForTargetAudience1 ->
+                        preloadImages(
+                            widgetWithOptionsAndVotesForTargetAudience1.options.map { it.option.imageUrl.getAllImages() }
+                                .flatten()
+                        )
+                        widgetDao.insertWidget(
+                            widgetWithOptionsAndVotesForTargetAudience1.widget,
+                            widgetWithOptionsAndVotesForTargetAudience1.targetAudienceGender,
+                            widgetWithOptionsAndVotesForTargetAudience1.targetAudienceAgeRange,
+                            widgetWithOptionsAndVotesForTargetAudience1.targetAudienceLocations,
+                            widgetWithOptionsAndVotesForTargetAudience1.options.map { it.option },
+                            widgetWithOptionsAndVotesForTargetAudience1.options.map { it.votes }
+                                .flatten()
+                        )
+                    }
+                }
+        }
 
     suspend fun vote(widgetId: String, optionId: String, userId: String) =
         withContext(dispatcher) {
@@ -197,15 +259,8 @@ class WidgetRepository @Inject constructor(
                 })
             }.also { widgetWithOptionsAndVotesForTargetAudience ->
                 removeVote?.let { widgetDao.deleteVote(it) }
-                widgetDao.insertWidget(
-                    widgetWithOptionsAndVotesForTargetAudience.widget,
-                    widgetWithOptionsAndVotesForTargetAudience.targetAudienceGender,
-                    widgetWithOptionsAndVotesForTargetAudience.targetAudienceAgeRange,
-                    widgetWithOptionsAndVotesForTargetAudience.targetAudienceLocations,
-                    widgetWithOptionsAndVotesForTargetAudience.options.map { it.option },
-                    widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }
-                        .flatten()
-                )
+                widgetDao.insertVotes(widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }
+                    .flatten())
             }.also {
                 widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
                     updatedTime.copy(voteTime = System.currentTimeMillis())
@@ -215,5 +270,27 @@ class WidgetRepository @Inject constructor(
 
     suspend fun clearAll() = withContext(dispatcher) {
         widgetDao.clearData()
+    }
+
+    suspend fun startStopVoting(widgetId: String, isStart: Boolean) = withContext(dispatcher) {
+        widgetDataSource.updateItemFromTransaction(widgetId) { widgetWithOptionsAndVotesForTargetAudience1 ->
+            if (isStart) {
+                widgetWithOptionsAndVotesForTargetAudience1.copy(
+                    widget = widgetWithOptionsAndVotesForTargetAudience1.widget.copy(
+                        startAt = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis()
+                    )
+                )
+            } else {
+                widgetWithOptionsAndVotesForTargetAudience1.copy(
+                    widget = widgetWithOptionsAndVotesForTargetAudience1.widget.copy(
+                        endAt = System.currentTimeMillis(),
+                        updatedAt = System.currentTimeMillis()
+                    )
+                )
+            }
+        }.also {
+            widgetDao.insertWidget(it.widget)
+        }
     }
 }

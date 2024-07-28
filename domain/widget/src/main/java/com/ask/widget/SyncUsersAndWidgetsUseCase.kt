@@ -3,11 +3,14 @@ package com.ask.widget
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.CategoryRepository
 import com.ask.core.AppSharedPreference
+import com.ask.core.DISPATCHER_DEFAULT
 import com.ask.core.RemoteConfigRepository
 import com.ask.core.UpdatedTime
 import com.ask.country.CountryRepository
 import com.ask.user.UserRepository
 import com.ask.user.generateCombinationsForUsers
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -19,26 +22,29 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
     private val sharedPreference: AppSharedPreference,
     private val remoteConfigRepository: RemoteConfigRepository,
     private val categoryRepository: CategoryRepository,
-    @Named("db_version") private val dbVersion: Int
+    @Named("db_version") private val dbVersion: Int,
+    @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
 
     suspend operator fun invoke(
         isConnected: Boolean = true,
         preloadImages: suspend (List<String>) -> Unit
-    ): Boolean {
+    ): Boolean = withContext(dispatcher) {
         if (!isConnected) {
             if (userRepository.getCurrentUserOptional() == null) {
                 throw Exception("User not signed in")
             }
-            return false
+            return@withContext false
         }
+        remoteConfigRepository.fetchInit()
         val refreshCountServer = remoteConfigRepository.refreshCountServer()
         val refreshCountLocal = sharedPreference.getRefreshCount()
         var refreshNeeded = false
         val lastUpdatedTime = sharedPreference.getUpdatedTime()
         val lastDbVersion = sharedPreference.getDbVersion()
-
-        if (refreshCountServer != refreshCountLocal || lastDbVersion != dbVersion) {
+        if (userRepository.getCurrentUserOptional() == null) {
+            refreshNeeded = true
+        } else if (refreshCountServer != refreshCountLocal || lastDbVersion != dbVersion) {
             refreshNeeded = true
             widgetRepository.clearAll()
             userRepository.clearAll()
@@ -69,12 +75,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         lastUpdatedTime,
                         list,
                         { userId ->
-                            userRepository.getUser(userId)
-                                .also {
-                                    if (it.profilePic.isNullOrBlank().not()) {
-                                        preloadImages(listOf(it.profilePic!!))
-                                    }
-                                }
+                            userRepository.getUser(userId, true, preloadImages)
                         },
                         preloadImages
                     ).also {
@@ -86,17 +87,19 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             val duration = System.currentTimeMillis() - time
             analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
             sharedPreference.setRefreshCount(refreshCountServer)
-            sharedPreference.setUpdatedTime(
-                UpdatedTime(
-                    widgetTime = System.currentTimeMillis(),
-                    voteTime = System.currentTimeMillis(),
-                    profileTime = System.currentTimeMillis()
+            sharedPreference.setDbVersion(dbVersion)
+                sharedPreference.setUpdatedTime(
+                    UpdatedTime(
+                        widgetTime = System.currentTimeMillis(),
+                        voteTime = System.currentTimeMillis(),
+                        profileTime = System.currentTimeMillis()
+                    )
                 )
-            )
-            return sendNotification
+
+            return@withContext sendNotification
         } else {
             println("Sync not required")
-            return false
+            return@withContext false
         }
     }
 }

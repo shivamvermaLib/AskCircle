@@ -9,8 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.ui.Modifier
-import com.ask.app.ui.AskNavigation
-import com.ask.app.ui.theme.ASKTheme
+import com.ask.app.theme.ASKTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)

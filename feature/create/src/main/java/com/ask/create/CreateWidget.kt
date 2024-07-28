@@ -27,6 +27,8 @@ import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -35,12 +37,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
@@ -79,11 +83,13 @@ import com.ask.common.SelectItemOnChipWithSearchDropDown
 import com.ask.common.TextOption
 import com.ask.common.connectivityState
 import com.ask.core.EMPTY
+import com.ask.core.toDate
 import com.ask.country.Country
 import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.workmanager.CreateWidgetWorker
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import java.util.Calendar
 
 
 @Composable
@@ -120,6 +126,8 @@ fun CreateWidgetScreen(
         },
         onRemoveOption = viewModel::removeOption,
         onSelectCategoryWidget = viewModel::selectCategoryWidget,
+        onStartTimeChange = viewModel::onStartTimeChange,
+        onEndTimeChange = viewModel::onEndTimeChange
     )
 }
 
@@ -148,6 +156,8 @@ private fun CreateWidgetScreen(
     onBackClick: () -> Unit = {},
     onRemoveOption: (Int) -> Unit = {},
     onSelectCategoryWidget: (List<Widget.WidgetCategory>) -> Unit = {},
+    onStartTimeChange: (Long) -> Unit = {},
+    onEndTimeChange: (Long?) -> Unit = {},
 ) {
     val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -194,7 +204,6 @@ private fun CreateWidgetScreen(
             },
         )
     }) { padding ->
-        println("width = [${sizeClass.widthSizeClass}]")
         val modifier = if (sizeClass.widthSizeClass == WindowWidthSizeClass.Compact) {
             Modifier
                 .padding(padding)
@@ -249,7 +258,7 @@ private fun CreateWidgetScreen(
                             totalOptions = createWidgetUiState.options.size,
                             isInput = true,
                             onDeleteIconClick = onRemoveOption,
-                            onImageClick = {
+                            onOptionClick = {
                                 imagePickerIndex = index
                                 singlePhotoPickerLauncher.launch(
                                     PickVisualMediaRequest(
@@ -302,6 +311,7 @@ private fun CreateWidgetScreen(
                     style = MaterialTheme.typography.titleMedium
                 )
                 GenderSelect(createWidgetUiState, onGenderChanged)
+                Spacer(modifier = Modifier.size(10.dp))
                 AgeRangeSelect(createWidgetUiState, onMinAgeChanged, onMaxAgeChanged)
                 Spacer(modifier = Modifier.size(10.dp))
                 SelectItemOnChipWithSearchDropDown(
@@ -324,6 +334,16 @@ private fun CreateWidgetScreen(
                     createWidgetUiState.widgetCategories,
                     onSelectCategoryWidget
                 )
+                Spacer(modifier = Modifier.size(15.dp))
+                Text(
+                    modifier = Modifier.align(Alignment.Start),
+                    text = "More Options",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.size(10.dp))
+                StartTime(createWidgetUiState, onStartTimeChange)
+                Spacer(modifier = Modifier.size(10.dp))
+                EndTime(createWidgetUiState, onEndTimeChange)
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
                     onCreateClick,
@@ -335,6 +355,76 @@ private fun CreateWidgetScreen(
                 Spacer(modifier = Modifier.size(100.dp))
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EndTime(createWidgetUiState: CreateWidgetUiState, onTimeChanged: (Long?) -> Unit) {
+    var openPicker by remember { mutableStateOf(false) }
+    val calendar by remember {
+        mutableStateOf(Calendar.getInstance().apply {
+            timeInMillis = createWidgetUiState.startTime
+            add(Calendar.DATE, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        })
+    }
+    LaunchedEffect(createWidgetUiState.startTime) {
+        calendar.timeInMillis = createWidgetUiState.startTime
+        calendar.add(Calendar.DATE, 1)
+    }
+    val datePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
+
+        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+            return utcTimeMillis >= calendar.timeInMillis
+        }
+
+        override fun isSelectableYear(year: Int): Boolean {
+            return year in (calendar.get(Calendar.YEAR)..calendar.get(Calendar.YEAR) + createWidgetUiState.maxYearAllowed)
+        }
+    })
+    if (openPicker) {
+        DatePickerDialog(
+            onDismissRequest = {
+                openPicker = false
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { onTimeChanged(it) }
+                    openPicker = false
+                }) {
+                    Text(text = stringResource(R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { openPicker = false }) {
+                    Text(text = stringResource(R.string.cancel))
+                }
+            }) {
+            DatePicker(state = datePickerState)
+        }
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.end_at), style = MaterialTheme.typography.titleSmall
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        AppOptionTypeSelect(
+            selected = createWidgetUiState.endTime != null,
+            onSelectedChange = { openPicker = true },
+            title = createWidgetUiState.endTime?.toDate() ?: stringResource(id = R.string.select),
+            icon = ImageVector.vectorResource(id = R.drawable.round_calendar_month_24)
+        )
+        Spacer(modifier = Modifier.size(5.dp))
+        AppOptionTypeSelect(
+            selected = createWidgetUiState.endTime == null,
+            onSelectedChange = { onTimeChanged(null) },
+            title = stringResource(R.string.manual),
+            icon = ImageVector.vectorResource(id = R.drawable.baseline_back_hand_24)
+        )
     }
 }
 
@@ -559,6 +649,67 @@ fun GenderSelect(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun StartTime(
+    createWidgetUiState: CreateWidgetUiState,
+    onTimeChanged: (Long) -> Unit
+) {
+    var openPicker by remember { mutableStateOf(false) }
+    val calendar by remember {
+        mutableStateOf(Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        })
+    }
+    val datePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
+
+        override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+            return utcTimeMillis >= calendar.timeInMillis
+        }
+
+        override fun isSelectableYear(year: Int): Boolean {
+            return year in (calendar.get(Calendar.YEAR)..calendar.get(Calendar.YEAR) + createWidgetUiState.maxYearAllowed)
+        }
+    })
+    if (openPicker) {
+        DatePickerDialog(
+            onDismissRequest = {
+                openPicker = false
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { onTimeChanged(it) }
+                    openPicker = false
+                }) {
+                    Text(text = stringResource(id = R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { openPicker = false }) {
+                    Text(text = stringResource(id = R.string.cancel))
+                }
+            }) {
+            DatePicker(state = datePickerState)
+        }
+    }
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.start_at), style = MaterialTheme.typography.titleSmall
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        AppOptionTypeSelect(
+            selected = false,
+            onSelectedChange = { openPicker = true },
+            title = createWidgetUiState.startTime.toDate(),
+            icon = ImageVector.vectorResource(id = R.drawable.round_calendar_month_24)
+        )
+    }
+}
+
+
 @Composable
 fun OptionTypeSelect(
     createWidgetUiState: CreateWidgetUiState,
@@ -566,7 +717,8 @@ fun OptionTypeSelect(
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = stringResource(R.string.options), style = MaterialTheme.typography.titleMedium
+            text = stringResource(R.string.options),
+            style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.weight(1f))
         AppOptionTypeSelect(
@@ -586,7 +738,8 @@ fun OptionTypeSelect(
 }
 
 
-class CreateWidgetStatePreviewParameterProvider : PreviewParameterProvider<CreateWidgetUiState> {
+class CreateWidgetStatePreviewParameterProvider :
+    PreviewParameterProvider<CreateWidgetUiState> {
     override val values: Sequence<CreateWidgetUiState> = sequenceOf(
         CreateWidgetUiState(
             "widget title",

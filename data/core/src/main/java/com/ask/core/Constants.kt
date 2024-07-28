@@ -16,3 +16,11 @@ const val TEST_DB = "QA"
 
 const val CONFIGURATIONS = "configurations"
 const val SQLITE_HELPER = "sqlite_helper"
+
+const val IMAGE_SPLIT_FACTOR = "(!$%)"
+
+
+const val DISPATCHER_IO = "DispatcherIO"
+const val DISPATCHER_MAIN = "DispatcherMain"
+const val DISPATCHER_DEFAULT = "DispatcherDefault"
+

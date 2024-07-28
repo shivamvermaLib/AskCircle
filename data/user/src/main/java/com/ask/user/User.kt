@@ -6,16 +6,21 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
 import com.ask.core.ALL
 import com.ask.core.EMPTY
 import com.ask.core.ID
 import com.ask.core.UNDERSCORE
 import com.ask.core.toSearchNeededField
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.util.UUID
 
 @Serializable
 @Entity(tableName = TABLE_USERS)
+@TypeConverters(StringListConverter::class)
 data class User(
     @PrimaryKey val id: String = EMPTY,
     val email: String? = null,
@@ -49,6 +54,7 @@ data class User(
         val updatedAt: Long = System.currentTimeMillis()
     )
 
+    @Serializable
     @Entity(
         tableName = TABLE_USER_CATEGORY,
         foreignKeys = [
@@ -69,6 +75,27 @@ data class User(
         val createdAt: Long = System.currentTimeMillis(),
         val updatedAt: Long = System.currentTimeMillis()
     )
+
+    @Serializable
+    @Entity(
+        tableName = TABLE_USER_WIDGET_BOOKMARK,
+        foreignKeys = [
+            ForeignKey(
+                entity = User::class,
+                parentColumns = [ID],
+                childColumns = [USER_ID],
+                onDelete = ForeignKey.CASCADE
+            )
+        ],
+        indices = [Index(value = [USER_ID])]
+    )
+    data class UserWidgetBookmarks(
+        @PrimaryKey val id: String = UUID.randomUUID().toString(),
+        val userId: String = EMPTY,
+        val widgetId: String = EMPTY,
+        val createdAt: Long = System.currentTimeMillis(),
+        val updatedAt: Long = System.currentTimeMillis()
+    )
 }
 
 data class UserWithLocationCategory(
@@ -85,7 +112,13 @@ data class UserWithLocationCategory(
         entityColumn = USER_ID,
         entity = User.UserCategory::class
     )
-    val userCategories: List<User.UserCategory>
+    val userCategories: List<User.UserCategory>,
+    @Relation(
+        parentColumn = ID,
+        entityColumn = USER_ID,
+        entity = User.UserWidgetBookmarks::class
+    )
+    val userWidgetBookmarks: List<User.UserWidgetBookmarks>
 )
 
 fun generateCombinationsForUsers(
@@ -176,4 +209,16 @@ fun generateCombinationsForUsers(
     categoriesCombination.add(userId)
 
     return categoriesCombination
+}
+
+class StringListConverter {
+    @TypeConverter
+    fun fromString(value: String): List<String> {
+        return Json.decodeFromString<List<String>>(value)
+    }
+
+    @TypeConverter
+    fun fromList(list: List<String>): String {
+        return Json.encodeToString(list)
+    }
 }

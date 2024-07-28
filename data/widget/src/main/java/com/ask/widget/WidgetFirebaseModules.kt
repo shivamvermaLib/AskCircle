@@ -89,7 +89,8 @@ object WidgetFirebaseModules {
                     User(id = widget.creatorId),
                     dataSnapshot.child(TABLE_WIDGET_CATEGORIES).children.map {
                         it.getValue(Widget.WidgetCategory::class.java)!!
-                    }
+                    },
+                    false
                 )
             }
 
@@ -116,7 +117,8 @@ object WidgetFirebaseModules {
                     User(id = widget.creatorId),
                     mutableData.child(TABLE_WIDGET_CATEGORIES).children.map {
                         it.getValue(Widget.WidgetCategory::class.java)!!
-                    }
+                    },
+                    false
                 )
             }
         }
