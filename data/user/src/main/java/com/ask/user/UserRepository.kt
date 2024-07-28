@@ -11,6 +11,8 @@ import com.ask.core.UNDERSCORE
 import com.ask.core.UpdatedTime
 import com.ask.core.getAllImages
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
@@ -148,14 +150,97 @@ class UserRepository @Inject constructor(
                 if (it.user.profilePic.isNullOrBlank().not()) {
                     preloadImages(it.user.profilePic.getAllImages())
                 }
-                userDao.insertUser(it.user)
+                userDao.insertAll(
+                    listOf(it.user),
+                    listOf(it.userLocation),
+                    it.userCategories,
+                    it.userWidgetBookmarks
+                )
             }.user
         } else {
             userDao.getUserById(userId) ?: userDataSource.getItem(userId).also {
-                userDao.insertUser(it.user)
+                if (it.user.profilePic.isNullOrBlank().not()) {
+                    preloadImages(it.user.profilePic.getAllImages())
+                }
+                userDao.insertAll(
+                    listOf(it.user),
+                    listOf(it.userLocation),
+                    it.userCategories,
+                    it.userWidgetBookmarks
+                )
             }.user
         }
+    }
 
+    suspend fun getUserDetails(
+        userId: String, refresh: Boolean = false, preloadImages: suspend (List<String>) -> Unit
+    ): UserWithLocationCategory = withContext(dispatcher) {
+        return@withContext if (refresh) {
+            userDataSource.getItem(userId).also {
+                if (it.user.profilePic.isNullOrBlank().not()) {
+                    preloadImages(it.user.profilePic.getAllImages())
+                }
+                userDao.insertAll(
+                    listOf(it.user),
+                    listOf(it.userLocation),
+                    it.userCategories,
+                    it.userWidgetBookmarks
+                )
+            }
+        } else {
+            userDao.getUserDetailsById(userId) ?: userDataSource.getItem(userId).also {
+                if (it.user.profilePic.isNullOrBlank().not()) {
+                    preloadImages(it.user.profilePic.getAllImages())
+                }
+                userDao.insertAll(
+                    listOf(it.user),
+                    listOf(it.userLocation),
+                    it.userCategories,
+                    it.userWidgetBookmarks
+                )
+            }
+        }
+    }
+
+    suspend fun getUserDetailList(
+        userIds: List<String>,
+        refresh: Boolean = false,
+        preloadImages: suspend (List<String>) -> Unit
+    ): List<UserWithLocationCategory> = withContext(dispatcher) {
+        if (refresh) {
+            userIds.map { async { userDataSource.getItem(it) } }.awaitAll()
+                .also { userWithLocationCategories ->
+                    userDao.insertAll(
+                        userWithLocationCategories.map { it.user },
+                        userWithLocationCategories.map { it.userLocation },
+                        emptyList(),
+                        emptyList()
+                    )
+                }
+        } else {
+            val users = userDao.getUserDetailsByIds(userIds).toMutableList()
+            if (users.size != userIds.size) {
+                users += userIds.filter { id -> users.any { id == it.user.id }.not() }
+                    .map { async { userDataSource.getItem(it) } }.awaitAll()
+                    .also { userWithLocationCategories ->
+                        userDao.insertAll(
+                            userWithLocationCategories.map { it.user },
+                            userWithLocationCategories.map { it.userLocation },
+                            emptyList(),
+                            emptyList()
+                        )
+                    }
+            }
+            users
+        }.also { userWithLocationCategories ->
+            userWithLocationCategories.mapNotNull {
+                if (it.user.profilePic.isNullOrBlank().not()) {
+                    async { preloadImages(it.user.profilePic.getAllImages()) }
+                } else {
+                    null
+                }
+            }.awaitAll()
+        }
     }
 
     suspend fun deleteUser(id: String) = withContext(dispatcher) {

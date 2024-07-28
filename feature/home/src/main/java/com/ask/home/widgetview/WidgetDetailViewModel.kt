@@ -4,14 +4,14 @@ import com.ask.analytics.AnalyticsLogger
 import com.ask.common.BaseViewModel
 import com.ask.widget.GetWidgetDetailsUseCase
 import com.ask.widget.UpdateVoteUseCase
-import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
+import com.ask.widget.WidgetDetailsWithResult
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
-class WidgetViewModel @Inject constructor(
+class WidgetDetailViewModel @Inject constructor(
     analyticsLogger: AnalyticsLogger,
     private val updateVoteUseCase: UpdateVoteUseCase,
     private val getWidgetDetailsUseCase: GetWidgetDetailsUseCase,
@@ -22,16 +22,21 @@ class WidgetViewModel @Inject constructor(
 
     fun init(
         widgetId: String,
+        unSpecifiedText: String,
+        maleText: String,
+        femaleText: String,
         lastVotedEmptyOptions: List<String>,
         preloadImages: suspend (List<String>) -> Unit
     ) {
         safeApiCall({
             _uiStateFlow.value = _uiStateFlow.value.copy(loading = true)
         }, {
-            getWidgetDetailsUseCase.invoke(widgetId, lastVotedEmptyOptions, preloadImages).let {
+            getWidgetDetailsUseCase.invoke(
+                widgetId, unSpecifiedText, maleText, femaleText, lastVotedEmptyOptions, preloadImages
+            ).let {
                 _uiStateFlow.value = _uiStateFlow.value.copy(
                     loading = false,
-                    widgetWithOptionsAndVotesForTargetAudience = it
+                    widgetDetailsWithResult = it,
                 )
             }
         }, {
@@ -51,7 +56,7 @@ class WidgetViewModel @Inject constructor(
 }
 
 data class WidgetUiState(
-    val widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience? = null,
+    val widgetDetailsWithResult: WidgetDetailsWithResult = WidgetDetailsWithResult(),
     val loading: Boolean = false,
     val error: String? = null
 )

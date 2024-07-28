@@ -71,7 +71,7 @@ import com.ask.home.dashboard.DashboardScreen
 import com.ask.home.imageview.ImageViewModel
 import com.ask.home.imageview.ImageViewScreen
 import com.ask.home.profile.ProfileScreen
-import com.ask.home.widgetview.WidgetViewScreen
+import com.ask.home.widgetview.WidgetDetailScreen
 import com.ask.widget.Filter
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
@@ -167,7 +167,8 @@ private fun HomeScreen(
                         }
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             Filter.entries.forEach {
-                                val modifier = if (selectedFilter == it) Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
+                                val modifier =
+                                    if (selectedFilter == it) Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
                                     else Modifier
 
                                 DropdownMenuItem(
@@ -214,7 +215,12 @@ private fun HomeScreen(
             }
         },
         floatingActionButton = {
-            AnimatedVisibility(visible = homeUiState.createWidgetStatus != WorkerStatus.Loading) {
+            val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+            AnimatedVisibility(
+                visible = homeUiState.createWidgetStatus != WorkerStatus.Loading &&
+                    (currentRoute?.contains("Dashboard") == true || currentRoute?.contains("Profile") == true)
+            ) {
                 ExtendedFloatingActionButton(
                     onClick = onCreateClick,
                     icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
@@ -225,36 +231,40 @@ private fun HomeScreen(
         bottomBar = {
             val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
-            NavigationBar {
-                listOf(
-                    R.string.dashboard, R.string.profile
-                ).forEach { item ->
-                    val stringResource = stringResource(id = item)
-                    NavigationBarItem(icon = {
-                        Icon(
-                            when (item) {
-                                R.string.dashboard -> Icons.Filled.Home
-                                R.string.profile -> Icons.Rounded.AccountCircle
-                                else -> Icons.Rounded.Close
-                            }, contentDescription = stringResource
-                        )
-                    },
-                        label = { Text(stringResource(id = item)) },
-                        selected = currentRoute?.contains(stringResource) == true,
-                        onClick = {
-                            when (item) {
-                                R.string.dashboard -> homeNavigationController.navigate(
-                                    HomeTabScreen.Dashboard(
-                                        Filter.Latest.name
+            if (currentRoute?.contains("Dashboard") == true || currentRoute?.contains("Profile") == true)
+                NavigationBar {
+                    listOf(
+                        R.string.dashboard, R.string.profile
+                    ).forEach { item ->
+                        val stringResource = stringResource(id = item)
+                        NavigationBarItem(icon = {
+                            Icon(
+                                when (item) {
+                                    R.string.dashboard -> Icons.Filled.Home
+                                    R.string.profile -> Icons.Rounded.AccountCircle
+                                    else -> Icons.Rounded.Close
+                                }, contentDescription = stringResource
+                            )
+                        },
+                            label = { Text(stringResource(id = item)) },
+                            selected = currentRoute.contains(stringResource),
+                            onClick = {
+                                when (item) {
+                                    R.string.dashboard -> homeNavigationController.navigate(
+                                        HomeTabScreen.Dashboard(
+                                            Filter.Latest.name
+                                        )
                                     )
-                                )
 
-                                R.string.profile -> homeNavigationController.navigate(HomeTabScreen.Profile)
-                            }
-                        })
+                                    R.string.profile -> homeNavigationController.navigate(
+                                        HomeTabScreen.Profile
+                                    )
+                                }
+                            })
+                    }
                 }
-            }
-        }) {
+        }
+    ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -381,7 +391,7 @@ fun HomeNavigation(
             }
             composable<HomeTabScreen.WidgetView> { navBackStackEntry ->
                 val route = navBackStackEntry.toRoute<HomeTabScreen.WidgetView>()
-                WidgetViewScreen(
+                WidgetDetailScreen(
                     Json.encodeToString(route),
                     widgetView = route,
                     this@SharedTransitionLayout,

@@ -94,13 +94,13 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
         return ImageLoader.Builder(this)
             .memoryCache {
                 MemoryCache.Builder(this)
-                    .maxSizePercent(0.20)
+                    .maxSizePercent(0.30)
                     .build()
             }
             .diskCache {
                 DiskCache.Builder()
                     .directory(cacheDir.resolve("image_cache"))
-                    .maxSizeBytes(10 * 1024 * 1024)
+                    .maxSizeBytes(30 * 1024 * 1024)
                     .build()
             }
 //            .logger(DebugLogger())

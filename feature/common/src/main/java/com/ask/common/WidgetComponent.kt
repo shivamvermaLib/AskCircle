@@ -84,109 +84,172 @@ fun WidgetWithUserView(
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         with(sharedTransitionScope) {
-            ElevatedCard(modifier = Modifier
-                .sharedElement(
-                    sharedTransitionScope.rememberSharedContentState(
-                        key = "$index-card-${widgetWithOptionsAndVotesForTargetAudience.widget.id}"
-                    ), animatedVisibilityScope = animatedContentScope
-                )
-                .fillMaxWidth()
-                .padding(all = 16.dp), onClick = {
-                onWidgetDetails?.invoke(
-                    index, widgetWithOptionsAndVotesForTargetAudience.widget.id
-                )
-            }) {
-                Column(
-                    modifier = Modifier.padding(all = 16.dp)
-                ) {
-                    WidgetUserView(
-                        index = index,
-                        user = widgetWithOptionsAndVotesForTargetAudience.user,
-                        startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat,
-                        sharedTransitionScope = sharedTransitionScope,
-                        animatedContentScope = animatedContentScope,
-                        onOpenIndexImage
+            if (onWidgetDetails != null) {
+                ElevatedCard(modifier = Modifier
+                    .sharedElement(
+                        sharedTransitionScope.rememberSharedContentState(
+                            key = "$index-card-${widgetWithOptionsAndVotesForTargetAudience.widget.id}"
+                        ), animatedVisibilityScope = animatedContentScope
                     )
-                    Spacer(modifier = Modifier.size(12.dp))
-                    HorizontalDivider(thickness = 1.dp)
-                    Spacer(modifier = Modifier.size(6.dp))
-                    Text(text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
-                        stringResource(R.string.last_voted, it)
-                    } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline,
-                        fontWeight = FontWeight.W400)
-                    Spacer(modifier = Modifier.size(6.dp))
-                    WidgetView(
-                        widget = widgetWithOptionsAndVotesForTargetAudience,
+                    .fillMaxWidth()
+                    .padding(all = 16.dp),
+                    onClick = {
+                        onWidgetDetails.invoke(
+                            index, widgetWithOptionsAndVotesForTargetAudience.widget.id
+                        )
+                    }) {
+                    CardItem(
+                        index,
+                        widgetWithOptionsAndVotesForTargetAudience,
                         sharedTransitionScope,
                         animatedContentScope,
-                        { widgetId, optionId ->
-                            if (widgetWithOptionsAndVotesForTargetAudience.isAllowedVoting) onOptionClick(
-                                widgetId,
-                                optionId
-                            )
-                        },
-                        onOpenImage
+                        onOptionClick,
+                        onOpenIndexImage,
+                        onOpenImage,
+                        onShareClick,
+                        onBookmarkClick,
+                        onStopVoteClick,
+                        onStartVoteClick
                     )
-                    Spacer(modifier = Modifier.size(18.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier
-                    ) {
-                        IconButton(
-                            title = stringResource(R.string.start),
-                            show = widgetWithOptionsAndVotesForTargetAudience.isCreatorOfTheWidget && widgetWithOptionsAndVotesForTargetAudience.isWidgetNotStarted,
-                            height = 30.dp,
-                            width = 52.dp,
-                            onClick = {
-                                onStartVoteClick(
-                                    widgetWithOptionsAndVotesForTargetAudience.widget.id
-                                )
-                            })
-
-                        IconButton(
-                            title = stringResource(R.string.end),
-                            show = widgetWithOptionsAndVotesForTargetAudience.isCreatorOfTheWidget && widgetWithOptionsAndVotesForTargetAudience.widget.endAt == null && widgetWithOptionsAndVotesForTargetAudience.isAllowedVoting,
-                            height = 29.dp,
-                            width = 44.dp,
-                            onClick = {
-                                onStopVoteClick(
-                                    widgetWithOptionsAndVotesForTargetAudience.widget.id
-                                )
-                            })
-
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.share),
-                            contentDescription = "Share",
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clickable { onShareClick(widgetWithOptionsAndVotesForTargetAudience.widget.id) })
-                        Spacer(modifier = Modifier.weight(1f))
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = if (widgetWithOptionsAndVotesForTargetAudience.isBookmarked) R.drawable.baseline_bookmark_24 else R.drawable.round_bookmark_border_24),
-                            contentDescription = stringResource(R.string.bookmark),
-                            modifier = Modifier
-                                .size(28.dp)
-                                .clickable {
-                                    onBookmarkClick(widgetWithOptionsAndVotesForTargetAudience.widget.id)
-                                })
-                    }
-                    Spacer(modifier = Modifier.size(12.dp))
-                    Text(
-                        text = stringResource(
-                            R.string.total_votes,
-                            widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
-                        ),
-                        color = MaterialTheme.colorScheme.outline,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.W400
+                }
+            } else {
+                ElevatedCard(
+                    modifier = Modifier
+                        .sharedElement(
+                            sharedTransitionScope.rememberSharedContentState(
+                                key = "$index-card-${widgetWithOptionsAndVotesForTargetAudience.widget.id}"
+                            ), animatedVisibilityScope = animatedContentScope
+                        )
+                        .fillMaxWidth()
+                        .padding(all = 16.dp),
+                ) {
+                    CardItem(
+                        index,
+                        widgetWithOptionsAndVotesForTargetAudience,
+                        sharedTransitionScope,
+                        animatedContentScope,
+                        onOptionClick,
+                        onOpenIndexImage,
+                        onOpenImage,
+                        onShareClick,
+                        onBookmarkClick,
+                        onStopVoteClick,
+                        onStartVoteClick
                     )
                 }
             }
         }
-        if (widgetWithOptionsAndVotesForTargetAudience.showAdMob) AppAdmobBanner(modifier = Modifier.fillMaxWidth())
+        if (widgetWithOptionsAndVotesForTargetAudience.showAdMob)
+            AppAdmobBanner(modifier = Modifier.fillMaxWidth())
+    }
+}
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+fun CardItem(
+    index: Int,
+    widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onOptionClick: (String, String) -> Unit = { _, _ -> },
+    onOpenIndexImage: (Int, String?) -> Unit,
+    onOpenImage: (String?) -> Unit,
+    onShareClick: (String) -> Unit = {},
+    onBookmarkClick: (String) -> Unit = {},
+    onStopVoteClick: (String) -> Unit = {},
+    onStartVoteClick: (String) -> Unit = {}
+) {
+    Column(
+        modifier = Modifier.padding(all = 16.dp)
+    ) {
+        WidgetUserView(
+            index = index,
+            user = widgetWithOptionsAndVotesForTargetAudience.user,
+            startedAtFormat = widgetWithOptionsAndVotesForTargetAudience.widget.startAtFormat,
+            sharedTransitionScope = sharedTransitionScope,
+            animatedContentScope = animatedContentScope,
+            onOpenIndexImage
+        )
+        Spacer(modifier = Modifier.size(12.dp))
+        HorizontalDivider(thickness = 1.dp)
+        Spacer(modifier = Modifier.size(6.dp))
+        Text(text = widgetWithOptionsAndVotesForTargetAudience.lastVotedAtFormat?.let {
+            stringResource(R.string.last_voted, it)
+        } ?: widgetWithOptionsAndVotesForTargetAudience.lastVotedAtOptional,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.outline,
+            fontWeight = FontWeight.W400)
+        Spacer(modifier = Modifier.size(6.dp))
+        WidgetView(
+            widget = widgetWithOptionsAndVotesForTargetAudience,
+            sharedTransitionScope,
+            animatedContentScope,
+            { widgetId, optionId ->
+                if (widgetWithOptionsAndVotesForTargetAudience.isAllowedVoting) onOptionClick(
+                    widgetId,
+                    optionId
+                )
+            },
+            onOpenImage
+        )
+        Spacer(modifier = Modifier.size(18.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier
+        ) {
+            IconButton(
+                title = stringResource(R.string.start),
+                show = widgetWithOptionsAndVotesForTargetAudience.isCreatorOfTheWidget && widgetWithOptionsAndVotesForTargetAudience.isWidgetNotStarted,
+                height = 30.dp,
+                width = 52.dp,
+                onClick = {
+                    onStartVoteClick(
+                        widgetWithOptionsAndVotesForTargetAudience.widget.id
+                    )
+                })
+
+            IconButton(
+                title = stringResource(R.string.end),
+                show = widgetWithOptionsAndVotesForTargetAudience.isCreatorOfTheWidget && widgetWithOptionsAndVotesForTargetAudience.widget.endAt == null && widgetWithOptionsAndVotesForTargetAudience.isAllowedVoting,
+                height = 29.dp,
+                width = 44.dp,
+                onClick = {
+                    onStopVoteClick(
+                        widgetWithOptionsAndVotesForTargetAudience.widget.id
+                    )
+                })
+
+            Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.share),
+                contentDescription = "Share",
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable {
+                        onShareClick(
+                            widgetWithOptionsAndVotesForTargetAudience.widget.id
+                        )
+                    })
+            Spacer(modifier = Modifier.weight(1f))
+            Icon(
+                imageVector = ImageVector.vectorResource(id = if (widgetWithOptionsAndVotesForTargetAudience.isBookmarked) R.drawable.baseline_bookmark_24 else R.drawable.round_bookmark_border_24),
+                contentDescription = stringResource(R.string.bookmark),
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable {
+                        onBookmarkClick(widgetWithOptionsAndVotesForTargetAudience.widget.id)
+                    })
+        }
+        Spacer(modifier = Modifier.size(12.dp))
+        Text(
+            text = stringResource(
+                R.string.total_votes,
+                widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
+            ),
+            color = MaterialTheme.colorScheme.outline,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.W400
+        )
     }
 }
 
