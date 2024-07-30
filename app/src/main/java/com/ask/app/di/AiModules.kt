@@ -17,7 +17,7 @@ object AiModules {
     fun provideGeminiModule(): GenerativeModel {
         return GenerativeModel(
             modelName = "gemini-1.5-flash",
-            apiKey = BuildConfig.apiKey
+            apiKey = BuildConfig.APIKEY
         )
     }
 }
