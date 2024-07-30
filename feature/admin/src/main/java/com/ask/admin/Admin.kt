@@ -19,13 +19,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -35,6 +35,7 @@ import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
 import com.ask.common.AppTextField
 import com.ask.common.BaseViewModel
+import com.ask.common.DropDownWithSelect
 import com.ask.widget.GetWidgetsFromAiUseCase
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.workmanager.CreateWidgetWorker
@@ -68,12 +69,13 @@ fun AdminScreen() {
 @Composable
 fun AdminContent(
     state: AdminUiState,
-    onAskAI: (text: String) -> Unit,
+    onAskAI: (text: String, number: Int) -> Unit,
     fetchCategories: () -> Unit,
     onCreateWidget: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
     onRemoveWidget: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit
 ) {
-    var text by remember { mutableStateOf("10") }
+    var text by remember { mutableStateOf("") }
+    var number by remember { mutableIntStateOf(10) }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -82,13 +84,23 @@ fun AdminContent(
     ) {
         item {
             AppTextField(
-                hint = "Enter Number",
+                hint = "Enter Text",
                 value = text,
                 onValueChange = { text = it },
-                keyboardType = KeyboardType.Number,
             )
         }
-
+        item {
+            Row {
+                Text(
+                    text = "Enter Number of Widgets", style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                DropDownWithSelect(list = (10..50).map { it },
+                    title = number.toString(),
+                    onItemSelect = { number = it },
+                    itemString = { it.toString() })
+            }
+        }
         item {
             Row(modifier = Modifier.fillMaxWidth()) {
                 FlowRow(
@@ -113,7 +125,7 @@ fun AdminContent(
             if (state.loading) {
                 CircularProgressIndicator()
             } else {
-                Button(onClick = { onAskAI(text) }) {
+                Button(onClick = { onAskAI(text, number) }) {
                     Text(text = "Ask AI")
                 }
             }
@@ -201,13 +213,18 @@ class AdminViewModel @Inject constructor(
         }
     }
 
-    fun askAI(number: String) {
+    fun askAI(text: String, number: Int) {
         safeApiCall({
-            _uiStateFlow.value = _uiStateFlow.value.copy(loading = true)
+            _uiStateFlow.value =
+                _uiStateFlow.value.copy(loading = true, widgets = emptyList(), error = null)
         }, {
             val widgets =
-                getWidgetWithAiUseCase(number.toInt(), uiStateFlow.value.selectedCategories)
-            _uiStateFlow.value = _uiStateFlow.value.copy(loading = false, widgets = widgets)
+                getWidgetWithAiUseCase(
+                    number,
+                    uiStateFlow.value.selectedCategories,
+                    myWords = text.takeIf { it.isNotEmpty() })
+            _uiStateFlow.value =
+                _uiStateFlow.value.copy(loading = false, widgets = widgets, error = null)
         }, {
             _uiStateFlow.value = _uiStateFlow.value.copy(loading = false, error = it)
         })

@@ -17,13 +17,15 @@ class GetWidgetsFromAiUseCase @Inject constructor(
     @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
 
-    suspend operator fun invoke(totalQuestions: Int, categories: List<String>) =
+    suspend operator fun invoke(
+        totalQuestions: Int,
+        categories: List<String>,
+        myWords: String? = null
+    ) =
         withContext(dispatcher) {
             val prompt =
-                "provide $totalQuestions ${Widget.WidgetType.entries.joinToString("/")} with options (min 2 and max 4 and max 5 words each option) based on latest month ${
-                    categories.joinToString(
-                        ","
-                    )
+                "provide latest and fresh $totalQuestions ${Widget.WidgetType.entries.joinToString("/")} with options (min 2 and max 4 and max 5 words each option) based on latest ${
+                    myWords ?: categories.joinToString(",")
                 } in json format like " +
                     "[ " +
                     "{ \"widgetType\": <${Widget.WidgetType.entries.joinToString("|")}> , \"category\": <category> , \"question\" : <your question>, \"options\" : [ { \"text\" : <your option>, isCorrect: <true,false> (add this only if widgetType is ${Widget.WidgetType.Quiz.name}) }, { \"text\" : <your option> } ] }, " +
