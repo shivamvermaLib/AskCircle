@@ -47,9 +47,7 @@ fun SplashScreen(route: String, navigateToHome: () -> Unit) {
             }
         }
 
-        viewModel.init(isConnected) {
-            context.preLoadImages(it)
-        }
+        viewModel.init(isConnected, context::preLoadImages)
         viewModel.screenOpenEvent(route)
     }
     SplashScreen(uiState)
@@ -67,6 +65,7 @@ private fun SplashScreen(
                 .padding(it),
             contentAlignment = Alignment.CenterStart
         ) {
+
             Column(
                 horizontalAlignment = Alignment.Start,
                 modifier = Modifier.padding(all = 12.dp)
@@ -85,7 +84,7 @@ private fun SplashScreen(
                 if (uiState is SplashUIState.Error)
                     Text(
                         text = uiState.message,
-                        style = MaterialTheme.typography.titleLarge
+                        style = MaterialTheme.typography.titleMedium
                     )
 
                 if (uiState == SplashUIState.Loading)
@@ -98,6 +97,7 @@ private fun SplashScreen(
         }
     }
 }
+
 
 class SplashScreenProvider : PreviewParameterProvider<SplashUIState> {
     override val values = sequenceOf(

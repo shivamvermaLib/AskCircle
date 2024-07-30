@@ -11,7 +11,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 
 
-suspend fun Context.preLoadImages(urls: List<String>) = coroutineScope {
+suspend fun Context.preLoadImages(urls: List<String>): Unit = coroutineScope {
     urls.map { url ->
         async {
             val imageRequest =
