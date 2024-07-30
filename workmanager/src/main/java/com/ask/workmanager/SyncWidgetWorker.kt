@@ -35,8 +35,8 @@ class SyncWidgetWorker @AssistedInject constructor(
     override suspend fun doWork(): Result {
         return try {
             setProgress(workDataOf(STATUS to WorkerStatus.Loading.name))
-            syncWidgetUseCase.invoke {
-                applicationContext.preLoadImages(it)
+            syncWidgetUseCase.invoke(preloadImages = applicationContext::preLoadImages) {
+                println("Progress: $it")
             }.let {
                 if (it) {
                     val pair = createWidgetTitleMessage.random()

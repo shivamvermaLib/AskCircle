@@ -28,7 +28,8 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
 
     suspend operator fun invoke(
         isConnected: Boolean = true,
-        preloadImages: suspend (List<String>) -> Unit
+        preloadImages: suspend (List<String>) -> Unit,
+        onProgress: (Float) -> Unit,
     ): Boolean = withContext(dispatcher) {
         if (!isConnected) {
             if (userRepository.getCurrentUserOptional() == null) {
@@ -36,6 +37,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             }
             return@withContext false
         }
+        onProgress(0.2f)
         remoteConfigRepository.fetchInit()
         val refreshCountServer = remoteConfigRepository.refreshCountServer()
         val refreshCountLocal = sharedPreference.getRefreshCount()
@@ -59,6 +61,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         } else if (widgetRepository.doesSyncRequired(lastUpdatedTime)) {
             refreshNeeded = true
         }
+        onProgress(0.38f)
         if (refreshNeeded) {
             val time = System.currentTimeMillis()
 
@@ -70,6 +73,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     userWithLocation.user.id,
                     userWithLocation.userCategories
                 ).let { list ->
+                    onProgress(0.56f)
                     widgetRepository.syncWidgetsFromServer(
                         userRepository.getCurrentUserId(),
                         lastUpdatedTime,
@@ -79,11 +83,13 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         },
                         preloadImages
                     ).also {
+                        onProgress(0.8f)
                         countryRepository.syncCountries()
                         categoryRepository.syncCategories()
                     }
                 }
             }
+            onProgress(0.9f)
             val duration = System.currentTimeMillis() - time
             println("Duration for Sync: $duration")
             analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
@@ -96,10 +102,10 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     profileTime = System.currentTimeMillis()
                 )
             )
-
+            onProgress(1f)
             return@withContext sendNotification
         } else {
-            println("Sync not required")
+            onProgress(1f)
             return@withContext false
         }
     }
