@@ -42,6 +42,7 @@ dependencies {
     implementation(project(":data:core"))
     implementation(project(":data:analytics"))
     implementation(project(":data:category"))
+    implementation(libs.generativeai)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

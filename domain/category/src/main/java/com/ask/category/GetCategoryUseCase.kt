@@ -4,6 +4,6 @@ import javax.inject.Inject
 
 class GetCategoryUseCase @Inject constructor(private val categoryRepository: CategoryRepository) {
 
-    operator fun invoke() = categoryRepository.getAllCategories()
+    operator fun invoke() = categoryRepository.getAllCategoriesFlow()
 
 }

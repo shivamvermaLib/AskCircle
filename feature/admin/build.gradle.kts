@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.kspPlugin)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
@@ -56,7 +56,12 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
     implementation(project(":feature:common"))
-    kapt(libs.hilt.compiler)
+    implementation(project(":domain:widget"))
+    implementation(project(":data:widget"))
+    implementation(project(":workmanager"))
+    implementation(project(":data:category"))
+    implementation(project(":domain:category"))
+    ksp(libs.hilt.compiler)
 
     implementation(libs.generativeai)
     implementation(project(":data:analytics"))

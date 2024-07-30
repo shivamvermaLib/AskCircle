@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kspPlugin)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.firebase.crashlytics)
+    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
 android {
@@ -104,6 +105,8 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
+
+    implementation(libs.generativeai)
 
     // For instrumentation tests
     androidTestImplementation(libs.hilt.android.testing)

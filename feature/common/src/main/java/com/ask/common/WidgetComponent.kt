@@ -179,7 +179,7 @@ fun CardItem(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline,
             fontWeight = FontWeight.W400)
-        Spacer(modifier = Modifier.size(6.dp))
+        Spacer(modifier = Modifier.size(12.dp))
         WidgetView(
             widget = widgetWithOptionsAndVotesForTargetAudience,
             sharedTransitionScope,
@@ -351,7 +351,7 @@ fun WidgetView(
     widget.widget.description?.let {
         Text(text = it, style = MaterialTheme.typography.bodySmall)
     }
-    Spacer(modifier = Modifier.size(10.dp))
+    Spacer(modifier = Modifier.size(8.dp))
     if (widget.isImageOnly) {
         NonLazyGrid(
             modifier = Modifier,

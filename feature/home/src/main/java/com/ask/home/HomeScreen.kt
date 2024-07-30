@@ -193,7 +193,7 @@ private fun HomeScreen(
                     }
                 },
                 navigationIcon = {
-                    if (currentRoute?.contains("WidgetView") == true || currentRoute?.contains("ImageView") == true) {
+                    if (didNavigationIconRequired(currentRoute)) {
                         IconButton(onClick = { homeNavigationController.popBackStack() }) {
                             Icon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
@@ -217,10 +217,7 @@ private fun HomeScreen(
         floatingActionButton = {
             val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
-            AnimatedVisibility(
-                visible = homeUiState.createWidgetStatus != WorkerStatus.Loading &&
-                    (currentRoute?.contains("Dashboard") == true || currentRoute?.contains("Profile") == true)
-            ) {
+            AnimatedVisibility(visible = didFloatingActionButtonRequired(currentRoute) && homeUiState.createWidgetStatus != WorkerStatus.Loading) {
                 ExtendedFloatingActionButton(
                     onClick = onCreateClick,
                     icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
@@ -231,7 +228,7 @@ private fun HomeScreen(
         bottomBar = {
             val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
-            if (currentRoute?.contains("Dashboard") == true || currentRoute?.contains("Profile") == true)
+            if (didNavigationBottomRequired(currentRoute)) {
                 NavigationBar {
                     listOf(
                         R.string.dashboard, R.string.profile
@@ -247,7 +244,7 @@ private fun HomeScreen(
                             )
                         },
                             label = { Text(stringResource(id = item)) },
-                            selected = currentRoute.contains(stringResource),
+                            selected = currentRoute?.contains(stringResource) == true,
                             onClick = {
                                 when (item) {
                                     R.string.dashboard -> homeNavigationController.navigate(
@@ -263,8 +260,8 @@ private fun HomeScreen(
                             })
                     }
                 }
-        }
-    ) {
+            }
+        }) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -285,6 +282,10 @@ private fun HomeScreen(
             )
         }
     }
+}
+
+fun didNavigationIconRequired(currentRoute: String?): Boolean {
+    return currentRoute?.contains("WidgetView") == true || currentRoute?.contains("ImageView") == true || currentRoute?.contains("Admin") == true
 }
 
 @Preview
@@ -417,6 +418,13 @@ fun HomeNavigation(
     }
 }
 
+fun didNavigationBottomRequired(currentRoute: String?): Boolean {
+    return currentRoute?.contains("Dashboard") == true || currentRoute?.contains("Profile") == true
+}
+
+fun didFloatingActionButtonRequired(currentRoute: String?): Boolean {
+    return currentRoute?.contains("Dashboard") == true
+}
 
 @Serializable
 sealed interface HomeTabScreen {
@@ -431,6 +439,7 @@ sealed interface HomeTabScreen {
 
     @Serializable
     data class WidgetView(val index: Int, val widgetId: String)
+
     @Serializable
     data object Admin : HomeTabScreen
 }
