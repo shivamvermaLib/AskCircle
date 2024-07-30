@@ -30,12 +30,13 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         isConnected: Boolean = true,
         preloadImages: suspend (List<String>) -> Unit,
         onProgress: (Float) -> Unit,
-    ): Boolean = withContext(dispatcher) {
+        onNotification: (NotificationType) -> Unit,
+    ) = withContext(dispatcher) {
         if (!isConnected) {
             if (userRepository.getCurrentUserOptional() == null) {
                 throw Exception("User not signed in")
             }
-            return@withContext false
+            return@withContext
         }
         onProgress(0.2f)
         remoteConfigRepository.fetchInit()
@@ -64,8 +65,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         onProgress(0.38f)
         if (refreshNeeded) {
             val time = System.currentTimeMillis()
-
-            val sendNotification = userRepository.createUser().let { userWithLocation ->
+            userRepository.createUser().let { userWithLocation ->
                 generateCombinationsForUsers(
                     userWithLocation.user.gender,
                     userWithLocation.user.age,
@@ -81,7 +81,8 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         {
                             userRepository.getUserDetailList(it, true, preloadImages)
                         },
-                        preloadImages
+                        preloadImages,
+                        onNotification
                     ).also {
                         onProgress(0.8f)
                         countryRepository.syncCountries()
@@ -91,7 +92,6 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             }
             onProgress(0.9f)
             val duration = System.currentTimeMillis() - time
-            println("Duration for Sync: $duration")
             analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
             sharedPreference.setRefreshCount(refreshCountServer)
             sharedPreference.setDbVersion(dbVersion)
@@ -103,10 +103,10 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                 )
             )
             onProgress(1f)
-            return@withContext sendNotification
+            return@withContext
         } else {
             onProgress(1f)
-            return@withContext false
+            return@withContext
         }
     }
 }

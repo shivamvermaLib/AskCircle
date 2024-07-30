@@ -39,11 +39,11 @@ class CreateWidgetWorker @AssistedInject constructor(
             widgetString?.let {
                 Json.decodeFromString<WidgetWithOptionsAndVotesForTargetAudience>(it)
             }?.let { widgetWithOptionsAndVotesForTargetAudience ->
-                createWidgetUseCase.invoke(widgetWithOptionsAndVotesForTargetAudience, {
-                    applicationContext.getExtension(it)!!
-                }, {
-                    applicationContext.getResizedImageByteArray(it)
-                }
+                createWidgetUseCase.invoke(
+                    widgetWithOptionsAndVotesForTargetAudience, {
+                        applicationContext.getExtension(it)!!
+                    }, applicationContext::getResizedImageByteArray,
+                    applicationContext::preLoadImages
                 ).let { it ->
                     applicationContext.preLoadImages(it.options.map { it.option.imageUrl.getAllImages() }
                         .flatten())

@@ -98,6 +98,15 @@ interface WidgetDao {
         voteList: List<Widget.Option.Vote>
     )
 
+    @Query("select count(*) from widgets")
+    suspend fun getWidgetsCount(): Int
+
+    @Query("select count(*) from `widget-option-votes` where optionId in (select id from `widgets-options` where widgetId in (select id from widgets where creatorId = :userId))")
+    suspend fun getUserWidgetsVoteCount(userId: String): Int
+
+    @Query("select id from widgets where (ROUND((strftime('%s', 'now') * 1000 - createdAt) / 2000)) % 2 = 0 AND createdAt <= strftime('%s', 'now') * 1000 and id not in (select widgetId from `widgets-options` where id in (select optionId from `widget-option-votes` where userId = :userId))")
+    suspend fun getWidgetIdsOnWhichUserNotVoted(userId: String): List<String>
+
     @Upsert
     suspend fun insertVotes(voteList: List<Widget.Option.Vote>)
 

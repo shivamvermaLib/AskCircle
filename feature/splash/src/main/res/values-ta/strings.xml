@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="initializing">தொடங்குகிறது</string>
-    <string name="loading">ஏற்றுகிறது</string>
-    <string name="success">வெற்றி</string>
-    <string name="error">பிழை</string>
-
-</resources>

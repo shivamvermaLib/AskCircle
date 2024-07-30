@@ -1,0 +1,26 @@
+<resources>
+    <string name="new_widget_added">تمت إضافة القطعة الجديدة</string>
+    <string name="a_new_widget_has_been_created_and_added_to_your_collection_check_it_out_now">تم إنشاء عنصر واجهة مستخدم جديد وإضافته إلى مجموعتك. افحصه الآن!</string>
+    <string name="your_widget_collection_just_got_bigger">مجموعة أدواتك أصبحت أكبر!</string>
+    <string name="explore_the_latest_widget_in_your_collection_open_the_app_to_see_it">استكشف أحدث الأدوات في مجموعتك. افتح التطبيق لرؤيته!</string>
+    <string name="exciting_news_new_widget_created">اخبار حماسية! تم إنشاء القطعة الجديدة</string>
+    <string name="a_brand_new_widget_is_available_don_t_miss_out_see_it_now_in_your_collection">القطعة الجديدة متاحة. لا تفوت الفرصة، شاهدها الآن في مجموعتك!</string>
+    <string name="new_interaction_on_your_widget">تفاعل جديد على القطعة الخاصة بك!</string>
+    <string name="a_user_has_just_engaged_with_your_widget_check_the_updated_results_now">لقد تفاعل المستخدم للتو مع أداتك. تحقق من النتائج المحدثة الآن!</string>
+    <string name="your_widget_just_got_an_interaction">القطعة الخاصة بك حصلت للتو على التفاعل!</string>
+    <string name="someone_has_participated_with_your_widget_view_the_latest_results_and_insights">وقد شارك شخص ما مع القطعة الخاصة بك. عرض أحدث النتائج والأفكار.</string>
+    <string name="widget_update_new_interaction_received">تحديث القطعة: تم تلقي تفاعل جديد</string>
+    <string name="your_widget_has_received_a_new_interaction_head_over_to_see_the_current_standings">لقد تلقت أداتك تفاعلا جديدا. توجه لرؤية الترتيب الحالي.</string>
+    <string name="interaction_alert_your_widget_was_engaged_with">تنبيه التفاعل: تم التعامل مع أداتك المصغّرة!</string>
+    <string name="a_new_interaction_has_been_registered_on_your_widget_check_out_the_updated_responses">تم تسجيل تفاعل جديد على عنصر واجهة المستخدم الخاص بك. تحقق من الردود المحدثة.</string>
+    <string name="don_t_miss_out">لا تفوت!</string>
+    <string name="your_vote_is_needed">هناك حاجة إلى صوتك!</string>
+    <string name="we_value_your_opinion">نحن نقدر رأيك</string>
+    <string name="reminder_vote_now">تذكير: التصويت الآن</string>
+    <string name="your_opinion_counts">رأيك مهم</string>
+    <string name="your_input_matters_vote_on_the_widget_now_and_let_your_voice_be_heard">مدخلاتك مهمة. التصويت على القطعة الآن والسماح لصوتك أن يسمع!</string>
+    <string name="take_a_moment_to_vote_on_the_widget_your_opinion_can_make_a_difference">نتوقف لحظة للتصويت على القطعة. رأيك يمكن أن يحدث فرقا.</string>
+    <string name="haven_t_voted_yet_cast_your_vote_and_help_shape_the_outcome">لم تصوت بعد؟ أدل بصوتك وساعد في تشكيل النتيجة.</string>
+    <string name="don_t_forget_to_vote_on_the_widget_your_participation_is_important">لا تنسى التصويت على القطعة. مشاركتك مهمة!</string>
+    <string name="make_sure_your_voice_is_heard_vote_on_the_widget_today">كن متأكدا أن صوتك مسموع. التصويت على القطعة اليوم!</string>
+</resources>

@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="initializing">ఆరంభిస్తున్నాం</string>
-    <string name="loading">లోడ్ అవుతోంది</string>
-    <string name="success">విజయం</string>
-    <string name="error">లోపం</string>
-
-</resources>

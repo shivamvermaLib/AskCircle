@@ -44,6 +44,7 @@ class CreateWidgetUseCase @Inject constructor(
         widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
         getExtension: (String) -> String,
         getByteArray: suspend (String) -> Map<ImageSizeType, ByteArray>,
+        preloadImages: suspend (List<String>) -> Unit
     ): WidgetWithOptionsAndVotesForTargetAudience {
         createWidgetEvent(widgetWithOptionsAndVotesForTargetAudience)
         return widgetRepository.createWidget(
@@ -54,7 +55,8 @@ class CreateWidgetUseCase @Inject constructor(
             ),
             userRepository.getCurrentUserId(),
             getExtension,
-            getByteArray
+            getByteArray,
+            preloadImages
         ).also {
             val lastUpdatedTime = sharedPreference.getUpdatedTime()
             sharedPreference.setUpdatedTime(

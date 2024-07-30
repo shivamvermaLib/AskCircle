@@ -623,13 +623,14 @@ fun ImageOption(
                             color = Color.White.copy(alpha = 0.8f), shape = CircleShape
                         )
                         .padding(bottom = 6.dp, end = 6.dp)
-                        .align(Alignment.BottomEnd)
+                        .align(Alignment.Center)
                 ) {
                     Icon(
                         ImageVector.vectorResource(id = R.drawable.baseline_delete_24),
                         stringResource(R.string.delete, option.text ?: EMPTY),
                         modifier = Modifier
                             .size(28.dp)
+                            .align(Alignment.Center)
                             .clickable { onDeleteIconClick(index) },
                         tint = Color.Unspecified
                     )
