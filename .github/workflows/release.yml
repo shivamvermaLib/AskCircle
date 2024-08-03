@@ -46,6 +46,11 @@ jobs:
           BANNER_ID: ${{ secrets.BANNER_ID }}
         run: echo BANNER_ID="$BANNER_ID" > ./local.properties
 
+      - name: Update Username from Secrets 2
+        env:
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+        run: echo GEMINI_KEY="GEMINI_KEY" > ./local.properties
+
       #2
       - name: Build Release apk
         env:
