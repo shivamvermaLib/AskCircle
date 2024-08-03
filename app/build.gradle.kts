@@ -36,7 +36,7 @@ android {
             useSupportLibrary = true
         }
 
-        buildConfigField("String", "APIKEY", localProperties.getProperty("APIKEY"))
+        buildConfigField("String", "GEMINI_KEY", localProperties.getProperty("GEMINI_KEY"))
     }
 
     signingConfigs {
