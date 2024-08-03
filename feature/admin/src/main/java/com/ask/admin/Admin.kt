@@ -1,6 +1,18 @@
 package com.ask.admin
 
+import android.os.Build
+import android.view.View
+import android.webkit.ConsoleMessage
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -11,12 +23,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -25,35 +46,39 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
-import com.ask.analytics.AnalyticsLogger
-import com.ask.category.GetCategoryUseCase
+import com.ask.common.AppImage
+import com.ask.common.AppOptionTypeSelect
 import com.ask.common.AppTextField
-import com.ask.common.BaseViewModel
 import com.ask.common.DropDownWithSelect
-import com.ask.widget.GetWidgetsFromAiUseCase
+import com.ask.common.WidgetWithUserView
+import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.workmanager.CreateWidgetWorker
-import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-import kotlin.random.Random
 
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun AdminScreen() {
+fun AdminScreen(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
+    onAdminMoveToCreate: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
+) {
     val viewModel = hiltViewModel<AdminViewModel>()
     val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
     AdminContent(
+        sharedTransitionScope = sharedTransitionScope,
+        animatedContentScope = animatedContentScope,
         state = state,
         onAskAI = viewModel::askAI,
         onCreateWidget = {
@@ -61,36 +86,66 @@ fun AdminScreen() {
             viewModel.removeWidget(it)
         },
         onRemoveWidget = viewModel::removeWidget,
-        fetchCategories = viewModel::fetchCategories
+        fetchCategories = viewModel::fetchCategories,
+        onAdminMoveToCreate = {
+            onAdminMoveToCreate(it)
+            viewModel.removeWidget(it)
+        },
+        onWidgetSelectForImage = viewModel::selectWidgetForTextToImageOption,
+        onFetchImage = viewModel::onFetchImage,
+        onUpdateWidget = viewModel::updateWidget,
+        onOptionSelected = viewModel::onOptionSelected
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun AdminContent(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedContentScope: AnimatedContentScope,
     state: AdminUiState,
     onAskAI: (text: String, number: Int) -> Unit,
     fetchCategories: () -> Unit,
     onCreateWidget: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
-    onRemoveWidget: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit
+    onRemoveWidget: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
+    onAdminMoveToCreate: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
+    onWidgetSelectForImage: (widget: WidgetWithOptionsAndVotesForTargetAudience?) -> Unit,
+    onFetchImage: (String) -> Unit,
+    onUpdateWidget: (WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
+    onOptionSelected: (Widget.Option) -> Unit,
 ) {
     var text by remember { mutableStateOf("") }
     var number by remember { mutableIntStateOf(10) }
+
+    BottomSheetForTextToImage(
+        state.selectedWidget,
+        state.selectedOption,
+        state.webViewSelectedImages,
+        onFetchImage,
+        onUpdateWidget,
+        onOptionSelected,
+        onWidgetSelectForImage
+    ) {
+        onWidgetSelectForImage(null)
+    }
+
+
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(all = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         item {
             AppTextField(
                 hint = "Enter Text",
                 value = text,
                 onValueChange = { text = it },
+                modifier = Modifier.padding(all = 16.dp)
             )
         }
         item {
-            Row {
+            Row(
+                modifier = Modifier.padding(all = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = "Enter Number of Widgets", style = MaterialTheme.typography.titleSmall
                 )
@@ -102,17 +157,22 @@ fun AdminContent(
             }
         }
         item {
-            Row(modifier = Modifier.fillMaxWidth()) {
-                FlowRow(
-                    modifier = Modifier
-                        .weight(1f),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    state.selectedCategories.fastForEach {
-                        FilterChip(
-                            selected = true,
-                            onClick = { /*TODO*/ },
-                            label = { Text(text = it) })
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(all = 16.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "Categories")
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        state.selectedCategories.fastForEach {
+                            FilterChip(selected = true,
+                                onClick = { /*TODO*/ },
+                                label = { Text(text = it) })
+                        }
                     }
                 }
                 Button(onClick = fetchCategories) {
@@ -120,133 +180,231 @@ fun AdminContent(
                 }
             }
         }
-
         item {
             if (state.loading) {
-                CircularProgressIndicator()
+                Box(modifier = Modifier.padding(all = 16.dp)) {
+                    CircularProgressIndicator()
+                }
             } else {
-                Button(onClick = { onAskAI(text, number) }) {
+                Button(
+                    onClick = { onAskAI(text, number) }, modifier = Modifier.padding(all = 16.dp)
+                ) {
                     Text(text = "Ask AI")
                 }
             }
         }
         if (state.error != null) {
             item(key = state.error) {
-                Text(text = state.error)
+                Text(text = state.error, modifier = Modifier.padding(all = 16.dp))
             }
         }
-        items(state.widgets) { widget ->
-            Row(
-                modifier = Modifier.padding(all = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(all = 6.dp)
-                        .weight(2f)
-                ) {
-                    Text(text = widget.widget.title, style = MaterialTheme.typography.titleMedium)
-                    Text(text = widget.widget.widgetType.name)
-                    Spacer(modifier = Modifier.size(4.dp))
-                    for (option in widget.options) {
-                        Text(
-                            text = option.option.text ?: "",
-                            modifier = Modifier.padding(vertical = 4.dp)
-                        )
-                    }
-                }
-
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.End,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { onCreateWidget(widget) })
-                    {
-                        Text(text = "Create")
-                    }
-                    Button(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { onRemoveWidget(widget) })
-                    {
-                        Text(text = "Remove")
-                    }
-                }
-
-            }
+        itemsIndexed(state.widgets) { index, widget ->
+            WidgetWithUserView(index = index,
+                isAdmin = true,
+                widgetWithOptionsAndVotesForTargetAudience = widget,
+                sharedTransitionScope = sharedTransitionScope,
+                animatedContentScope = animatedContentScope,
+                onOpenIndexImage = { _, _ -> },
+                onOpenImage = {},
+                onAdminCreate = { onCreateWidget(widget) },
+                onAdminRemove = { onRemoveWidget(widget) },
+                onAdminMoveToCreate = {
+                    onAdminMoveToCreate(widget)
+                },
+                onAdminUpdateTextToImage = {
+                    onWidgetSelectForImage(widget)
+                })
         }
     }
 }
 
-
-@HiltViewModel
-class AdminViewModel @Inject constructor(
-    analyticsLogger: AnalyticsLogger,
-    private val getCategoryUseCase: GetCategoryUseCase,
-    private val getWidgetWithAiUseCase: GetWidgetsFromAiUseCase
-) : BaseViewModel(analyticsLogger) {
-
-    private val _uiStateFlow = MutableStateFlow(AdminUiState())
-    val uiStateFlow = _uiStateFlow.asStateFlow()
-
-    init {
-        fetchCategories()
-    }
-
-    fun fetchCategories() {
-        viewModelScope.launch {
-            val categories = if (uiStateFlow.value.categories.isNotEmpty()) {
-                uiStateFlow.value.categories
-            } else {
-                getCategoryUseCase().first()
-                    .map { listOf(it.category.name) + it.subCategories.map { it.title } }
-                    .flatten()
-            }
-            _uiStateFlow.value =
-                _uiStateFlow.value.copy(
-                    categories = categories,
-                    selectedCategories = categories.shuffled().take(Random.nextInt(3, 10))
+@Composable
+fun WebViewComponent(query: String, collectedImageCount: Int, onFetchImage: (String) -> Unit) {
+    var webView: WebView? by remember { mutableStateOf(null) }
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(all = 12.dp)
+        ) {
+            Text(text = "Get Images = $collectedImageCount")
+            TextButton(onClick = {
+                webView?.evaluateJavascript(
+                    "(function() { " + "const anchorTags = document.querySelectorAll('a[href]'); // Get all anchor tags\n" + "const hrefs = []; // Array to store href values\n" + "\n" + "anchorTags.forEach(tag => {\n" + "  if(tag.href.includes(\"/imgres?q=\")){  \n" + "      hrefs.push(tag.href);\n" + "  }\n" + "});\n" + "\n" + "console.log(hrefs.length);" + "return hrefs;" + " })();",
+                    onFetchImage
                 )
+            }) {
+                Text(text = "Fetch")
+            }
         }
-    }
+        AndroidView(
+            factory = { context ->
+                WebView(context).apply {
+                    if (Build.VERSION.SDK_INT >= 19) {
+                        // chromium, enable hardware acceleration
+                        setLayerType(View.LAYER_TYPE_HARDWARE, null)
+                    } else {
+                        // older android version, disable hardware acceleration
+                        setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+                    }
+                    settings.javaScriptEnabled = true
+                    settings.userAgentString =
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+                    loadUrl("https://www.google.com/search?hl=en&tbm=isch&q=$query")
+                    webView = this
+                    webViewClient = object : WebViewClient() {
+                        override fun onPageFinished(view: WebView?, url: String?) {
+                            super.onPageFinished(view, url)
+                            // Inject JavaScript to get the HTML source
+                        }
 
-    fun askAI(text: String, number: Int) {
-        safeApiCall({
-            _uiStateFlow.value =
-                _uiStateFlow.value.copy(loading = true, widgets = emptyList(), error = null)
-        }, {
-            val widgets =
-                getWidgetWithAiUseCase(
-                    number,
-                    uiStateFlow.value.selectedCategories,
-                    myWords = text.takeIf { it.isNotEmpty() })
-            _uiStateFlow.value =
-                _uiStateFlow.value.copy(loading = false, widgets = widgets, error = null)
-        }, {
-            _uiStateFlow.value = _uiStateFlow.value.copy(loading = false, error = it)
-        })
-    }
 
-
-    fun removeWidget(widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience) {
-        viewModelScope.launch {
-            _uiStateFlow.value = _uiStateFlow.value.copy(
-                widgets = _uiStateFlow.value.widgets.filter {
-                    it != widgetWithOptionsAndVotesForTargetAudience
+                    }
+                    webChromeClient = object : WebChromeClient() {
+                        override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
+                            println("console: ${consoleMessage?.message()}")
+                            return super.onConsoleMessage(consoleMessage)
+                        }
+                    }
                 }
-            )
-        }
+            }, modifier = Modifier
+                .fillMaxSize()
+                .background(color = Color.Red)
+                .clipToBounds()
+                .verticalScroll(rememberScrollState())
+        )
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BottomSheetForTextToImage(
+    widget: WidgetWithOptionsAndVotesForTargetAudience?,
+    selectedOption: Widget.Option?,
+    images: List<String>,
+    onFetchImage: (String) -> Unit,
+    onUpdateWidget: (WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
+    onOptionSelected: (Widget.Option) -> Unit,
+    onSelectWidget: (WidgetWithOptionsAndVotesForTargetAudience?) -> Unit,
+    onDismissRequest: () -> Unit,
+) {
+    if (widget != null) {
+        var selectWebView by remember { mutableStateOf(false) }
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 
-data class AdminUiState(
-    val loading: Boolean = false,
-    val error: String? = null,
-    val categories: List<String> = emptyList(),
-    val selectedCategories: List<String> = emptyList(),
-    val widgets: List<WidgetWithOptionsAndVotesForTargetAudience> = emptyList()
-)
+        val modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+        ModalBottomSheet(
+            modifier = Modifier.fillMaxSize(),
+            sheetState = sheetState,
+            onDismissRequest = onDismissRequest
+        ) {
+            Row(
+                modifier = modifier, verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = widget.widget.title,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.weight(1f)
+                )
+                Spacer(modifier = Modifier.size(10.dp))
+                TextButton(onClick = {
+                    onUpdateWidget(widget.copy(options = widget.options.map { optionWithVotes ->
+                        optionWithVotes.copy(
+                            option = optionWithVotes.option.copy(
+                                text = null
+                            )
+                        )
+                    }))
+                    onDismissRequest()
+                }, enabled = (widget.isTextOnly && widget.isImageOnly).not()) {
+                    Text(text = "Done")
+                }
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically, modifier = modifier
+            ) {
+                Text(
+                    text = "Options", style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                DropDownWithSelect(list = widget.options,
+                    title = selectedOption?.text ?: "No Text",
+                    onItemSelect = { t ->
+                        onOptionSelected(t.option)
+                    },
+                    itemString = { it.option.text.toString() })
+
+            }
+
+            Row(
+                modifier = modifier, verticalAlignment = Alignment.CenterVertically
+            ) {
+                AppOptionTypeSelect(
+                    selected = selectWebView,
+                    onSelectedChange = { selectWebView = true },
+                    title = "WebView",
+                    icon = null
+                )
+                Spacer(modifier = Modifier.size(5.dp))
+                AppOptionTypeSelect(
+                    selected = selectWebView.not(),
+                    onSelectedChange = { selectWebView = false },
+                    title = "Images",
+                    icon = null
+                )
+            }
+
+            Box(modifier = modifier) {
+                if (selectWebView) {
+                    WebViewComponent(query = selectedOption?.text ?: "", images.size, onFetchImage)
+                } else {
+                    LazyVerticalGrid(columns = GridCells.Fixed(3)) {
+                        if (images.isEmpty()) {
+                            item {
+                                Text(text = "No Images Found")
+                            }
+                        }
+                        items(images) { item ->
+                            Box(modifier = Modifier) {
+                                AppImage(
+                                    modifier = Modifier
+                                        .clickable {
+                                            onSelectWidget(widget.copy(options = widget.options.map {
+                                                if (it.option.id == selectedOption?.id) {
+                                                    it.copy(
+                                                        option = it.option.copy(imageUrl = item)
+                                                    )
+                                                } else {
+                                                    it
+                                                }
+                                            }))
+                                        },
+                                    url = item,
+                                    contentDescription = item,
+                                    contentScale = ContentScale.Crop,
+                                    placeholder = R.drawable.baseline_image_24,
+                                    error = R.drawable.baseline_broken_image_24
+                                )
+                                Text(
+                                    text = widget.options.find { it.option.imageUrl == item }?.option?.text
+                                        ?: "No Text",
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(vertical = 3.dp, horizontal = 5.dp)
+                                        .background(
+                                            color = MaterialTheme.colorScheme.primaryContainer,
+                                            shape = MaterialTheme.shapes.small
+                                        )
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

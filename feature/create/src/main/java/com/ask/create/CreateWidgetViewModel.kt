@@ -10,6 +10,7 @@ import com.ask.core.EMPTY
 import com.ask.country.Country
 import com.ask.country.GetCountryUseCase
 import com.ask.widget.Widget
+import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -168,6 +169,21 @@ class CreateWidgetViewModel @Inject constructor(
         } else if (endAt >= _startAtFlow.value) {
             _endAtFlow.value = endAt
         }
+    }
+
+    fun setWidget(widget: WidgetWithOptionsAndVotesForTargetAudience) {
+        _titleFlow.value = widget.widget.title
+        _selectedWidgetCategories.value = widget.categories
+        _descFlow.value = widget.widget.description ?: EMPTY
+        _optionType.value =
+            if (widget.options.any { it.option.text == null && it.option.imageUrl != null }) CreateWidgetUiState.WidgetOptionType.Image else CreateWidgetUiState.WidgetOptionType.Text
+        _options.value = widget.options.map { it.option }
+        _targetAudienceGender.value = widget.targetAudienceGender
+        _targetAudienceAgeRange.value = widget.targetAudienceAgeRange
+        _targetAudienceLocations.value = widget.targetAudienceLocations
+        _startAtFlow.value = widget.widget.startAt
+        _endAtFlow.value = widget.widget.endAt
+        _errorFlow.value = null
     }
 
     val uiStateFlow = combine(

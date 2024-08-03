@@ -26,9 +26,7 @@ class SplashViewModel @Inject constructor(
         }, {
             syncUsersAndWidgetsUseCase.invoke(isConnected, preloadImages, {
                 _uiStateFlow.value = SplashUIState.Loading(it)
-            }, {
-
-            })
+            }, {})
             _uiStateFlow.value = SplashUIState.Success(
                 remoteConfigRepository.getSyncTimeInMinutes()
             )

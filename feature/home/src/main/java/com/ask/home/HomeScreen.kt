@@ -73,6 +73,7 @@ import com.ask.home.imageview.ImageViewScreen
 import com.ask.home.profile.ProfileScreen
 import com.ask.home.widgetview.WidgetDetailScreen
 import com.ask.widget.Filter
+import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -83,7 +84,10 @@ import kotlinx.serialization.json.Json
 
 @Composable
 fun HomeScreen(
-    route: String, widgetId: String?, sizeClass: WindowSizeClass, navigateToCreate: () -> Unit
+    route: String,
+    widgetId: String?,
+    sizeClass: WindowSizeClass,
+    navigateToCreate: (widget: WidgetWithOptionsAndVotesForTargetAudience?) -> Unit
 ) {
     val context = LocalContext.current
     val workerFlow = CreateWidgetWorker.getWorkerFlow(context)
@@ -121,7 +125,7 @@ private fun HomeScreen(
     homeUiState: HomeUiState = HomeUiState(),
     widgetId: String? = null,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
-    onCreateClick: () -> Unit = {},
+    onCreateClick: (widget: WidgetWithOptionsAndVotesForTargetAudience?) -> Unit = {},
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val isConnected by connectivityState()
@@ -219,7 +223,9 @@ private fun HomeScreen(
             val currentRoute = navBackStackEntry?.destination?.route
             AnimatedVisibility(visible = didFloatingActionButtonRequired(currentRoute) && homeUiState.createWidgetStatus != WorkerStatus.Loading) {
                 ExtendedFloatingActionButton(
-                    onClick = onCreateClick,
+                    onClick = {
+                        onCreateClick(null)
+                    },
                     icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
                     text = { Text(text = stringResource(id = R.string.create)) },
                 )
@@ -261,21 +267,25 @@ private fun HomeScreen(
                     }
                 }
             }
-        }) {
+        }) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it)
+                .padding(paddingValues)
         ) {
             val scope = rememberCoroutineScope()
             HomeNavigation(
-                homeNavigationController, sizeClass, dashboardFirst
-            ) { msg, dismissSnackBar ->
-                scope.launch {
-                    snackBarHostState.showSnackbar(msg)
-                    dismissSnackBar()
+                homeNavigationController, sizeClass, dashboardFirst,
+                { msg, dismissSnackBar ->
+                    scope.launch {
+                        snackBarHostState.showSnackbar(msg)
+                        dismissSnackBar()
+                    }
+                },
+                {
+                    onCreateClick(it)
                 }
-            }
+            )
             CreatingCard(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 homeUiState.createWidgetStatus == WorkerStatus.Loading
@@ -285,7 +295,9 @@ private fun HomeScreen(
 }
 
 fun didNavigationIconRequired(currentRoute: String?): Boolean {
-    return currentRoute?.contains("WidgetView") == true || currentRoute?.contains("ImageView") == true || currentRoute?.contains("Admin") == true
+    return currentRoute?.contains("WidgetView") == true || currentRoute?.contains("ImageView") == true || currentRoute?.contains(
+        "Admin"
+    ) == true
 }
 
 @Preview
@@ -316,7 +328,8 @@ fun HomeNavigation(
     homeNavigationController: NavHostController,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     dashboard: HomeTabScreen.Dashboard,
-    onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
+    onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
+    onAdminMoveToCreate: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
 ) {
     val context = LocalContext.current
     val lastVotedEmptyOptions = listOf(
@@ -410,9 +423,12 @@ fun HomeNavigation(
                     },
                 )
             }
-
             composable<HomeTabScreen.Admin> {
-                AdminScreen()
+                AdminScreen(
+                    this@SharedTransitionLayout,
+                    this@composable,
+                    onAdminMoveToCreate = onAdminMoveToCreate
+                )
             }
         }
     }

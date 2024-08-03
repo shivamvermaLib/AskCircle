@@ -218,6 +218,7 @@ fun DashboardList(
             widget?.let {
                 WidgetWithUserView(
                     index,
+                    false,
                     it,
                     sharedTransitionScope,
                     animatedContentScope,
@@ -264,6 +265,7 @@ fun DashboardGrid(
             widget?.let {
                 WidgetWithUserView(
                     index,
+                    false,
                     it,
                     sharedTransitionScope,
                     animatedContentScope,

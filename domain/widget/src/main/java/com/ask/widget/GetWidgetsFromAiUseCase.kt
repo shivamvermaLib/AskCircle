@@ -23,14 +23,20 @@ class GetWidgetsFromAiUseCase @Inject constructor(
         myWords: String? = null
     ) =
         withContext(dispatcher) {
-            val prompt =
-                "provide latest and fresh $totalQuestions ${Widget.WidgetType.entries.joinToString("/")} with options (min 2 and max 4 and max 5 words each option) based on latest ${
-                    myWords ?: categories.joinToString(",")
-                } in json format like " +
-                    "[ " +
-                    "{ \"widgetType\": <${Widget.WidgetType.entries.joinToString("|")}> , \"category\": <category> , \"question\" : <your question>, \"options\" : [ { \"text\" : <your option>, isCorrect: <true,false> (add this only if widgetType is ${Widget.WidgetType.Quiz.name}) }, { \"text\" : <your option> } ] }, " +
-                    "]" +
-                    " only"
+            val prompt = "Generate a set of random $totalQuestions polls with options based on the latest ${myWords?: categories.joinToString(", ")}. Each poll should have a minimum of 2 and a maximum of 4 options. The response should be in the following JSON format:\n" +
+                "\n" +
+                "[\n" +
+                "  { \n" +
+                "    \"widgetType\": \"${Widget.WidgetType.Poll.name}\",\n" +
+                "    \"category\": \"poll category\",\n" +
+                "    \"title\": \"poll title\",\n" +
+                "    \"options\": [\n" +
+                "      { \"text\": \"poll option\" },\n" +
+                "      { \"text\": \"poll option\" },\n" +
+                "      { \"text\": \"poll option\" }\n" +
+                "    ]\n" +
+                "  }\n" +
+                "]"
             val response = generativeModel.generateContent(prompt)
             response.text?.let { res ->
                 println("res = [${res}]")
@@ -38,9 +44,9 @@ class GetWidgetsFromAiUseCase @Inject constructor(
                     Json.parseToJsonElement(res.replace("```json", "").replace("```", ""))
                 val jsonArray = jsonElement.jsonArray
                 jsonArray.map { json ->
-                    val widgetType =
-                        Widget.WidgetType.valueOf(json.jsonObject["widgetType"]!!.jsonPrimitive.content)
-                    val question = json.jsonObject["question"]!!.jsonPrimitive.content
+//                    val widgetType =
+//                        Widget.WidgetType.valueOf(json.jsonObject["widgetType"]!!.jsonPrimitive.content)
+                    val question = json.jsonObject["title"]!!.jsonPrimitive.content
                     val category = json.jsonObject["category"]!!.jsonPrimitive.content
                     val options = json.jsonObject["options"]!!.jsonArray.map {
                         val text = it.jsonObject["text"]!!.jsonPrimitive.content

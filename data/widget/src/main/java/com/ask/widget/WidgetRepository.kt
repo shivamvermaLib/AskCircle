@@ -12,7 +12,7 @@ import com.ask.core.IMAGE_SPLIT_FACTOR
 import com.ask.core.ImageSizeType
 import com.ask.core.UNDERSCORE
 import com.ask.core.UpdatedTime
-import com.ask.core.checkIfUrl
+import com.ask.core.checkIfFirebaseUrl
 import com.ask.core.fileNameWithExtension
 import com.ask.core.getAllImages
 import com.ask.core.isUpdateRequired
@@ -78,16 +78,18 @@ class WidgetRepository @Inject constructor(
                         votes = optionWithVotes.votes.map { vote -> vote.copy(optionId = optionWithVotes.option.id) },
                         option = optionWithVotes.option.copy(
                             widgetId = pollId,
-                            imageUrl = when (optionWithVotes.option.imageUrl != null && !optionWithVotes.option.imageUrl.checkIfUrl()) {
+                            imageUrl = when (optionWithVotes.option.imageUrl != null) {
                                 true -> getByteArrays(optionWithVotes.option.imageUrl).map {
-                                    pollOptionStorageSource.upload(
-                                        "${optionWithVotes.option.id}$UNDERSCORE${it.key.name}$DOT${
-                                            getExtension(optionWithVotes.option.imageUrl)
-                                        }", it.value
-                                    )
-                                }.joinToString(separator = IMAGE_SPLIT_FACTOR)
+                                    async {
+                                        pollOptionStorageSource.upload(
+                                            "${optionWithVotes.option.id}$UNDERSCORE${it.key.name}$DOT${
+                                                getExtension(optionWithVotes.option.imageUrl)
+                                            }", it.value
+                                        )
+                                    }
+                                }.awaitAll().joinToString(separator = IMAGE_SPLIT_FACTOR)
 
-                                else -> when (optionWithVotes.option.imageUrl?.checkIfUrl()) {
+                                else -> when (optionWithVotes.option.imageUrl?.checkIfFirebaseUrl()) {
                                     true -> optionWithVotes.option.imageUrl
                                     else -> null
                                 }
@@ -113,9 +115,9 @@ class WidgetRepository @Inject constructor(
                         widgetIdDataSource.updateItem(widgetId.copy(widgetIds = widgetId.widgetIds + pollId))
                     }
                 }
-            }.let {
-                it + async {
-                    preloadImages(createdPollWithOptionsAndVotesForTargetAudience.options.mapNotNull { it.option.imageUrl })
+            }.let { list ->
+                list + async {
+                    preloadImages(createdPollWithOptionsAndVotesForTargetAudience.options.map { it.option.imageUrl.getAllImages() }.flatten())
                 } + async {
                     widgetDao.insertWidget(createdPollWithOptionsAndVotesForTargetAudience.widget,
                         createdPollWithOptionsAndVotesForTargetAudience.targetAudienceGender,
@@ -141,7 +143,7 @@ class WidgetRepository @Inject constructor(
         withContext(dispatcher) {
             widgetWithOptionsAndVotesForTargetAudience.options.forEach { optionWithVotes ->
                 optionWithVotes.option.imageUrl?.let {
-                    if (it.checkIfUrl()) {
+                    if (it.checkIfFirebaseUrl()) {
                         pollOptionStorageSource.delete(it.fileNameWithExtension())
                     }
                 }

@@ -4,9 +4,15 @@ import android.text.format.DateFormat
 import android.text.format.DateUtils
 import java.util.Locale
 
+
+fun String.checkIfFirebaseUrl(): Boolean {
+    val s: String = this.trim().lowercase(Locale.ROOT)
+    return s.startsWith(HTTP) || s.startsWith(HTTPS) && s.contains(FIREBASE)
+}
+
 fun String.checkIfUrl(): Boolean {
     val s: String = this.trim().lowercase(Locale.ROOT)
-    return (s.startsWith(HTTP) || s.startsWith(HTTPS) && s.contains(FIREBASE))
+    return s.startsWith(HTTP) || s.startsWith(HTTPS)
 }
 
 fun String.extension(): String {
@@ -23,8 +29,13 @@ fun String?.toSearchNeededField(predicate: ((String) -> Boolean)? = null): Strin
 }
 
 
-fun String?.getAllImages(): List<String> {
-    return this?.split(IMAGE_SPLIT_FACTOR) ?: emptyList()
+fun String?.getAllImages(avoidOriginal: Boolean = true): List<String> {
+    return (this?.split(IMAGE_SPLIT_FACTOR) ?: emptyList()).filter {
+        if (avoidOriginal)
+            it.contains(ImageSizeType.SIZE_ORIGINAL.name).not()
+        else
+            true
+    }
 }
 
 fun String?.getImage(imageSizeType: ImageSizeType): String? {

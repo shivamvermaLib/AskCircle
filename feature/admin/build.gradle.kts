@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kspPlugin)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -58,13 +59,19 @@ dependencies {
     implementation(project(":feature:common"))
     implementation(project(":domain:widget"))
     implementation(project(":data:widget"))
+    implementation(project(":data:user"))
     implementation(project(":workmanager"))
     implementation(project(":data:category"))
     implementation(project(":domain:category"))
+    implementation(project(":data:core"))
     ksp(libs.hilt.compiler)
 
     implementation(libs.generativeai)
     implementation(project(":data:analytics"))
+    implementation("org.jsoup:jsoup:1.15.3")
+    implementation(libs.coil.compose)
+    implementation(libs.kotlinx.serialization.json)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

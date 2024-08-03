@@ -94,13 +94,18 @@ import java.util.Calendar
 
 @Composable
 fun CreateWidgetScreen(
-    route: String, sizeClass: WindowSizeClass, onBack: () -> Unit
+    route: String,
+    widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience?,
+    sizeClass: WindowSizeClass, onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val viewModel = hiltViewModel<CreateWidgetViewModel>()
     val uiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         viewModel.screenOpenEvent(route)
+        widgetWithOptionsAndVotesForTargetAudience?.let {
+            viewModel.setWidget(it)
+        }
     }
     CreateWidgetScreen(
         sizeClass,

@@ -14,6 +14,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -70,6 +73,7 @@ import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 @Composable
 fun WidgetWithUserView(
     index: Int,
+    isAdmin: Boolean = false,
     widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
@@ -80,7 +84,11 @@ fun WidgetWithUserView(
     onShareClick: (String) -> Unit = {},
     onBookmarkClick: (String) -> Unit = {},
     onStopVoteClick: (String) -> Unit = {},
-    onStartVoteClick: (String) -> Unit = {}
+    onStartVoteClick: (String) -> Unit = {},
+    onAdminCreate: () -> Unit = {},
+    onAdminMoveToCreate: () -> Unit = {},
+    onAdminRemove: () -> Unit = {},
+    onAdminUpdateTextToImage: () -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         with(sharedTransitionScope) {
@@ -141,6 +149,41 @@ fun WidgetWithUserView(
         }
         if (widgetWithOptionsAndVotesForTargetAudience.showAdMob)
             AppAdmobBanner(modifier = Modifier.fillMaxWidth())
+
+        if (isAdmin)
+            AdminButton(
+                onAdminCreate = onAdminCreate,
+                onAdminMoveToCreate = onAdminMoveToCreate,
+                onAdminRemove = onAdminRemove,
+                onAdminUpdateTextToImage = onAdminUpdateTextToImage
+            )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AdminButton(
+    onAdminCreate: () -> Unit = {},
+    onAdminMoveToCreate: () -> Unit = {},
+    onAdminRemove: () -> Unit = {},
+    onAdminUpdateTextToImage: () -> Unit = {}
+) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.padding(all = 16.dp)
+    ) {
+        ElevatedButton(onClick = onAdminCreate) {
+            Text(text = "Create")
+        }
+        ElevatedButton(onClick = onAdminMoveToCreate) {
+            Text(text = "Move To Create Screen")
+        }
+        ElevatedButton(onClick = onAdminRemove) {
+            Text(text = "Remove")
+        }
+        ElevatedButton(onClick = onAdminUpdateTextToImage) {
+            Text(text = "Update Text To Image")
+        }
     }
 }
 
@@ -409,13 +452,14 @@ fun TextOption(
     TextButton(modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(all = 5.dp),
         shape = RoundedCornerShape(28.dp),
-        colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.let {
-            if (didUserVoted) {
-                it.primary
-            } else {
-                it.primaryContainer
-            }
-        }),
+        colors = ButtonDefaults.textButtonColors(
+            containerColor = MaterialTheme.colorScheme.let {
+                if (didUserVoted) {
+                    it.primary
+                } else {
+                    it.primaryContainer
+                }
+            }),
         onClick = {
             onOptionClick(option.id)
         }) {
