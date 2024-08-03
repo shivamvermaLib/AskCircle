@@ -82,6 +82,7 @@ import com.ask.common.NonLazyGrid
 import com.ask.common.SelectItemOnChipWithSearchDropDown
 import com.ask.common.TextOption
 import com.ask.common.connectivityState
+import com.ask.common.toErrorString
 import com.ask.core.EMPTY
 import com.ask.core.toDate
 import com.ask.country.Country
@@ -132,7 +133,8 @@ fun CreateWidgetScreen(
         onRemoveOption = viewModel::removeOption,
         onSelectCategoryWidget = viewModel::selectCategoryWidget,
         onStartTimeChange = viewModel::onStartTimeChange,
-        onEndTimeChange = viewModel::onEndTimeChange
+        onEndTimeChange = viewModel::onEndTimeChange,
+        onError = viewModel::setError
     )
 }
 
@@ -163,10 +165,12 @@ private fun CreateWidgetScreen(
     onSelectCategoryWidget: (List<Widget.WidgetCategory>) -> Unit = {},
     onStartTimeChange: (Long) -> Unit = {},
     onEndTimeChange: (Long?) -> Unit = {},
+    onError: (Int) -> Unit = {},
 ) {
     val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     var imagePickerIndex by remember { mutableIntStateOf(-1) }
+    val context = LocalContext.current
     val singlePhotoPickerLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.PickVisualMedia(),
             onResult = { uri ->
@@ -182,8 +186,17 @@ private fun CreateWidgetScreen(
     LaunchedEffect(isConnected) {
         if (!isConnected) {
             snackBarHostState.showSnackbar(
-                message = "No Internet Connection", duration = SnackbarDuration.Indefinite
+                message = context.getString(R.string.no_internet_connection),
+                duration = SnackbarDuration.Indefinite
             )
+        }
+    }
+    LaunchedEffect(createWidgetUiState.error) {
+        if (createWidgetUiState.error != -1) {
+            snackBarHostState.showSnackbar(
+                message = context.getString(createWidgetUiState.error)
+            )
+            onError(-1)
         }
     }
     Scaffold(snackbarHost = {
@@ -233,8 +246,8 @@ private fun CreateWidgetScreen(
                     hint = stringResource(R.string.title),
                     value = createWidgetUiState.title,
                     onValueChange = setTitle,
-                    isError = createWidgetUiState.titleError.isNotBlank(),
-                    errorMessage = createWidgetUiState.titleError
+                    isError = createWidgetUiState.titleError != -1,
+                    errorMessage = createWidgetUiState.titleError.toErrorString(context)
                 )
                 AppTextField(
                     hint = stringResource(R.string.description),
@@ -242,6 +255,8 @@ private fun CreateWidgetScreen(
                     onValueChange = setDesc,
                     minLines = 3,
                     maxLines = 8,
+                    isError = createWidgetUiState.descError != -1,
+                    errorMessage = createWidgetUiState.descError.toErrorString(context)
                 )
                 OptionTypeSelect(createWidgetUiState, onOptionTypeChanged)
                 Spacer(modifier = Modifier.size(5.dp))
@@ -281,8 +296,9 @@ private fun CreateWidgetScreen(
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         createWidgetUiState.options.forEachIndexed { index, option ->
-                            Row {
-                                TextOption(index = index,
+                            Row(modifier = Modifier.fillMaxWidth()) {
+                                TextOption(
+                                    index = index,
                                     widgetOption = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                                         option = option, votes = emptyList()
                                     ),
@@ -296,7 +312,9 @@ private fun CreateWidgetScreen(
                                     },
                                     onDeleteIconClick = {
                                         onRemoveOption(index)
-                                    })
+                                    },
+                                    hasError = createWidgetUiState.optionError.contains(option.id)
+                                )
                             }
                         }
                     }
@@ -748,9 +766,9 @@ class CreateWidgetStatePreviewParameterProvider :
     override val values: Sequence<CreateWidgetUiState> = sequenceOf(
         CreateWidgetUiState(
             "widget title",
-            "widget title error",
+            -1,
             "desc",
-            "desc error",
+            -1,
             CreateWidgetUiState.WidgetOptionType.Image,
             listOf(
                 Widget.Option(
@@ -775,9 +793,9 @@ class CreateWidgetStatePreviewParameterProvider :
             ),
         ), CreateWidgetUiState(
             "widget title",
-            "widget title error",
+            R.string.title_cannot_contain_bad_words,
             "desc",
-            "desc error",
+            R.string.description_cannot_contain_bad_words,
             CreateWidgetUiState.WidgetOptionType.Text,
             listOf(
                 Widget.Option(

@@ -181,8 +181,7 @@ class WidgetRepository @Inject constructor(
                     widgetWithOptionsAndVotesForTargetAudience.options.any { (it.option.imageUrl != null && it.option.text == null) || (it.option.imageUrl == null && it.option.text != null) }
                 }
 
-        val users =
-            fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget.creatorId })
+        val users = fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget.creatorId })
 
         widgetWithOptionsAndVotesForTargetAudiences =
             widgetWithOptionsAndVotesForTargetAudiences.map { widget ->

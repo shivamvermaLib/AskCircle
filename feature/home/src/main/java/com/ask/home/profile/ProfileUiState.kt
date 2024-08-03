@@ -10,9 +10,9 @@ import com.ask.user.User
 
 data class ProfileUiState(
     val name: String = EMPTY,
-    val nameError: String = EMPTY,
+    val nameError: Int = -1,
     val email: String = EMPTY,
-    val emailError: String = EMPTY,
+    val emailError: Int = -1,
     val profilePic: String? = null,
     val age: Int? = null,
     val gender: Gender? = null,

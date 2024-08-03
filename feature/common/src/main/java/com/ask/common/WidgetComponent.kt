@@ -443,6 +443,7 @@ fun TextOption(
     didUserVoted: Boolean,
     isInput: Boolean = false,
     hasVotes: Boolean = false,
+    hasError: Boolean = false,
     onValueChange: (String) -> Unit = {},
     onClearIconClick: () -> Unit = {},
     onOptionClick: (String) -> Unit = {},
@@ -486,11 +487,11 @@ fun TextOption(
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 textStyle = TextStyle(
-                    color = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                    color = if (hasError) Color.Red else if (isSystemInDarkTheme()) Color.White else Color.Black,
                 ),
                 cursorBrush = SolidColor(
                     if (isSystemInDarkTheme()) Color.White else Color.Black
-                )
+                ),
             )
         } else {
             Text(
@@ -522,6 +523,7 @@ fun TextOption(
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onClearIconClick() })
+            Spacer(modifier = Modifier.size(6.dp))
             Icon(Icons.Rounded.Delete,
                 stringResource(R.string.delete, option.text ?: EMPTY),
                 modifier = Modifier

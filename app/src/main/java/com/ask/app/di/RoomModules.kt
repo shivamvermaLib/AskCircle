@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.ask.app.AskAppDatabase
 import com.ask.category.CategoryDao
+import com.ask.core.badwords.BadWordDao
 import com.ask.country.CountryDao
 import com.ask.user.UserDao
 import com.ask.widget.WidgetDao
@@ -52,6 +53,12 @@ object RoomModules {
     @Provides
     fun provideCategoryDao(askAppDatabase: AskAppDatabase): CategoryDao {
         return askAppDatabase.categoryDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideBadWordDao(askAppDatabase: AskAppDatabase): BadWordDao {
+        return askAppDatabase.badWordDao()
     }
 
     @Singleton

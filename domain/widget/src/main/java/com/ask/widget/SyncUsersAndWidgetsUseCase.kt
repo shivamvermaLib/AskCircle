@@ -6,10 +6,13 @@ import com.ask.core.AppSharedPreference
 import com.ask.core.DISPATCHER_DEFAULT
 import com.ask.core.RemoteConfigRepository
 import com.ask.core.UpdatedTime
+import com.ask.core.badwords.BadWordRepository
 import com.ask.country.CountryRepository
 import com.ask.user.UserRepository
 import com.ask.user.generateCombinationsForUsers
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Named
@@ -22,6 +25,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
     private val sharedPreference: AppSharedPreference,
     private val remoteConfigRepository: RemoteConfigRepository,
     private val categoryRepository: CategoryRepository,
+    private val badWordRepository: BadWordRepository,
     @Named("db_version") private val dbVersion: Int,
     @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
@@ -85,8 +89,11 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         onNotification
                     ).also {
                         onProgress(0.8f)
-                        countryRepository.syncCountries()
-                        categoryRepository.syncCategories()
+                        listOf(
+                            async { countryRepository.syncCountries() },
+                            async { categoryRepository.syncCategories() },
+                            async { badWordRepository.syncBadWords() }
+                        ).awaitAll()
                     }
                 }
             }

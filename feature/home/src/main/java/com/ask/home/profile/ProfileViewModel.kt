@@ -4,11 +4,13 @@ import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
 import com.ask.common.BaseViewModel
+import com.ask.common.CheckModerationUseCase
 import com.ask.common.GetCreateWidgetRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
 import com.ask.core.ImageSizeType
 import com.ask.country.GetCountryUseCase
+import com.ask.home.R
 import com.ask.home.isValidEmail
 import com.ask.user.Gender
 import com.ask.user.GetCurrentProfileUseCase
@@ -30,6 +32,7 @@ class ProfileViewModel @Inject constructor(
     getCountryUseCase: GetCountryUseCase,
     getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
     getCategoryUseCase: GetCategoryUseCase,
+    private val checkModerationUseCase: CheckModerationUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
 
@@ -67,10 +70,18 @@ class ProfileViewModel @Inject constructor(
         _userCategoriesFlow,
         _categories
     ) { countries, name, email, gender, age, country, profilePic, profileLoading, error, userCategories, categories ->
-        val nameError = if (name.isBlank()) "Name is required" else EMPTY
+        val nameError =
+            if (name.isBlank())
+                R.string.name_is_required
+            else if (checkModerationUseCase(name))
+                R.string.name_cannot_contain_bad_words
+            else -1
         val emailError =
-            if (email.isNotBlank() && isValidEmail(email).not()) "Email is not valid" else EMPTY
-        val allowUpdate = nameError.isBlank() && emailError.isBlank()
+            if (email.isNotBlank() && isValidEmail(email).not()) R.string.email_is_not_valid
+//            else if (checkModerationUseCase(email))
+//                "Email cannot contain bad words"
+            else -1
+        val allowUpdate = nameError != -1 && emailError != -1
         ProfileUiState(
             name = name,
             nameError = nameError,

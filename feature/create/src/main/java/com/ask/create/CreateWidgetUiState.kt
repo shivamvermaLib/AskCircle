@@ -11,9 +11,9 @@ import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
 data class CreateWidgetUiState(
     val title: String = EMPTY,
-    val titleError: String = EMPTY,
+    val titleError: Int = -1,
     val desc: String = EMPTY,
-    val descError: String = EMPTY,
+    val descError: Int = -1,
     val optionType: WidgetOptionType = WidgetOptionType.Text,
     val options: List<Widget.Option> = listOf(
         Widget.Option(text = EMPTY),
@@ -32,8 +32,9 @@ data class CreateWidgetUiState(
     val categories: List<CategoryWithSubCategory> = emptyList(),
     val startTime: Long = System.currentTimeMillis(),
     val endTime: Long? = null,
-    val error: String? = null,
+    val error: Int = -1,
     val maxYearAllowed: Int = 0,
+    val optionError: List<String> = emptyList()
 ) {
     enum class WidgetOptionType { Text, Image }
 
@@ -53,5 +54,4 @@ data class CreateWidgetUiState(
             widgetCategories,
             false
         )
-
 }
