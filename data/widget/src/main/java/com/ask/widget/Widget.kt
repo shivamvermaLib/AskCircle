@@ -262,11 +262,19 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
 
     @get:Exclude
     @Ignore
+    var isLastVotedWidget = false
+
+    @get:Exclude
+    @Ignore
     val isAllowedVoting: Boolean = widget.startAt < System.currentTimeMillis() && (widget.endAt == null || widget.endAt > System.currentTimeMillis())
 
     @get:Exclude
     @Ignore
     val isWidgetNotStarted: Boolean = widget.startAt > System.currentTimeMillis()
+
+    @get:Exclude
+    @Ignore
+    val isWidgetEnd : Boolean = widget.endAt != null && widget.endAt < System.currentTimeMillis()
 
     @Serializable
     data class OptionWithVotes(

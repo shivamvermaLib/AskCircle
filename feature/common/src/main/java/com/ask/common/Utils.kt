@@ -15,7 +15,8 @@ suspend fun Context.preLoadImages(urls: List<String>) = coroutineScope {
     urls.map { url ->
         async {
             val imageRequest =
-                ImageRequest.Builder(this@preLoadImages).data(url)
+                ImageRequest.Builder(this@preLoadImages)
+                    .data(url)
                     .dispatcher(Dispatchers.IO)
                     .memoryCacheKey(url).memoryCachePolicy(CachePolicy.ENABLED)
                     .diskCacheKey(url).diskCachePolicy(CachePolicy.ENABLED)

@@ -18,8 +18,8 @@ class RemoteConfigRepository @Inject constructor(
             .addOnFailureListener { cont.resumeWithException(it) }
     }
 
-    fun getAgeRangeMin() = remoteConfig.getLong(AGE_RANGE_MIN)
-    fun getAgeRangeMax() = remoteConfig.getLong(AGE_RANGE_MAX)
+    fun getAgeRangeMin() = remoteConfig.getLong(AGE_RANGE_MIN).toInt()
+    fun getAgeRangeMax() = remoteConfig.getLong(AGE_RANGE_MAX).toInt()
     fun getSyncTimeInMinutes() = remoteConfig.getLong(SYNC_TIME_IN_MINUTES)
     fun getMaxOptionSize() = remoteConfig.getLong(MAX_OPTION_SIZE)
     fun getMaxYearAllowed() = remoteConfig.getLong(MAX_YEAR_ALLOWED)

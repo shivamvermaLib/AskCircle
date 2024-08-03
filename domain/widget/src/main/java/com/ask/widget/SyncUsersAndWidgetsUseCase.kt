@@ -74,8 +74,8 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         userRepository.getCurrentUserId(),
                         lastUpdatedTime,
                         list,
-                        { userId ->
-                            userRepository.getUser(userId, true, preloadImages)
+                        {
+                            userRepository.getUserDetailList(it, true, preloadImages)
                         },
                         preloadImages
                     ).also {
@@ -85,16 +85,17 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                 }
             }
             val duration = System.currentTimeMillis() - time
+            println("Duration for Sync: $duration")
             analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
             sharedPreference.setRefreshCount(refreshCountServer)
             sharedPreference.setDbVersion(dbVersion)
-                sharedPreference.setUpdatedTime(
-                    UpdatedTime(
-                        widgetTime = System.currentTimeMillis(),
-                        voteTime = System.currentTimeMillis(),
-                        profileTime = System.currentTimeMillis()
-                    )
+            sharedPreference.setUpdatedTime(
+                UpdatedTime(
+                    widgetTime = System.currentTimeMillis(),
+                    voteTime = System.currentTimeMillis(),
+                    profileTime = System.currentTimeMillis()
                 )
+            )
 
             return@withContext sendNotification
         } else {

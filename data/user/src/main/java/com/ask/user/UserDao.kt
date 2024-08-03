@@ -38,6 +38,10 @@ interface UserDao {
     suspend fun getUsersByIds(ids: List<String>): List<User>
 
     @Transaction
+    @Query("select * from users where id in (:ids)")
+    suspend fun getUserDetailsByIds(ids: List<String>): List<UserWithLocationCategory>
+
+    @Transaction
     @Query("select * from users where id = :id")
     fun getUserByIdLive(id: String): Flow<UserWithLocationCategory>
 

@@ -16,7 +16,7 @@ import com.ask.core.checkIfUrl
 import com.ask.core.fileNameWithExtension
 import com.ask.core.getAllImages
 import com.ask.core.isUpdateRequired
-import com.ask.user.User
+import com.ask.user.UserWithLocationCategory
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -163,44 +163,60 @@ class WidgetRepository @Inject constructor(
         currentUserId: String,
         lastUpdatedTime: UpdatedTime,
         searchCombinations: Set<String>,
-        fetchUserDetails: suspend (String) -> User,
+        fetchUsersDetails: suspend (List<String>) -> List<UserWithLocationCategory>,
         preloadImages: suspend (List<String>) -> Unit
     ) = withContext(dispatcher) {
-        var widgetIds = searchCombinations.map {
+        val widgetIds = searchCombinations.map {
             async {
                 widgetIdDataSource.getItemOrNull(it)
             }
         }.awaitAll().asSequence().filterNotNull().distinct().map { it.widgetIds }.flatten()
-            .distinct()
+            .distinct().toList()
 
-        val widgetWithOptionsAndVotesForTargetAudiences =
-            mutableListOf<WidgetWithOptionsAndVotesForTargetAudience>()
-        for (id in widgetIds) {
-            val widgetWithOptionsAndVotesForTargetAudience = widgetDataSource.getItem(id)
-            if (widgetWithOptionsAndVotesForTargetAudience.options.any { (it.option.imageUrl != null && it.option.text == null) || (it.option.imageUrl == null && it.option.text != null) }) {
-                widgetWithOptionsAndVotesForTargetAudiences.add(
-                    widgetWithOptionsAndVotesForTargetAudience.copy(
-                        user = fetchUserDetails(
-                            widgetWithOptionsAndVotesForTargetAudience.widget.creatorId
-                        )
-                    )
+        var widgetWithOptionsAndVotesForTargetAudiences =
+            widgetIds.map { async { widgetDataSource.getItem(it) } }.awaitAll()
+                .filter { widgetWithOptionsAndVotesForTargetAudience ->
+                    widgetWithOptionsAndVotesForTargetAudience.options.any { (it.option.imageUrl != null && it.option.text == null) || (it.option.imageUrl == null && it.option.text != null) }
+                }
+
+        val users =
+            fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget.creatorId })
+
+        widgetWithOptionsAndVotesForTargetAudiences =
+            widgetWithOptionsAndVotesForTargetAudiences.map { widget ->
+                widget.copy(
+                    user = users.find { it.user.id == widget.widget.creatorId }!!.user
                 )
             }
-        }
-        preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it ->
-            it.options.map { it.option.imageUrl.getAllImages() }.flatten()
-        }.flatten())
-        widgetDao.insertWidgets(
-            widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
-            widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceGender },
-            widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceAgeRange },
-            widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceLocations }
-                .flatten(),
-            widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.map { it.option } }
-                .flatten(),
-            widgetWithOptionsAndVotesForTargetAudiences.map { it ->
-                it.options.map { it.votes }.flatten()
-            }.flatten()
+
+        awaitAll(
+            async {
+                fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudiences.filter { it.isWidgetEnd }
+                    .map { widgetWithOptionsAndVotesForTargetAudience ->
+                        widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
+                            optionWithVotes.votes.map { it.userId }
+                        }.flatten()
+                    }.flatten())
+            },
+            async {
+                preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it ->
+                    it.options.map { it.option.imageUrl.getAllImages() }.flatten()
+                }.flatten())
+            },
+            async {
+                widgetDao.insertWidgets(
+                    widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
+                    widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceGender },
+                    widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceAgeRange },
+                    widgetWithOptionsAndVotesForTargetAudiences.map { it.targetAudienceLocations }
+                        .flatten(),
+                    widgetWithOptionsAndVotesForTargetAudiences.map { it -> it.options.map { it.option } }
+                        .flatten(),
+                    widgetWithOptionsAndVotesForTargetAudiences.map { it ->
+                        it.options.map { it.votes }.flatten()
+                    }.flatten()
+                )
+            }
         )
         return@withContext widgetWithOptionsAndVotesForTargetAudiences.any { it.widget.creatorId != currentUserId && it.widget.createdAt > lastUpdatedTime.widgetTime && lastUpdatedTime.widgetTime > 0 }
     }
@@ -208,55 +224,91 @@ class WidgetRepository @Inject constructor(
     suspend fun getWidgetDetails(
         widgetId: String,
         currentUserId: String,
-        fetchUserDetails: suspend (String) -> User,
+        fetchUsersDetails: suspend (List<String>) -> List<UserWithLocationCategory>,
         preloadImages: suspend (List<String>) -> Unit
     ): WidgetWithOptionsAndVotesForTargetAudience =
         withContext(dispatcher) {
-            widgetDao.getWidgetById(widgetId, currentUserId) ?: widgetDataSource.getItem(widgetId)
-                .also { widgetWithOptionsAndVotesForTargetAudience ->
+            (widgetDao.getWidgetById(widgetId, currentUserId) ?: widgetDataSource.getItem(widgetId))
+                .let { widgetWithOptionsAndVotesForTargetAudience ->
                     widgetWithOptionsAndVotesForTargetAudience.copy(
-                        user = fetchUserDetails(
-                            widgetWithOptionsAndVotesForTargetAudience.widget.creatorId
-                        )
-                    ).let { widgetWithOptionsAndVotesForTargetAudience1 ->
-                        preloadImages(
-                            widgetWithOptionsAndVotesForTargetAudience1.options.map { it.option.imageUrl.getAllImages() }
-                                .flatten()
-                        )
-                        widgetDao.insertWidget(
-                            widgetWithOptionsAndVotesForTargetAudience1.widget,
-                            widgetWithOptionsAndVotesForTargetAudience1.targetAudienceGender,
-                            widgetWithOptionsAndVotesForTargetAudience1.targetAudienceAgeRange,
-                            widgetWithOptionsAndVotesForTargetAudience1.targetAudienceLocations,
-                            widgetWithOptionsAndVotesForTargetAudience1.options.map { it.option },
-                            widgetWithOptionsAndVotesForTargetAudience1.options.map { it.votes }
-                                .flatten()
-                        )
+                        user = fetchUsersDetails(
+                            listOf(widgetWithOptionsAndVotesForTargetAudience.widget.creatorId)
+                        ).find { it.user.id == widgetWithOptionsAndVotesForTargetAudience.widget.creatorId }!!.user
+                    ).also { widgetWithOptionsAndVotesForTargetAudience1 ->
+                        if (widgetWithOptionsAndVotesForTargetAudience1.isWidgetEnd) {
+                            fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudience1.options.map { optionWithVotes -> optionWithVotes.votes.map { it.userId } }
+                                .flatten())
+                        }
+                        val imagesPreload = async {
+                            preloadImages(
+                                widgetWithOptionsAndVotesForTargetAudience1.options.map { it.option.imageUrl.getAllImages() }
+                                    .flatten()
+                            )
+                        }
+                        val widgetInsertion = async {
+                            widgetDao.insertWidget(
+                                widgetWithOptionsAndVotesForTargetAudience1.widget,
+                                widgetWithOptionsAndVotesForTargetAudience1.targetAudienceGender,
+                                widgetWithOptionsAndVotesForTargetAudience1.targetAudienceAgeRange,
+                                widgetWithOptionsAndVotesForTargetAudience1.targetAudienceLocations,
+                                widgetWithOptionsAndVotesForTargetAudience1.options.map { it.option },
+                                widgetWithOptionsAndVotesForTargetAudience1.options.map { it.votes }
+                                    .flatten()
+                            )
+                        }
+                        awaitAll(imagesPreload, widgetInsertion)
                     }
                 }
         }
 
     suspend fun vote(widgetId: String, optionId: String, userId: String) =
         withContext(dispatcher) {
+            /*widgetDao.getWidgetById(widgetId, userId)?.let { widgetWithOptionsAndVotesForTargetAudience ->
+                    var removeVote: Widget.Option.Vote? = null
+                    widgetWithOptionsAndVotesForTargetAudience.copy(
+                        options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
+                            val (option, votes) = optionWithVotes
+                            val mutableVotes = votes.toMutableList()
+                            val index = mutableVotes.indexOfFirst { it.userId == userId }
+                            if (index != -1) {
+                                removeVote = mutableVotes.removeAt(index)
+                                optionWithVotes.copy(votes = mutableVotes)
+                            } else if (option.id == optionId) {
+                                optionWithVotes.copy(
+                                    votes = votes + Widget.Option.Vote(
+                                        userId = userId, optionId = optionId
+                                    )
+                                )
+                            } else {
+                                optionWithVotes
+                            }
+                        }
+                    ).let { widgetWithOptionsAndVotesForTargetAudience1 ->
+                        removeVote?.let { widgetDao.deleteVote(it) }
+                        widgetDao.insertVotes(widgetWithOptionsAndVotesForTargetAudience1.options.map { it.votes }.flatten())
+                    }
+                }*/
+
             var removeVote: Widget.Option.Vote? = null
             widgetDataSource.updateItemFromTransaction(widgetId) { widgetWithOptionsAndVotesForTargetAudience ->
-                widgetWithOptionsAndVotesForTargetAudience.copy(options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
-                    val (option, votes) = optionWithVotes
-                    val mutableVotes = votes.toMutableList()
-                    val index = mutableVotes.indexOfFirst { it.userId == userId }
-                    if (index != -1) {
-                        removeVote = mutableVotes.removeAt(index)
-                        optionWithVotes.copy(votes = mutableVotes)
-                    } else if (option.id == optionId) {
-                        optionWithVotes.copy(
-                            votes = votes + Widget.Option.Vote(
-                                userId = userId, optionId = optionId
+                widgetWithOptionsAndVotesForTargetAudience.copy(
+                    options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
+                        val (option, votes) = optionWithVotes
+                        val mutableVotes = votes.toMutableList()
+                        val index = mutableVotes.indexOfFirst { it.userId == userId }
+                        if (index != -1) {
+                            removeVote = mutableVotes.removeAt(index)
+                            optionWithVotes.copy(votes = mutableVotes)
+                        } else if (option.id == optionId) {
+                            optionWithVotes.copy(
+                                votes = votes + Widget.Option.Vote(
+                                    userId = userId, optionId = optionId
+                                )
                             )
-                        )
-                    } else {
-                        optionWithVotes
-                    }
-                })
+                        } else {
+                            optionWithVotes
+                        }
+                    })
             }.also { widgetWithOptionsAndVotesForTargetAudience ->
                 removeVote?.let { widgetDao.deleteVote(it) }
                 widgetDao.insertVotes(widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }
