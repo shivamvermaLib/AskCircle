@@ -1,6 +1,5 @@
 package com.ask.admin
 
-import android.os.Build
 import android.view.View
 import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
@@ -47,7 +46,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -241,25 +239,19 @@ fun WebViewComponent(query: String, collectedImageCount: Int, onFetchImage: (Str
         AndroidView(
             factory = { context ->
                 WebView(context).apply {
-                    if (Build.VERSION.SDK_INT >= 19) {
-                        // chromium, enable hardware acceleration
-                        setLayerType(View.LAYER_TYPE_HARDWARE, null)
-                    } else {
-                        // older android version, disable hardware acceleration
-                        setLayerType(View.LAYER_TYPE_SOFTWARE, null)
-                    }
+                    clipToOutline = true
+                    setLayerType(View.LAYER_TYPE_SOFTWARE, null)
                     settings.javaScriptEnabled = true
+                    settings.builtInZoomControls = true
+
                     settings.userAgentString =
                         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-                    loadUrl("https://www.google.com/search?hl=en&tbm=isch&q=$query")
                     webView = this
                     webViewClient = object : WebViewClient() {
                         override fun onPageFinished(view: WebView?, url: String?) {
                             super.onPageFinished(view, url)
                             // Inject JavaScript to get the HTML source
                         }
-
-
                     }
                     webChromeClient = object : WebChromeClient() {
                         override fun onConsoleMessage(consoleMessage: ConsoleMessage?): Boolean {
@@ -267,10 +259,12 @@ fun WebViewComponent(query: String, collectedImageCount: Int, onFetchImage: (Str
                             return super.onConsoleMessage(consoleMessage)
                         }
                     }
+                    loadUrl("https://www.google.com/search?hl=en&tbm=isch&q=$query")
                 }
+            }, update = {
+                it.loadUrl("https://www.google.com/search?hl=en&tbm=isch&q=$query")
             }, modifier = Modifier
                 .fillMaxSize()
-                .background(color = Color.Red)
                 .clipToBounds()
                 .verticalScroll(rememberScrollState())
         )
