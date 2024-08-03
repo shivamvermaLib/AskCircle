@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -7,10 +10,17 @@ plugins {
     alias(libs.plugins.kspPlugin)
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.firebase.crashlytics)
-    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
 android {
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(FileInputStream(localPropertiesFile))
+    } else {
+        throw GradleException("Gradle properties file does not exists or not contains API keys")
+    }
+
     namespace = "com.ask.app"
     compileSdk = 34
 
@@ -25,6 +35,8 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField("String", "APIKEY", localProperties.getProperty("APIKEY"))
     }
 
     signingConfigs {
