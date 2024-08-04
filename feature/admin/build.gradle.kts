@@ -64,6 +64,9 @@ dependencies {
     implementation(project(":data:category"))
     implementation(project(":domain:category"))
     implementation(project(":data:core"))
+    implementation(project(":domain:common"))
+    implementation(project(":domain:country"))
+    implementation(project(":data:country"))
     ksp(libs.hilt.compiler)
 
     implementation(libs.generativeai)

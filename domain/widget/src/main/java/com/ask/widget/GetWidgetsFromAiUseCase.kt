@@ -1,5 +1,6 @@
 package com.ask.widget
 
+import com.ask.core.AppSharedPreference
 import com.ask.core.DISPATCHER_DEFAULT
 import com.ask.user.User
 import com.google.ai.client.generativeai.GenerativeModel
@@ -14,29 +15,30 @@ import javax.inject.Named
 
 class GetWidgetsFromAiUseCase @Inject constructor(
     private val generativeModel: GenerativeModel,
+    private val appSharedPreference: AppSharedPreference,
     @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
 
     suspend operator fun invoke(
         totalQuestions: Int,
-        categories: List<String>,
-        myWords: String? = null
+        myWords: String
     ) =
         withContext(dispatcher) {
-            val prompt = "Generate a set of random $totalQuestions polls with options based on the latest ${myWords?: categories.joinToString(", ")}. Each poll should have a minimum of 2 and a maximum of 4 options. The response should be in the following JSON format:\n" +
-                "\n" +
-                "[\n" +
-                "  { \n" +
-                "    \"widgetType\": \"${Widget.WidgetType.Poll.name}\",\n" +
-                "    \"category\": \"poll category\",\n" +
-                "    \"title\": \"poll title\",\n" +
-                "    \"options\": [\n" +
-                "      { \"text\": \"poll option\" },\n" +
-                "      { \"text\": \"poll option\" },\n" +
-                "      { \"text\": \"poll option\" }\n" +
-                "    ]\n" +
-                "  }\n" +
-                "]"
+            val prompt =
+                "Generate a set of random $totalQuestions polls with options based on the latest ${myWords}. Each poll should have a minimum of 2 and a maximum of 4 options. The response should be in the following JSON format:\n" +
+                    "\n" +
+                    "[\n" +
+                    "  { \n" +
+                    "    \"widgetType\": \"${Widget.WidgetType.Poll.name}\",\n" +
+                    "    \"category\": \"poll category\",\n" +
+                    "    \"title\": \"poll title\",\n" +
+                    "    \"options\": [\n" +
+                    "      { \"text\": \"poll option\" },\n" +
+                    "      { \"text\": \"poll option\" },\n" +
+                    "      { \"text\": \"poll option\" }\n" +
+                    "    ]\n" +
+                    "  }\n" +
+                    "]"
             val response = generativeModel.generateContent(prompt)
             response.text?.let { res ->
                 println("res = [${res}]")
@@ -73,6 +75,8 @@ class GetWidgetsFromAiUseCase @Inject constructor(
                         targetAudienceLocations = emptyList()
                     )
                 }
+            }.also {
+                myWords.let { it1 -> appSharedPreference.setAiSearchPrompt(it1) }
             } ?: emptyList()
         }
 

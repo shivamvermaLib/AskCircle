@@ -15,6 +15,7 @@ import com.ask.core.UpdatedTime
 import com.ask.core.checkIfFirebaseUrl
 import com.ask.core.fileNameWithExtension
 import com.ask.core.getAllImages
+import com.ask.core.getImage
 import com.ask.core.isUpdateRequired
 import com.ask.user.UserWithLocationCategory
 import kotlinx.coroutines.CoroutineDispatcher
@@ -201,7 +202,7 @@ class WidgetRepository @Inject constructor(
                 }.flatten())
         }, async {
             preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it ->
-                it.options.map { it.option.imageUrl.getAllImages() }.flatten()
+                it.options.mapNotNull { it.option.imageUrl.getImage(ImageSizeType.SIZE_300) }
             }.flatten())
         }, async {
             widgetDao.insertWidgets(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },

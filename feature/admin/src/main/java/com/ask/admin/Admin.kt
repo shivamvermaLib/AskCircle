@@ -1,6 +1,5 @@
 package com.ask.admin
 
-import android.view.View
 import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebView
@@ -85,6 +84,7 @@ fun AdminScreen(
         },
         onRemoveWidget = viewModel::removeWidget,
         fetchCategories = viewModel::fetchCategories,
+        fetchCountries = viewModel::fetchCountries,
         onAdminMoveToCreate = {
             onAdminMoveToCreate(it)
             viewModel.removeWidget(it)
@@ -104,6 +104,7 @@ fun AdminContent(
     state: AdminUiState,
     onAskAI: (text: String, number: Int) -> Unit,
     fetchCategories: () -> Unit,
+    fetchCountries: () -> Unit,
     onCreateWidget: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
     onRemoveWidget: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
     onAdminMoveToCreate: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
@@ -140,8 +141,26 @@ fun AdminContent(
             )
         }
         item {
+            FlowRow(modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)) {
+                for (item in state.searchList) {
+                    FilterChip(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .align(alignment = Alignment.CenterVertically),
+                        onClick = {
+                            text = item
+                        },
+                        label = { Text(item) },
+                        selected = true,
+                    )
+                }
+            }
+        }
+        item {
             Row(
-                modifier = Modifier.padding(all = 16.dp),
+                modifier = Modifier.padding(horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -158,7 +177,31 @@ fun AdminContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(all = 16.dp)
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = "Country")
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        state.selectedCountries.fastForEach {
+                            FilterChip(selected = true,
+                                onClick = { text = it.name },
+                                label = { Text(text = "${it.emoji} ${it.name}") })
+                        }
+                    }
+                }
+                Button(onClick = fetchCountries) {
+                    Text(text = "Refresh")
+                }
+            }
+        }
+        item {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = "Categories")
@@ -168,7 +211,7 @@ fun AdminContent(
                     ) {
                         state.selectedCategories.fastForEach {
                             FilterChip(selected = true,
-                                onClick = { /*TODO*/ },
+                                onClick = { text = it },
                                 label = { Text(text = it) })
                         }
                     }
@@ -180,7 +223,7 @@ fun AdminContent(
         }
         item {
             if (state.loading) {
-                Box(modifier = Modifier.padding(all = 16.dp)) {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                     CircularProgressIndicator()
                 }
             } else {
@@ -195,6 +238,9 @@ fun AdminContent(
             item(key = state.error) {
                 Text(text = state.error, modifier = Modifier.padding(all = 16.dp))
             }
+        }
+        item {
+            Spacer(modifier = Modifier.size(10.dp))
         }
         itemsIndexed(state.widgets) { index, widget ->
             WidgetWithUserView(index = index,
@@ -239,10 +285,9 @@ fun WebViewComponent(query: String, collectedImageCount: Int, onFetchImage: (Str
         AndroidView(
             factory = { context ->
                 WebView(context).apply {
-                    clipToOutline = true
-                    setLayerType(View.LAYER_TYPE_SOFTWARE, null)
+//                    clipToOutline = true
+//                    setLayerType(View.LAYER_TYPE_NONE, null)
                     settings.javaScriptEnabled = true
-                    settings.builtInZoomControls = true
 
                     settings.userAgentString =
                         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"

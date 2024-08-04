@@ -30,6 +30,7 @@ class AppSharedPreference @Inject constructor(@ApplicationContext private val co
     private val REFRESH_COUNT = longPreferencesKey(AppSharedPreference.REFRESH_COUNT)
     private val DB_VERSION = intPreferencesKey(AppSharedPreference.DB_VERSION)
     private val WIDGET_BOOKMARK = stringSetPreferencesKey(AppSharedPreference.WIDGET_BOOKMARK)
+    private val AI_SEARCH_PROMPT = stringSetPreferencesKey(AppSharedPreference.AI_SEARCH_PROMPT)
 
     suspend fun setUpdatedTime(updatedTime: UpdatedTime) {
 //        sharedPreference.edit().putString(TABLE_UPDATED_TIME, Json.encodeToString(updatedTime))
@@ -77,6 +78,19 @@ class AppSharedPreference @Inject constructor(@ApplicationContext private val co
     }
 
 
+    suspend fun setAiSearchPrompt(search: String) {
+        context.userPreferencesDataStore.edit { preferences ->
+            preferences[AI_SEARCH_PROMPT] = getAiSearchPrompt() + search
+        }
+    }
+
+    suspend fun getAiSearchPrompt(): Set<String> {
+        return context.userPreferencesDataStore.data.firstOrNull()?.let {
+            return it[AI_SEARCH_PROMPT] ?: emptySet()
+        } ?: emptySet()
+    }
+
+
     suspend fun clearData() {
 //        sharedPreference.edit().clear().apply()
         context.userPreferencesDataStore.edit { preferences ->
@@ -90,5 +104,6 @@ class AppSharedPreference @Inject constructor(@ApplicationContext private val co
         const val DB_VERSION = "DB version"
         const val WIDGET_BOOKMARK = "Widget bookmark"
         const val TABLE_UPDATED_TIME = "updated_time"
+        const val AI_SEARCH_PROMPT = "ai_search_prompt"
     }
 }

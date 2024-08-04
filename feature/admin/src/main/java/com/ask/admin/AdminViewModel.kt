@@ -4,13 +4,17 @@ import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
 import com.ask.common.BaseViewModel
+import com.ask.common.GetLastSearchDataUseCase
 import com.ask.common.combine
+import com.ask.country.Country
+import com.ask.country.GetCountryUseCase
 import com.ask.widget.GetWidgetsFromAiUseCase
 import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -24,11 +28,14 @@ import kotlin.random.Random
 class AdminViewModel @Inject constructor(
     analyticsLogger: AnalyticsLogger,
     getCategoryUseCase: GetCategoryUseCase,
-    private val getWidgetWithAiUseCase: GetWidgetsFromAiUseCase
+    private val getWidgetWithAiUseCase: GetWidgetsFromAiUseCase,
+    private val getLastSearchDataUseCase: GetLastSearchDataUseCase,
+    getCountryUseCase: GetCountryUseCase,
 ) : BaseViewModel(analyticsLogger) {
 
 
     private val _categories = getCategoryUseCase()
+    private val _countries = getCountryUseCase()
     private val _selectedWidgetForTextToImageOption =
         MutableStateFlow<WidgetWithOptionsAndVotesForTargetAudience?>(null)
 
@@ -39,41 +46,57 @@ class AdminViewModel @Inject constructor(
     private val _selectedImages = MutableStateFlow<List<String>>(emptyList())
     private val _selectedOption = MutableStateFlow<Widget.Option?>(null)
     private val _selectedCategories = MutableStateFlow<List<String>>(emptyList())
-
+    private val _selectedCountries = MutableStateFlow<List<Country>>(emptyList())
+    private val _lastSearchedPrompts = MutableStateFlow<Set<String>>(emptySet())
     val uiStateFlow = combine(
-        _categories,
         _selectedWidgetForTextToImageOption,
         _widgetsFromAiFlow,
         _aiErrorFlow,
         _selectedImages,
         _aiLoading,
         _selectedOption,
-        _selectedCategories
-    ) { categories, selectedWidget, widgetsFromAi, aiError, images, aiLoading, selectedOption, selectedCategories ->
-        val stringCategories =
-            categories.map { categoryWithSubCategory -> listOf(categoryWithSubCategory.category.name) + categoryWithSubCategory.subCategories.map { it.title } }
-                .flatten()
+        _selectedCategories,
+        _lastSearchedPrompts,
+        _selectedCountries
+    ) { selectedWidget, widgetsFromAi, aiError, images, aiLoading, selectedOption, selectedCategories, lastSearchedPrompts, countries ->
         AdminUiState(
-            categories = stringCategories,
             selectedCategories = selectedCategories,
             selectedWidget = selectedWidget,
             loading = aiLoading,
             widgets = widgetsFromAi,
             error = aiError,
             webViewSelectedImages = images,
-            selectedOption = selectedOption
+            selectedOption = selectedOption,
+            searchList = lastSearchedPrompts,
+            selectedCountries = countries
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), AdminUiState())
 
 
     init {
         fetchCategories()
+        fetchCountries()
+        viewModelScope.launch {
+            _lastSearchedPrompts.value = getLastSearchDataUseCase.invoke()
+        }
+    }
+
+    fun fetchCountries() {
+        viewModelScope.launch {
+            _countries.firstOrNull()?.let {
+                _selectedCountries.value = it.shuffled().take(Random.nextInt(1, 5))
+            }
+        }
     }
 
     fun fetchCategories() {
         viewModelScope.launch {
-            _selectedCategories.value =
-                uiStateFlow.value.categories.shuffled().take(Random.nextInt(1, 5))
+            _categories.firstOrNull()?.let {
+                val stringCategories =
+                    it.map { categoryWithSubCategory -> listOf(categoryWithSubCategory.category.name) + categoryWithSubCategory.subCategories.map { it.title } }
+                        .flatten()
+                _selectedCategories.value = stringCategories.shuffled().take(Random.nextInt(1, 5))
+            }
         }
     }
 
@@ -81,10 +104,9 @@ class AdminViewModel @Inject constructor(
         safeApiCall({
             _aiLoading.value = true
         }, {
-            _widgetsFromAiFlow.value = getWidgetWithAiUseCase(
-                number,
-                uiStateFlow.value.selectedCategories,
-                myWords = text.takeIf { it.isNotEmpty() })
+            if (text.isNotEmpty()) {
+                _widgetsFromAiFlow.value = getWidgetWithAiUseCase.invoke(number, text)
+            }
             _aiLoading.value = false
             _aiErrorFlow.value = null
         }, {
