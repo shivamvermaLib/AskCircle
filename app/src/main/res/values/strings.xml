@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">AskCircle</string>
+    <string name="app_name" translatable="false">AskCircle</string>
+    <string name="filter_view_ask_circle" translatable="false">AskCircleViewFilter</string>
+    <string name="percent" translatable="false" formatted="false">%1$s%</string>
 </resources>

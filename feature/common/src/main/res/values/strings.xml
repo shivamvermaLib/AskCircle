@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">AskCircle</string>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="gender">Gender</string>
+    <string name="select">Select</string>
+    <string name="location">Location</string>
+    <string name="clear">Clear %1$s</string>
+    <string name="delete">Delete %1$s</string>
+    <string name="no_widgets">No Widgets</string>
+    <string name="create">Create</string>
+    <string name="last_voted">LAST VOTED %1$s</string>
+    <string name="total_votes">%1$s Total Votes</string>
+    <string name="search">Search</string>
+    <string name="start">START</string>
+    <string name="end">END</string>
+    <string name="share">Share</string>
+    <string name="bookmark">Bookmark</string>
+</resources>
