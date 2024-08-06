@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.DropdownMenu
@@ -28,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +47,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEach
@@ -205,6 +206,8 @@ fun AppTextField(
     maxLines: Int = 1,
     minLines: Int = 1,
     hasMaxLength: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    trailingIcon: @Composable (() -> Unit)? = null
 ) {
     var textFieldWidth by remember { mutableIntStateOf(0) }
     val maxLength = remember(textFieldWidth) { calculateMaxLength(textFieldWidth) }
@@ -230,7 +233,9 @@ fun AppTextField(
         minLines = minLines,
         supportingText = {
             Text(if (isError) errorMessage else EMPTY, Modifier.clearAndSetSemantics {})
-        }
+        },
+        trailingIcon = trailingIcon,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
     )
 }
 

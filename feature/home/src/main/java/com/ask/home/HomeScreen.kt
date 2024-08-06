@@ -65,6 +65,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import com.ask.admin.AdminScreen
 import com.ask.common.connectivityState
 import com.ask.home.dashboard.DashboardScreen
 import com.ask.home.imageview.ImageViewModel
@@ -72,6 +73,7 @@ import com.ask.home.imageview.ImageViewScreen
 import com.ask.home.profile.ProfileScreen
 import com.ask.home.widgetview.WidgetDetailScreen
 import com.ask.widget.Filter
+import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -82,7 +84,10 @@ import kotlinx.serialization.json.Json
 
 @Composable
 fun HomeScreen(
-    route: String, widgetId: String?, sizeClass: WindowSizeClass, navigateToCreate: () -> Unit
+    route: String,
+    widgetId: String?,
+    sizeClass: WindowSizeClass,
+    navigateToCreate: (widget: WidgetWithOptionsAndVotesForTargetAudience?) -> Unit
 ) {
     val context = LocalContext.current
     val workerFlow = CreateWidgetWorker.getWorkerFlow(context)
@@ -120,7 +125,7 @@ private fun HomeScreen(
     homeUiState: HomeUiState = HomeUiState(),
     widgetId: String? = null,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
-    onCreateClick: () -> Unit = {},
+    onCreateClick: (widget: WidgetWithOptionsAndVotesForTargetAudience?) -> Unit = {},
 ) {
     var showMenu by remember { mutableStateOf(false) }
     val isConnected by connectivityState()
@@ -182,9 +187,17 @@ private fun HomeScreen(
                             }
                         }
                     }
+                    IconButton(onClick = {
+                        homeNavigationController.navigate(HomeTabScreen.Admin)
+                    }) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_supervisor_account_24),
+                            contentDescription = "Admin"
+                        )
+                    }
                 },
                 navigationIcon = {
-                    if (currentRoute?.contains("WidgetView") == true || currentRoute?.contains("ImageView") == true) {
+                    if (didNavigationIconRequired(currentRoute)) {
                         IconButton(onClick = { homeNavigationController.popBackStack() }) {
                             Icon(
                                 imageVector = ImageVector.vectorResource(id = R.drawable.baseline_arrow_back_24),
@@ -208,12 +221,11 @@ private fun HomeScreen(
         floatingActionButton = {
             val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
-            AnimatedVisibility(
-                visible = homeUiState.createWidgetStatus != WorkerStatus.Loading &&
-                    (currentRoute?.contains("Dashboard") == true || currentRoute?.contains("Profile") == true)
-            ) {
+            AnimatedVisibility(visible = didFloatingActionButtonRequired(currentRoute) && homeUiState.createWidgetStatus != WorkerStatus.Loading) {
                 ExtendedFloatingActionButton(
-                    onClick = onCreateClick,
+                    onClick = {
+                        onCreateClick(null)
+                    },
                     icon = { Icon(Icons.Filled.Add, stringResource(R.string.create_widget)) },
                     text = { Text(text = stringResource(id = R.string.create)) },
                 )
@@ -222,7 +234,7 @@ private fun HomeScreen(
         bottomBar = {
             val navBackStackEntry by homeNavigationController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
-            if (currentRoute?.contains("Dashboard") == true || currentRoute?.contains("Profile") == true)
+            if (didNavigationBottomRequired(currentRoute)) {
                 NavigationBar {
                     listOf(
                         R.string.dashboard, R.string.profile
@@ -238,7 +250,7 @@ private fun HomeScreen(
                             )
                         },
                             label = { Text(stringResource(id = item)) },
-                            selected = currentRoute.contains(stringResource),
+                            selected = currentRoute?.contains(stringResource) == true,
                             onClick = {
                                 when (item) {
                                     R.string.dashboard -> homeNavigationController.navigate(
@@ -254,28 +266,38 @@ private fun HomeScreen(
                             })
                     }
                 }
-        }
-    ) {
+            }
+        }) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it)
+                .padding(paddingValues)
         ) {
             val scope = rememberCoroutineScope()
             HomeNavigation(
-                homeNavigationController, sizeClass, dashboardFirst
-            ) { msg, dismissSnackBar ->
-                scope.launch {
-                    snackBarHostState.showSnackbar(msg)
-                    dismissSnackBar()
+                homeNavigationController, sizeClass, dashboardFirst,
+                { msg, dismissSnackBar ->
+                    scope.launch {
+                        snackBarHostState.showSnackbar(msg)
+                        dismissSnackBar()
+                    }
+                },
+                {
+                    onCreateClick(it)
                 }
-            }
+            )
             CreatingCard(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 homeUiState.createWidgetStatus == WorkerStatus.Loading
             )
         }
     }
+}
+
+fun didNavigationIconRequired(currentRoute: String?): Boolean {
+    return currentRoute?.contains("WidgetView") == true || currentRoute?.contains("ImageView") == true || currentRoute?.contains(
+        "Admin"
+    ) == true
 }
 
 @Preview
@@ -306,7 +328,8 @@ fun HomeNavigation(
     homeNavigationController: NavHostController,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     dashboard: HomeTabScreen.Dashboard,
-    onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> }
+    onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
+    onAdminMoveToCreate: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
 ) {
     val context = LocalContext.current
     val lastVotedEmptyOptions = listOf(
@@ -400,10 +423,24 @@ fun HomeNavigation(
                     },
                 )
             }
+            composable<HomeTabScreen.Admin> {
+                AdminScreen(
+                    this@SharedTransitionLayout,
+                    this@composable,
+                    onAdminMoveToCreate = onAdminMoveToCreate
+                )
+            }
         }
     }
 }
 
+fun didNavigationBottomRequired(currentRoute: String?): Boolean {
+    return currentRoute?.contains("Dashboard") == true || currentRoute?.contains("Profile") == true
+}
+
+fun didFloatingActionButtonRequired(currentRoute: String?): Boolean {
+    return currentRoute?.contains("Dashboard") == true
+}
 
 @Serializable
 sealed interface HomeTabScreen {
@@ -418,4 +455,7 @@ sealed interface HomeTabScreen {
 
     @Serializable
     data class WidgetView(val index: Int, val widgetId: String)
+
+    @Serializable
+    data object Admin : HomeTabScreen
 }

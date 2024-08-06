@@ -47,7 +47,10 @@ data class Widget(
     @Ignore
     var startAtFormat: String = startAt.toTimeAgo()
 
-    enum class WidgetType { Poll, Quiz }
+    enum class WidgetType {
+        Poll,
+        Quiz
+    }
 
     @Serializable
     @Entity(
@@ -266,7 +269,8 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
 
     @get:Exclude
     @Ignore
-    val isAllowedVoting: Boolean = widget.startAt < System.currentTimeMillis() && (widget.endAt == null || widget.endAt > System.currentTimeMillis())
+    val isAllowedVoting: Boolean =
+        widget.startAt < System.currentTimeMillis() && (widget.endAt == null || widget.endAt > System.currentTimeMillis())
 
     @get:Exclude
     @Ignore
@@ -274,7 +278,7 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
 
     @get:Exclude
     @Ignore
-    val isWidgetEnd : Boolean = widget.endAt != null && widget.endAt < System.currentTimeMillis()
+    val isWidgetEnd: Boolean = widget.endAt != null && widget.endAt < System.currentTimeMillis()
 
     @Serializable
     data class OptionWithVotes(
@@ -322,7 +326,6 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
             isCreatorOfTheWidget = userId == widget.creatorId
             hasVotes = options.any { it.votes.isNotEmpty() }
             isCreatorOfTheWidget = userId == widget.creatorId
-//                isBookmarked = widgetBookmarks.contains(widget.id)
             showAdMob = showAds
             lastVotedAtOptional = lastVotedOption
         }

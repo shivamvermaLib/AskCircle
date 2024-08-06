@@ -1,6 +1,5 @@
 package com.ask.home.dashboard
 
-import android.widget.Space
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
@@ -219,6 +218,7 @@ fun DashboardList(
             widget?.let {
                 WidgetWithUserView(
                     index,
+                    false,
                     it,
                     sharedTransitionScope,
                     animatedContentScope,
@@ -265,6 +265,7 @@ fun DashboardGrid(
             widget?.let {
                 WidgetWithUserView(
                     index,
+                    false,
                     it,
                     sharedTransitionScope,
                     animatedContentScope,
@@ -285,34 +286,3 @@ fun DashboardGrid(
         }
     }
 }
-
-/*
-class DashBoardScreenPreviewParameterProvider : PreviewParameterProvider<DashboardUiState> {
-    override val values: Sequence<DashboardUiState>
-        get() = sequenceOf(
-            DashboardUiState(
-                widgets = listOf(
-                    WidgetWithOptionsAndVotesForTargetAudience(
-                        widget = Widget(
-                            title = "Find the answer?"
-                        ),
-                        options = listOf(
-                            WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                                option = Widget.Option(text = "option1"),
-                                votes = listOf()
-                            ),
-                            WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                                option = Widget.Option(text = "Option 2"),
-                                votes = listOf()
-                            ),
-                        ),
-                        targetAudienceAgeRange = Widget.TargetAudienceAgeRange(),
-                        targetAudienceGender = Widget.TargetAudienceGender(),
-                        targetAudienceLocations = listOf(),
-                        user = User(),
-                        categories = listOf()
-                    )
-                )
-            )
-        )
-}*/

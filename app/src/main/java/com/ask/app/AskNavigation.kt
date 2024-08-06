@@ -39,15 +39,20 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                 }
             }
         }
-        composable<HomeScreen> {
-            val route = it.toRoute<HomeScreen>()
+        composable<HomeScreen> { navBackStackEntry ->
+            val route = navBackStackEntry.toRoute<HomeScreen>()
             val widgetId = route.widgetId
             HomeScreen(Json.encodeToString(route), widgetId, sizeClass) {
-                navController.navigate(CreateScreen)
+                navController.navigate(CreateScreen(Json.encodeToString(it)))
             }
         }
         composable<CreateScreen> {
-            CreateWidgetScreen(Json.encodeToString(CreateScreen), sizeClass) {
+            val route = it.toRoute<CreateScreen>()
+            CreateWidgetScreen(
+                Json.encodeToString(route),
+                route.widgetJson?.let { it1 -> Json.decodeFromString(it1) },
+                sizeClass
+            ) {
                 navController.popBackStack()
             }
         }
@@ -65,7 +70,7 @@ object TestAPI
 data class HomeScreen(val widgetId: String? = null)
 
 @Serializable
-object CreateScreen
+data class CreateScreen(val widgetJson: String? = null)
 
 
 class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :

@@ -9,9 +9,14 @@ import coil.ImageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
 import com.ask.core.ImageSizeType
+import com.ask.core.checkIfUrl
 import java.io.ByteArrayOutputStream
+import java.net.URL
 
 fun Context.getExtension(path: String): String? {
+    if (path.checkIfUrl()) {
+        return URL(path).path.substringAfterLast('.', "")
+    }
     return MimeTypeMap.getSingleton()
         .getExtensionFromMimeType(contentResolver.getType(Uri.parse(path)))
 }
@@ -39,20 +44,16 @@ suspend fun Context.getResizedImageByteArray(
         if (width > 0 && height > 0) {
             requestBuilder.size(width, height) // Resize to specified width and height
         }
-
         // Build the request
         val request = requestBuilder.build()
-
-
         // Execute the request and get the drawable
         val result = (imageLoader.execute(request) as SuccessResult).drawable
-
         // Convert drawable to bitmap
         val bitmap = result.toBitmap()
-
         // Convert bitmap to byte array
         val byteArrayOutputStream = ByteArrayOutputStream()
         bitmap.compress(Bitmap.CompressFormat.JPEG, quality, byteArrayOutputStream)
         byteArrayOutputStream.toByteArray()
     }
 }
+

@@ -14,6 +14,8 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -70,6 +73,7 @@ import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 @Composable
 fun WidgetWithUserView(
     index: Int,
+    isAdmin: Boolean = false,
     widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
@@ -80,7 +84,11 @@ fun WidgetWithUserView(
     onShareClick: (String) -> Unit = {},
     onBookmarkClick: (String) -> Unit = {},
     onStopVoteClick: (String) -> Unit = {},
-    onStartVoteClick: (String) -> Unit = {}
+    onStartVoteClick: (String) -> Unit = {},
+    onAdminCreate: () -> Unit = {},
+    onAdminMoveToCreate: () -> Unit = {},
+    onAdminRemove: () -> Unit = {},
+    onAdminUpdateTextToImage: () -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         with(sharedTransitionScope) {
@@ -141,6 +149,41 @@ fun WidgetWithUserView(
         }
         if (widgetWithOptionsAndVotesForTargetAudience.showAdMob)
             AppAdmobBanner(modifier = Modifier.fillMaxWidth())
+
+        if (isAdmin)
+            AdminButton(
+                onAdminCreate = onAdminCreate,
+                onAdminMoveToCreate = onAdminMoveToCreate,
+                onAdminRemove = onAdminRemove,
+                onAdminUpdateTextToImage = onAdminUpdateTextToImage
+            )
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun AdminButton(
+    onAdminCreate: () -> Unit = {},
+    onAdminMoveToCreate: () -> Unit = {},
+    onAdminRemove: () -> Unit = {},
+    onAdminUpdateTextToImage: () -> Unit = {}
+) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.padding(all = 16.dp)
+    ) {
+        ElevatedButton(onClick = onAdminCreate) {
+            Text(text = "Create")
+        }
+        ElevatedButton(onClick = onAdminMoveToCreate) {
+            Text(text = "Move To Create Screen")
+        }
+        ElevatedButton(onClick = onAdminRemove) {
+            Text(text = "Remove")
+        }
+        ElevatedButton(onClick = onAdminUpdateTextToImage) {
+            Text(text = "Update Text To Image")
+        }
     }
 }
 
@@ -179,7 +222,7 @@ fun CardItem(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.outline,
             fontWeight = FontWeight.W400)
-        Spacer(modifier = Modifier.size(6.dp))
+        Spacer(modifier = Modifier.size(12.dp))
         WidgetView(
             widget = widgetWithOptionsAndVotesForTargetAudience,
             sharedTransitionScope,
@@ -351,7 +394,7 @@ fun WidgetView(
     widget.widget.description?.let {
         Text(text = it, style = MaterialTheme.typography.bodySmall)
     }
-    Spacer(modifier = Modifier.size(10.dp))
+    Spacer(modifier = Modifier.size(8.dp))
     if (widget.isImageOnly) {
         NonLazyGrid(
             modifier = Modifier,
@@ -400,6 +443,7 @@ fun TextOption(
     didUserVoted: Boolean,
     isInput: Boolean = false,
     hasVotes: Boolean = false,
+    hasError: Boolean = false,
     onValueChange: (String) -> Unit = {},
     onClearIconClick: () -> Unit = {},
     onOptionClick: (String) -> Unit = {},
@@ -409,13 +453,14 @@ fun TextOption(
     TextButton(modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(all = 5.dp),
         shape = RoundedCornerShape(28.dp),
-        colors = ButtonDefaults.textButtonColors(containerColor = MaterialTheme.colorScheme.let {
-            if (didUserVoted) {
-                it.primary
-            } else {
-                it.primaryContainer
-            }
-        }),
+        colors = ButtonDefaults.textButtonColors(
+            containerColor = MaterialTheme.colorScheme.let {
+                if (didUserVoted) {
+                    it.primary
+                } else {
+                    it.primaryContainer
+                }
+            }),
         onClick = {
             onOptionClick(option.id)
         }) {
@@ -442,11 +487,11 @@ fun TextOption(
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 textStyle = TextStyle(
-                    color = if (isSystemInDarkTheme()) Color.White else Color.Black,
+                    color = if (hasError) Color.Red else if (isSystemInDarkTheme()) Color.White else Color.Black,
                 ),
                 cursorBrush = SolidColor(
                     if (isSystemInDarkTheme()) Color.White else Color.Black
-                )
+                ),
             )
         } else {
             Text(
@@ -478,6 +523,7 @@ fun TextOption(
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onClearIconClick() })
+            Spacer(modifier = Modifier.size(6.dp))
             Icon(Icons.Rounded.Delete,
                 stringResource(R.string.delete, option.text ?: EMPTY),
                 modifier = Modifier
@@ -623,13 +669,14 @@ fun ImageOption(
                             color = Color.White.copy(alpha = 0.8f), shape = CircleShape
                         )
                         .padding(bottom = 6.dp, end = 6.dp)
-                        .align(Alignment.BottomEnd)
+                        .align(Alignment.Center)
                 ) {
                     Icon(
                         ImageVector.vectorResource(id = R.drawable.baseline_delete_24),
                         stringResource(R.string.delete, option.text ?: EMPTY),
                         modifier = Modifier
                             .size(28.dp)
+                            .align(Alignment.Center)
                             .clickable { onDeleteIconClick(index) },
                         tint = Color.Unspecified
                     )

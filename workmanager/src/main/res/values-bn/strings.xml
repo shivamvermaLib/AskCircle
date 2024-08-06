@@ -1,0 +1,26 @@
+<resources>
+    <string name="new_widget_added">New Widget Added</string>
+    <string name="a_new_widget_has_been_created_and_added_to_your_collection_check_it_out_now">A new widget has been created and added to your collection. Check it out now!</string>
+    <string name="your_widget_collection_just_got_bigger">Your Widget Collection Just Got Bigger!</string>
+    <string name="explore_the_latest_widget_in_your_collection_open_the_app_to_see_it">Explore the latest widget in your collection. Open the app to see it!</string>
+    <string name="exciting_news_new_widget_created">Exciting News! New Widget Created</string>
+    <string name="a_brand_new_widget_is_available_don_t_miss_out_see_it_now_in_your_collection">A brand new widget is available. Don\'t miss out, see it now in your collection!</string>
+    <string name="new_interaction_on_your_widget">New Interaction on Your Widget!</string>
+    <string name="a_user_has_just_engaged_with_your_widget_check_the_updated_results_now">A user has just engaged with your widget. Check the updated results now!</string>
+    <string name="your_widget_just_got_an_interaction">Your Widget Just Got an Interaction!</string>
+    <string name="someone_has_participated_with_your_widget_view_the_latest_results_and_insights">Someone has participated with your widget. View the latest results and insights.</string>
+    <string name="widget_update_new_interaction_received">Widget Update: New Interaction Received</string>
+    <string name="your_widget_has_received_a_new_interaction_head_over_to_see_the_current_standings">Your widget has received a new interaction. Head over to see the current standings.</string>
+    <string name="interaction_alert_your_widget_was_engaged_with">Interaction Alert: Your Widget was Engaged With!</string>
+    <string name="a_new_interaction_has_been_registered_on_your_widget_check_out_the_updated_responses">A new interaction has been registered on your widget. Check out the updated responses.</string>
+    <string name="don_t_miss_out">Don\'t Miss Out!</string>
+    <string name="your_vote_is_needed">Your Vote is Needed!</string>
+    <string name="we_value_your_opinion">We Value Your Opinion</string>
+    <string name="reminder_vote_now">Reminder: Vote Now</string>
+    <string name="your_opinion_counts">Your Opinion Counts</string>
+    <string name="your_input_matters_vote_on_the_widget_now_and_let_your_voice_be_heard">Your input matters. Vote on the widget now and let your voice be heard!</string>
+    <string name="take_a_moment_to_vote_on_the_widget_your_opinion_can_make_a_difference">Take a moment to vote on the widget. Your opinion can make a difference.</string>
+    <string name="haven_t_voted_yet_cast_your_vote_and_help_shape_the_outcome">Haven\'t voted yet? Cast your vote and help shape the outcome.</string>
+    <string name="don_t_forget_to_vote_on_the_widget_your_participation_is_important">Don\'t forget to vote on the widget. Your participation is important!</string>
+    <string name="make_sure_your_voice_is_heard_vote_on_the_widget_today">Make sure your voice is heard. Vote on the widget today!</string>
+</resources>

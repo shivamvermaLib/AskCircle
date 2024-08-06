@@ -55,7 +55,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
@@ -72,6 +71,7 @@ import com.ask.common.AppTextField
 import com.ask.common.DropDownWithSelect
 import com.ask.common.connectivityState
 import com.ask.common.shimmerBrush
+import com.ask.common.toErrorString
 import com.ask.core.EMPTY
 import com.ask.core.ImageSizeType
 import com.ask.core.getImage
@@ -126,13 +126,6 @@ fun ProfileScreen(
                 profileUiState.userCategories,
             )
             onMessage(context.getString(R.string.profile_update_in_progress)) {}
-            /*{
-            context.getExtension(it)
-        }, {
-            context.getResizedImageByteArray(it)
-        }, {
-            context.preLoadImages(it)
-        }*/
         },
         viewModel::onImageClick,
         onOpenImage,
@@ -140,10 +133,7 @@ fun ProfileScreen(
     )
 }
 
-@Preview
-@OptIn(
-    ExperimentalCoroutinesApi::class, ExperimentalSharedTransitionApi::class
-)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalSharedTransitionApi::class)
 @Composable
 private fun ProfileScreen(
     @PreviewParameter(ProfileTabViewPreviewParameter::class) profile: ProfileUiState,
@@ -159,6 +149,7 @@ private fun ProfileScreen(
     onOpenImage: (String) -> Unit = {},
     onCategorySelect: (List<User.UserCategory>) -> Unit
 ) {
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .padding(all = 16.dp)
@@ -229,8 +220,8 @@ private fun ProfileScreen(
                 hint = stringResource(R.string.name),
                 value = profile.name,
                 onValueChange = setName,
-                isError = profile.nameError.isNotBlank(),
-                errorMessage = profile.nameError,
+                isError = profile.nameError != -1,
+                errorMessage = profile.nameError.toErrorString(context),
             )
         }
         Spacer(modifier = Modifier.size(8.dp))
@@ -246,8 +237,8 @@ private fun ProfileScreen(
                 hint = stringResource(R.string.email),
                 value = profile.email,
                 onValueChange = setEmail,
-                isError = profile.emailError.isNotBlank(),
-                errorMessage = profile.emailError,
+                isError = profile.emailError != -1,
+                errorMessage = profile.emailError.toErrorString(context),
             )
         }
         Spacer(modifier = Modifier.size(8.dp))

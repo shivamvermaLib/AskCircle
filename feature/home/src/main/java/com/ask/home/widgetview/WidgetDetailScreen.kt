@@ -50,11 +50,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.ask.common.AppAdmobBanner
 import com.ask.common.AppImage
 import com.ask.common.WidgetWithUserView
 import com.ask.common.preLoadImages
-import com.ask.core.checkIfUrl
+import com.ask.core.checkIfFirebaseUrl
 import com.ask.home.HomeTabScreen
 import com.ask.home.R
 import com.ask.widget.WidgetDetailsWithResult.WidgetResult
@@ -120,6 +119,7 @@ private fun WidgetDetailScreen(
             ) {
                 WidgetWithUserView(
                     index,
+                    false,
                     it,
                     sharedTransitionScope,
                     animatedContentScope,
@@ -163,7 +163,7 @@ fun PieChartGroup(showAds: Boolean, title: String, resultData: Map<String, List<
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (title.checkIfUrl()) {
+            if (title.checkIfFirebaseUrl()) {
                 AppImage(
                     modifier = Modifier.size(45.dp),
                     url = title,

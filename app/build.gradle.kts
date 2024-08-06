@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -10,6 +13,14 @@ plugins {
 }
 
 android {
+    val localProperties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        localProperties.load(FileInputStream(localPropertiesFile))
+    } else {
+        throw GradleException("Gradle properties file does not exists or not contains API keys")
+    }
+
     namespace = "com.ask.app"
     compileSdk = 34
 
@@ -24,6 +35,8 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField("String", "GEMINI_KEY", localProperties.getProperty("GEMINI_KEY"))
     }
 
     signingConfigs {
@@ -104,6 +117,8 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
+
+    implementation(libs.generativeai)
 
     // For instrumentation tests
     androidTestImplementation(libs.hilt.android.testing)

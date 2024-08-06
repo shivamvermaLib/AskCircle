@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="initializing">ਸ਼ੁਰੂ ਕਰ ਰਿਹਾ ਹੈ</string>
-    <string name="loading">ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ</string>
-    <string name="success">ਸਫਲਤਾ</string>
-    <string name="error">ਗਲਤੀ</string>
-</resources>

@@ -4,16 +4,19 @@ import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
 import com.ask.common.BaseViewModel
+import com.ask.common.CheckModerationUseCase
 import com.ask.common.GetCreateWidgetRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
 import com.ask.country.Country
 import com.ask.country.GetCountryUseCase
 import com.ask.widget.Widget
+import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -22,14 +25,15 @@ class CreateWidgetViewModel @Inject constructor(
     getCountryUseCase: GetCountryUseCase,
     getCategoriesUseCase: GetCategoryUseCase,
     getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
+    private val checkModerationUseCase: CheckModerationUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
     private val minOptions = 2
     private val maxOptions = getCreateWidgetRemoteConfigUseCase().maxOptionSize
     private val _titleFlow = MutableStateFlow(EMPTY)
-    private val _titleErrorFlow = MutableStateFlow(EMPTY)
+    private val _titleErrorFlow = MutableStateFlow(-1)
     private val _descFlow = MutableStateFlow(EMPTY)
-    private val _descErrorFlow = MutableStateFlow(EMPTY)
+    private val _descErrorFlow = MutableStateFlow(-1)
     private val _optionType = MutableStateFlow(CreateWidgetUiState.WidgetOptionType.Text)
     private val _options = MutableStateFlow(
         listOf(
@@ -46,19 +50,31 @@ class CreateWidgetViewModel @Inject constructor(
     private val _categoriesFlow = getCategoriesUseCase()
     private val _startAtFlow = MutableStateFlow(System.currentTimeMillis())
     private val _endAtFlow = MutableStateFlow<Long?>(null)
-    private val _errorFlow = MutableStateFlow<String?>(null)
+    private val _errorFlow = MutableStateFlow(-1)
+    private val _optionErrorFlow = MutableStateFlow(emptyList<String>())
 
     fun setTitle(title: String) {
-        _titleFlow.value = title
-        _titleErrorFlow.value = if (title.isBlank()) {
-            "Title is required"
-        } else {
-            ""
+        viewModelScope.launch {
+            _titleFlow.value = title
+            _titleErrorFlow.value = if (title.isBlank()) {
+                R.string.title_is_required
+            } else if (checkModerationUseCase.invoke(title)) {
+                R.string.title_cannot_contain_bad_words
+            } else {
+                -1
+            }
         }
     }
 
     fun setDesc(desc: String) {
-        _descFlow.value = desc
+        viewModelScope.launch {
+            _descFlow.value = desc
+            if (checkModerationUseCase.invoke(desc)) {
+                _descErrorFlow.value = R.string.description_cannot_contain_bad_words
+            } else {
+                _descErrorFlow.value = -1
+            }
+        }
     }
 
     fun setOptionType(type: CreateWidgetUiState.WidgetOptionType) {
@@ -91,9 +107,20 @@ class CreateWidgetViewModel @Inject constructor(
     }
 
     fun updateOption(index: Int, option: Widget.Option) {
-        _options.value = _options.value.toMutableList().apply {
-            this[index] = option
-        }.toList()
+        viewModelScope.launch {
+            if (option.text.isNullOrBlank().not()) {
+                if (checkModerationUseCase.invoke(option.text!!)) {
+                    _optionErrorFlow.value += option.id
+                    setError(R.string.text_cannot_contain_bad_words)
+                } else {
+                    _optionErrorFlow.value -= option.id
+                    setError(-1)
+                }
+            }
+            _options.value = _options.value.toMutableList().apply {
+                this[index] = option
+            }.toList()
+        }
     }
 
     fun removeOption(index: Int) {
@@ -170,6 +197,25 @@ class CreateWidgetViewModel @Inject constructor(
         }
     }
 
+    fun setWidget(widget: WidgetWithOptionsAndVotesForTargetAudience) {
+        _titleFlow.value = widget.widget.title
+        _selectedWidgetCategories.value = widget.categories
+        _descFlow.value = widget.widget.description ?: EMPTY
+        _optionType.value =
+            if (widget.options.any { it.option.text == null && it.option.imageUrl != null }) CreateWidgetUiState.WidgetOptionType.Image else CreateWidgetUiState.WidgetOptionType.Text
+        _options.value = widget.options.map { it.option }
+        _targetAudienceGender.value = widget.targetAudienceGender
+        _targetAudienceAgeRange.value = widget.targetAudienceAgeRange
+        _targetAudienceLocations.value = widget.targetAudienceLocations
+        _startAtFlow.value = widget.widget.startAt
+        _endAtFlow.value = widget.widget.endAt
+        _errorFlow.value = -1
+    }
+
+    fun setError(id: Int) {
+        _errorFlow.value = id
+    }
+
     val uiStateFlow = combine(
         _titleFlow,
         _titleErrorFlow,
@@ -186,9 +232,14 @@ class CreateWidgetViewModel @Inject constructor(
         _startAtFlow,
         _endAtFlow,
         _errorFlow,
-    ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories, startAt, endAt, error ->
+        _optionErrorFlow
+    ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories, startAt, endAt, error, optionError ->
         val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size in 2..4
-            && ((optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all { !it.text.isNullOrBlank() }) || (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() }))
+            && ((optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all {
+            !it.text.isNullOrBlank() && checkModerationUseCase(
+                it.text!!
+            )
+        }) || (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() }))
         CreateWidgetUiState(
             title,
             titleError,
@@ -207,7 +258,8 @@ class CreateWidgetViewModel @Inject constructor(
             widgetCategories = widgetCategories,
             startTime = startAt,
             endTime = endAt,
-            error = error
+            error = error,
+            optionError = optionError
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
 }

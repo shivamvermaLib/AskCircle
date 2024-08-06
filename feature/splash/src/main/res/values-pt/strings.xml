@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="initializing">Inicializando</string>
-    <string name="loading">Carregando</string>
-    <string name="success">Sucesso</string>
-    <string name="error">Erro</string>
-
-</resources>

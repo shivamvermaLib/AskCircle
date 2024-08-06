@@ -16,7 +16,8 @@ const val TEST_DB = "QA"
 
 const val CONFIGURATIONS = "configurations"
 const val SQLITE_HELPER = "sqlite_helper"
-
+const val TABLE_BAD_WORDS = "bad_words"
+const val BAD_WORDS_JSON = "badwords.json"
 const val IMAGE_SPLIT_FACTOR = "(!$%)"
 
 

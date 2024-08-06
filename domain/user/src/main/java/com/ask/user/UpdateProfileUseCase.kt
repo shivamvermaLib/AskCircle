@@ -3,7 +3,7 @@ package com.ask.user
 import com.ask.analytics.AnalyticsLogger
 import com.ask.core.AppSharedPreference
 import com.ask.core.ImageSizeType
-import com.ask.core.checkIfUrl
+import com.ask.core.checkIfFirebaseUrl
 import com.ask.core.getAllImages
 import kotlinx.coroutines.coroutineScope
 import javax.inject.Inject
@@ -35,7 +35,7 @@ class UpdateProfileUseCase @Inject constructor(
             email.isNotBlank()
         )
         val extension = profilePic?.let { path ->
-            path.takeIf { it.isNotBlank() && it.checkIfUrl().not() }
+            path.takeIf { it.isNotBlank() && it.checkIfFirebaseUrl().not() }
                 ?.let { getExtension(it) }
         }
 
@@ -48,7 +48,7 @@ class UpdateProfileUseCase @Inject constructor(
             userCategories = userCategories,
             widgetBookmarks = widgetBookmarks,
             profilePicExtension = extension,
-            profileByteArray = profilePic?.takeIf { it.checkIfUrl().not() }
+            profileByteArray = profilePic?.takeIf { it.checkIfFirebaseUrl().not() }
                 ?.let { path -> getBytes(path) },
         ).also {
             it.user.profilePic?.let { it1 -> preloadImage(it1.getAllImages()) }

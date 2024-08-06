@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
+    implementation(project(":feature:admin"))
 
     ksp(libs.hilt.compiler)
 

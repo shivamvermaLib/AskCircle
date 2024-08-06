@@ -48,10 +48,13 @@ jobs:
       - name: Change wrapper permissions
         run: chmod +x ./gradlew
 
-      - name: Update Username from Secrets
+      - name: Write secrets to local.properties
         env:
           BANNER_ID: ${{ secrets.BANNER_ID }}
-        run: echo BANNER_ID="$BANNER_ID" > ./local.properties
+          GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
+        run: |
+          echo BANNER_ID="$BANNER_ID" > ./local.properties
+          echo GEMINI_KEY="$GEMINI_KEY" >> ./local.properties
 
       # Run Tests Build
 #      - name: Run gradle tests

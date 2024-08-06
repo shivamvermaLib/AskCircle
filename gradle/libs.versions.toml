@@ -8,18 +8,17 @@ coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
-lifecycleRuntimeKtx = "2.8.3"
-activityCompose = "1.9.0"
+lifecycleRuntimeKtx = "2.8.4"
+activityCompose = "1.9.1"
 composeBom = "2024.06.00"
 google-services = "4.4.2"
 firebaseBom = "33.1.2"
-#com-google-devtools-ksp = "2.0.0-1.0.21"
 hiltNavigationCompose = "1.2.0"
 multidex = "2.0.1"
-navigationCompose = "2.8.0-beta05"
+navigationCompose = "2.8.0-beta06"
 coilCompose = "2.6.0"
-pagingCompose = "3.3.0"
-pagingRuntimeKtx = "3.3.0"
+pagingCompose = "3.3.1"
+pagingRuntimeKtx = "3.3.1"
 playServicesAds = "23.2.0"
 roomKtx = "2.6.1"
 kotlinxSerializationJson = "1.6.3"
@@ -32,12 +31,13 @@ appcompat = "1.7.0"
 material = "1.12.0"
 uiTooling = "1.6.8"
 playServicesAdsLite = "23.2.0"
-sqliteKtx = "2.4.0"
 kspVersion = "2.0.0-1.0.21"
+generativeai = "0.9.0"
+googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
-
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
@@ -91,7 +91,7 @@ material = { group = "com.google.android.material", name = "material", version.r
 play-services-ads = { module = "com.google.android.gms:play-services-ads", version.ref = "playServicesAds" }
 ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "uiTooling" }
 play-services-ads-lite = { group = "com.google.android.gms", name = "play-services-ads-lite", version.ref = "playServicesAdsLite" }
-
+generativeai = { group = "com.google.ai.client.generativeai", name = "generativeai", version.ref = "generativeai" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -99,9 +99,8 @@ jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = 
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-services = { id = "com.google.gms.google-services", version.ref = "google-services" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hiltAndroidVersion" }
-#com-google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "com-google-devtools-ksp" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "firebaseCrashlytics" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kspPlugin = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
+google-android-libraries-mapsplatform-secrets-gradle-plugin = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "googleAndroidLibrariesMapsplatformSecretsGradlePlugin" }

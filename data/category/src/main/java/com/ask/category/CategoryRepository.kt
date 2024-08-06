@@ -19,7 +19,7 @@ class CategoryRepository @Inject constructor(
     @Named(DISPATCHER_IO) private val dispatcher: CoroutineDispatcher
 ) {
 
-    fun getAllCategories() = categoryDao.getAllCategories().flowOn(dispatcher)
+    fun getAllCategoriesFlow() = categoryDao.getAllCategories().flowOn(dispatcher)
 
     suspend fun syncCategories() = withContext(dispatcher) {
         if (categoryDao.hasCategory().not()) {
