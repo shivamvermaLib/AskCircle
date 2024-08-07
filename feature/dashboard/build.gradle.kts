@@ -1,6 +1,3 @@
-import java.io.FileInputStream
-import java.util.Properties
-
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -11,15 +8,7 @@ plugins {
 }
 
 android {
-    val localProperties = Properties()
-    val localPropertiesFile = rootProject.file("local.properties")
-    if (localPropertiesFile.exists()) {
-        localProperties.load(FileInputStream(localPropertiesFile))
-    } else {
-        throw GradleException("Gradle properties file does not exists or not contains API keys")
-    }
-
-    namespace = "com.ask.home"
+    namespace = "com.ask.dashboard"
     compileSdk = 34
 
     defaultConfig {
@@ -27,11 +16,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
-        vectorDrawables {
-            useSupportLibrary = true
-        }
-
-        buildConfigField("String", "BANNER_ID", localProperties.getProperty("BANNER_ID"))
     }
 
     buildTypes {
@@ -47,15 +31,12 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
     buildFeatures {
         buildConfig = true
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
@@ -75,10 +56,6 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.hilt.android)
     implementation(project(":feature:admin"))
-    implementation(project(":feature:dashboard"))
-    implementation(project(":feature:profile"))
-    implementation(project(":feature:imageview"))
-    implementation(project(":feature:widgetdetails"))
 
     ksp(libs.hilt.compiler)
 
@@ -101,6 +78,8 @@ dependencies {
     implementation(project(":domain:category"))
     implementation(project(":feature:common"))
     implementation(project(":workmanager"))
+
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

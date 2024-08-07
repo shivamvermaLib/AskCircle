@@ -67,13 +67,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.ask.admin.AdminScreen
 import com.ask.common.connectivityState
-import com.ask.home.dashboard.DashboardScreen
-import com.ask.home.imageview.ImageViewModel
-import com.ask.home.imageview.ImageViewScreen
-import com.ask.home.profile.ProfileScreen
-import com.ask.home.widgetview.WidgetDetailScreen
+import com.ask.dashboard.DashboardScreen
+import com.ask.imageview.ImageViewModel
+import com.ask.imageview.ImageViewScreen
+import com.ask.profile.ProfileScreen
 import com.ask.widget.Filter
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
+import com.ask.widgetdetails.WidgetDetailScreen
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -400,14 +400,18 @@ fun HomeNavigation(
                     imageViewModel.onImageOpen(imageView.imagePath)
                 }
                 ImageViewScreen(
-                    imageView, this@SharedTransitionLayout, this@composable
+                    imageView.index,
+                    imageView.imagePath,
+                    this@SharedTransitionLayout,
+                    this@composable
                 )
             }
             composable<HomeTabScreen.WidgetView> { navBackStackEntry ->
                 val route = navBackStackEntry.toRoute<HomeTabScreen.WidgetView>()
                 WidgetDetailScreen(
                     Json.encodeToString(route),
-                    widgetView = route,
+                    route.index,
+                    route.widgetId,
                     this@SharedTransitionLayout,
                     this@composable,
                     onOpenImage = {
