@@ -3,13 +3,12 @@ plugins {
     alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.hilt)
     alias(libs.plugins.kspPlugin)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
     alias(libs.plugins.kotlinx.serialization)
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
-    namespace = "com.ask.admin"
+    namespace = "com.ask.settings"
     compileSdk = 35
 
     defaultConfig {
@@ -32,10 +31,6 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
-    buildFeatures {
-        buildConfig = true
-        compose = true
-    }
     kotlinOptions {
         jvmTarget = "1.8"
     }
@@ -48,23 +43,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     ksp(libs.hilt.compiler)
 
-    implementation(libs.generativeai)
-    implementation(libs.jsoup)
-    implementation(libs.coil.compose)
-
-    implementation(project(":feature:common"))
-    implementation(project(":domain:widget"))
-    implementation(project(":data:widget"))
-    implementation(project(":data:user"))
-    implementation(project(":workmanager"))
-    implementation(project(":data:category"))
-    implementation(project(":domain:category"))
-    implementation(project(":data:core"))
-    implementation(project(":domain:common"))
-    implementation(project(":domain:country"))
-    implementation(project(":data:country"))
-    implementation(project(":data:analytics"))
-
+    implementation(libs.firebase.crashlytics)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

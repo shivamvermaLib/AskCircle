@@ -45,9 +45,9 @@ class WidgetDetailViewModel @Inject constructor(
 
     }
 
-    fun vote(widgetId: String, optionId: String, screenName: String) {
+    fun vote(widgetId: String, optionId: String) {
         safeApiCall({}, {
-            updateVoteUseCase(widgetId, optionId, screenName)
+            updateVoteUseCase(widgetId, optionId)
         }, {
 //            _errorFlow.value = it
         })

@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.ask.user"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -36,13 +36,13 @@ android {
 
 dependencies {
     implementation(libs.hilt.android)
-    implementation(project(":data:user"))
-    implementation(project(":data:widget"))
-    implementation(project(":domain:common"))
-    implementation(project(":data:analytics"))
-    implementation(project(":data:core"))
     ksp(libs.hilt.compiler)
 
+    api(project(":data:user"))
+    api(project(":data:widget"))
+    api(project(":domain:common"))
+    api(project(":data:analytics"))
+    api(project(":data:core"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

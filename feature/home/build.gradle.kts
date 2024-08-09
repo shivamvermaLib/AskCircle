@@ -20,7 +20,7 @@ android {
     }
 
     namespace = "com.ask.home"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -60,40 +60,20 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material3.window.size)
-    implementation(libs.androidx.navigation.compose)
-
-    implementation(libs.androidx.work.runtime.ktx)
-    implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.hilt.android)
-    implementation(project(":feature:admin"))
-    implementation(project(":feature:dashboard"))
-    implementation(project(":feature:profile"))
-    implementation(project(":feature:imageview"))
-    implementation(project(":feature:widgetdetails"))
-
+    implementation(libs.bundles.androidx.ui.navigation)
+    implementation(libs.bundles.hilt.navigation.work)
+    implementation(libs.kotlinx.serialization.json)
     ksp(libs.hilt.compiler)
 
-    implementation(libs.kotlinx.serialization.json)
     implementation(libs.firebase.crashlytics)
-
     implementation(libs.androidx.paging.runtime.ktx)
     implementation(libs.androidx.paging.compose)
 
-    implementation(project(":data:user"))
-    implementation(project(":data:analytics"))
-    implementation(project(":data:country"))
-    implementation(project(":data:category"))
-    implementation(project(":data:core"))
-    implementation(project(":data:widget"))
+    implementation(project(":feature:admin"))
+    implementation(project(":feature:profile"))
+    implementation(project(":feature:imageview"))
+    implementation(project(":feature:widgetdetails"))
     implementation(project(":domain:common"))
     implementation(project(":domain:user"))
     implementation(project(":domain:widget"))

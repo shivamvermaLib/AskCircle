@@ -1,4 +1,4 @@
-package com.ask.dashboard
+package com.ask.settings
 
 import org.junit.Test
 

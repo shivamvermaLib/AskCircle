@@ -24,11 +24,18 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -67,35 +74,37 @@ fun WidgetDetailScreen(
     lastVotedEmptyOptions: List<String>,
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
+    onBack: () -> Unit
 ) {
     val viewModel = hiltViewModel<WidgetDetailViewModel>()
     val context = LocalContext.current
     val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    LaunchedEffect(route) {
+        viewModel.screenOpenEvent(route)
+    }
     LaunchedEffect(widgetViewWidgetId, lastVotedEmptyOptions) {
         viewModel.init(
             widgetViewWidgetId,
             context.getString(R.string.unspecified),
             context.getString(R.string.male),
             context.getString(R.string.female),
-            lastVotedEmptyOptions
-        ) {
-            context.preLoadImages(it)
-        }
+            lastVotedEmptyOptions,
+            context::preLoadImages,
+        )
     }
     WidgetDetailScreen(
         widgetViewIndex,
         state,
         sharedTransitionScope,
         animatedContentScope,
-        { voteWidgetId, optionId ->
-            viewModel.vote(voteWidgetId, optionId, route)
-        },
+        viewModel::vote,
         onOpenImage,
-        onOpenIndexImage
+        onOpenIndexImage,
+        onBack
     )
 }
 
-@OptIn(ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalSharedTransitionApi::class, ExperimentalMaterial3Api::class)
 @Composable
 private fun WidgetDetailScreen(
     index: Int,
@@ -105,45 +114,66 @@ private fun WidgetDetailScreen(
     onOptionClick: (String, String) -> Unit,
     onOpenImage: (String?) -> Unit,
     onOpenIndexImage: (Int, String?) -> Unit,
+    onBack: () -> Unit = {}
 ) {
     val widget = widgetUiState.widgetDetailsWithResult.widgetWithOptionsAndVotesForTargetAudience
-    Box(modifier = Modifier.fillMaxSize()) {
-        if (widgetUiState.loading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Widget Details") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                }
+            )
         }
-        widgetUiState.error?.let {
-            Text(text = it, modifier = Modifier.align(Alignment.Center))
-        }
-        widget?.let {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                WidgetWithUserView(
-                    index,
-                    false,
-                    it,
-                    sharedTransitionScope,
-                    animatedContentScope,
-                    onOptionClick,
-                    onOpenIndexImage,
-                    onOpenImage,
-                    null
-                )
-                Spacer(modifier = Modifier.size(10.dp))
-                PieChartGroup(
-                    showAds = false,
-                    title = "Result",
-                    resultData = widgetUiState.widgetDetailsWithResult.widgetResults
-                )
-                widgetUiState.widgetDetailsWithResult.widgetOptionResults.forEach {
-                    PieChartGroup(
-                        showAds = true,
-                        title = it.key,
-                        resultData = it.value
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it)
+        ) {
+            if (widgetUiState.loading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+            widgetUiState.error?.let {
+                Text(text = it, modifier = Modifier.align(Alignment.Center))
+            }
+            widget?.let {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    WidgetWithUserView(
+                        index,
+                        false,
+                        it,
+                        sharedTransitionScope,
+                        animatedContentScope,
+                        onOptionClick,
+                        onOpenIndexImage,
+                        onOpenImage,
+                        null
                     )
+                    Spacer(modifier = Modifier.size(10.dp))
+                    PieChartGroup(
+                        showAds = false,
+                        title = "Result",
+                        resultData = widgetUiState.widgetDetailsWithResult.widgetResults
+                    )
+                    widgetUiState.widgetDetailsWithResult.widgetOptionResults.forEach {
+                        PieChartGroup(
+                            showAds = true,
+                            title = it.key,
+                            resultData = it.value
+                        )
+                    }
                 }
             }
         }

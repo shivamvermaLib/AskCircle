@@ -19,6 +19,9 @@
     <string name="let_s_shape_the_future_vote_now">LET\'S SHAPE THE FUTURE! VOTE NOW.</string>
     <string name="vote_for_your_favorite_option">VOTE FOR YOUR FAVORITE OPTION!</string>
     <string name="dashboard">Dashboard</string>
+    <string name="widget_collection_empty">Widget collection is empty</string>
+    <string name="start_creating_widgets">Start creating widgets by clicking the ‘+ Create’ button.</string>
+    <string name="widget_share_url" translatable="false">https://ask-app-36527.web.app/widget/%1$s</string>
 
 
 </resources>

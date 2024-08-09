@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.ask.category"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -38,7 +38,7 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
 
-    implementation(project(":data:category"))
+    api(project(":data:category"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
