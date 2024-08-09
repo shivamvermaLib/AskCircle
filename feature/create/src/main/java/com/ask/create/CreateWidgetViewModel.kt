@@ -234,12 +234,14 @@ class CreateWidgetViewModel @Inject constructor(
         _errorFlow,
         _optionErrorFlow
     ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories, startAt, endAt, error, optionError ->
-        val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size in 2..4
-            && ((optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all {
+        val textOptionValid = (optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all {
             !it.text.isNullOrBlank() && checkModerationUseCase(
                 it.text!!
-            )
-        }) || (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() }))
+            ).not()
+        })
+        val imageOptionValid = (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() })
+        val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size in 2..4
+            && (textOptionValid || imageOptionValid)
         CreateWidgetUiState(
             title,
             titleError,

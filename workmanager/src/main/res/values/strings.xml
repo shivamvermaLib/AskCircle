@@ -28,4 +28,6 @@
     <string name="we_re_fetching_the_latest_updates_for_you">We\'re fetching the latest updates for you.</string>
     <string name="updating_profile">Updating Profile</string>
     <string name="your_profile_information_is_being_updated_please_wait">Your profile information is being updated. Please wait...</string>
+    <string name="creating_widget">Creating Widget</string>
+    <string name="your_widget_is_being_created_please_wait">Your widget is being created. Please wait...</string>
 </resources>
