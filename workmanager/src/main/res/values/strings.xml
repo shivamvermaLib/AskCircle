@@ -24,4 +24,8 @@
     <string name="haven_t_voted_yet_cast_your_vote_and_help_shape_the_outcome">Haven\'t voted yet? Cast your vote and help shape the outcome.</string>
     <string name="don_t_forget_to_vote_on_the_widget_your_participation_is_important">Don\'t forget to vote on the widget. Your participation is important!</string>
     <string name="make_sure_your_voice_is_heard_vote_on_the_widget_today">Make sure your voice is heard. Vote on the widget today!</string>
+    <string name="fetching_latest_data">Fetching Latest Data</string>
+    <string name="we_re_fetching_the_latest_updates_for_you">We\'re fetching the latest updates for you.</string>
+    <string name="updating_profile">Updating Profile</string>
+    <string name="your_profile_information_is_being_updated_please_wait">Your profile information is being updated. Please wait...</string>
 </resources>

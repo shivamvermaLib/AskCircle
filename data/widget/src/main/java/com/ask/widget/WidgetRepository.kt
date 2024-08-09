@@ -118,7 +118,8 @@ class WidgetRepository @Inject constructor(
                 }
             }.let { list ->
                 list + async {
-                    preloadImages(createdPollWithOptionsAndVotesForTargetAudience.options.map { it.option.imageUrl.getAllImages() }.flatten())
+                    preloadImages(createdPollWithOptionsAndVotesForTargetAudience.options.map { it.option.imageUrl.getAllImages() }
+                        .flatten())
                 } + async {
                     widgetDao.insertWidget(createdPollWithOptionsAndVotesForTargetAudience.widget,
                         createdPollWithOptionsAndVotesForTargetAudience.targetAudienceGender,
@@ -182,7 +183,8 @@ class WidgetRepository @Inject constructor(
                     widgetWithOptionsAndVotesForTargetAudience.options.any { (it.option.imageUrl != null && it.option.text == null) || (it.option.imageUrl == null && it.option.text != null) }
                 }
 
-        val users = fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget.creatorId })
+        val users =
+            fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget.creatorId })
 
         widgetWithOptionsAndVotesForTargetAudiences =
             widgetWithOptionsAndVotesForTargetAudiences.map { widget ->
@@ -350,4 +352,5 @@ class WidgetRepository @Inject constructor(
 
 enum class NotificationType {
     NEW_WIDGETS, USER_VOTED_ON_YOUR_WIDGET, USER_NOT_VOTED_ON_WIDGET_REMINDER,
+    SYNC_DATA, UPDATE_PROFILE_DATA
 }
