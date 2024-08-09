@@ -29,17 +29,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -90,6 +95,7 @@ fun ProfileScreen(
     animatedContentScope: AnimatedContentScope,
     onMessage: (String, onDismiss: () -> Unit) -> Unit = { _, _ -> },
     onOpenImage: (String) -> Unit = {},
+    onBack: () -> Unit
 ) {
     val context = LocalContext.current
     val viewModel = hiltViewModel<ProfileViewModel>()
@@ -128,11 +134,14 @@ fun ProfileScreen(
         },
         viewModel::onImageClick,
         onOpenImage,
-        viewModel::onCategorySelect
+        viewModel::onCategorySelect,
+        onBack
     )
 }
 
-@OptIn(ExperimentalCoroutinesApi::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalSharedTransitionApi::class,
+    ExperimentalMaterial3Api::class
+)
 @Composable
 private fun ProfileScreen(
     @PreviewParameter(ProfileTabViewPreviewParameter::class) profile: ProfileUiState,
@@ -146,200 +155,221 @@ private fun ProfileScreen(
     onUpdate: () -> Unit = {},
     onImageClick: (String) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
-    onCategorySelect: (List<User.UserCategory>) -> Unit
+    onCategorySelect: (List<User.UserCategory>) -> Unit,
+    onBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    Column(
-        modifier = Modifier
-            .padding(all = 16.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(text = "Profile")
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back"
+                        )
+                    }
+                },
+            )
+        }
     ) {
-        val isConnected by connectivityState()
-        val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.PickVisualMedia(),
-            onResult = { uri ->
-                uri?.let { onImageClick(it.toString()) }
-            })
-        Box {
-            if (profile.profileLoading) {
-                Box(
-                    modifier = Modifier
-                        .size(160.dp)
-                        .background(shimmerBrush(), shape = RoundedCornerShape(20.dp))
-                )
-            } else {
-                with(sharedTransitionScope) {
-                    AppImage(url = profile.profilePic.getImage(ImageSizeType.SIZE_500),
-                        contentDescription = profile.name,
-                        contentScale = ContentScale.Fit,
-                        placeholder = R.drawable.baseline_account_box_24,
-                        error = R.drawable.baseline_account_box_24,
-                        modifier = Modifier.Companion
-                            .sharedElement(
-                                sharedTransitionScope.rememberSharedContentState(
-                                    key = profile.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
-                                        ?: EMPTY
-                                ), animatedVisibilityScope = animatedContentScope
-                            )
-                            .height(160.dp)
-                            .clip(RoundedCornerShape(20.dp))
-                            .clickable {
-                                profile.profilePic?.let {
-                                    onOpenImage(
-                                        it.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY
-                                    )
-                                }
-                            })
-                }
-            }
-            FilledIconButton(onClick = {
-                singlePhotoPickerLauncher.launch(
-                    PickVisualMediaRequest(
-                        ActivityResultContracts.PickVisualMedia.ImageOnly
-                    )
-                )
-            }, modifier = Modifier.align(Alignment.TopEnd)) {
-                Icon(
-                    Icons.Outlined.Edit, contentDescription = stringResource(R.string.edit_image)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.size(20.dp))
-        if (profile.profileLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(65.dp)
-                    .background(shimmerBrush())
-            )
-        } else {
-            AppTextField(
-                hint = stringResource(R.string.name),
-                value = profile.name,
-                onValueChange = setName,
-                isError = profile.nameError != -1,
-                errorMessage = profile.nameError.toErrorString(context),
-            )
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        if (profile.profileLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(65.dp)
-                    .background(shimmerBrush())
-            )
-        } else {
-            AppTextField(
-                hint = stringResource(R.string.email),
-                value = profile.email,
-                onValueChange = setEmail,
-                isError = profile.emailError != -1,
-                errorMessage = profile.emailError.toErrorString(context),
-            )
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(id = R.string.gender),
-                style = MaterialTheme.typography.titleMedium
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            if (profile.profileLoading) {
-                Box(
-                    modifier = Modifier
-                        .height(45.dp)
-                        .width(100.dp)
-                        .background(shimmerBrush())
-                )
-            } else {
-                AppOptionTypeSelect(
-                    Modifier,
-                    profile.gender == Gender.MALE,
-                    { setGender(Gender.MALE) },
-                    stringResource(id = R.string.male),
-                    ImageVector.vectorResource(id = R.drawable.baseline_male_24)
-                )
-            }
-            Spacer(modifier = Modifier.size(5.dp))
-            if (profile.profileLoading) {
-                Box(
-                    modifier = Modifier
-                        .height(45.dp)
-                        .width(100.dp)
-                        .background(shimmerBrush())
-                )
-            } else {
-                AppOptionTypeSelect(
-                    Modifier,
-                    profile.gender == Gender.FEMALE,
-                    { setGender(Gender.FEMALE) },
-                    stringResource(id = R.string.female),
-                    ImageVector.vectorResource(id = R.drawable.baseline_female_24)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.age), style = MaterialTheme.typography.titleSmall
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            if (profile.profileLoading) {
-                Box(
-                    modifier = Modifier
-                        .size(45.dp)
-                        .background(shimmerBrush())
-                )
-            } else {
-                DropDownWithSelect(
-                    list = (profile.minAgeRange..profile.maxAgeRange).map { it },
-                    title = profile.age?.toString() ?: "",
-                    onItemSelect = setAge,
-                    itemString = { it.toString() },
-                )
-            }
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(id = R.string.location),
-                style = MaterialTheme.typography.titleSmall
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            if (profile.profileLoading) {
-                Box(
-                    modifier = Modifier
-                        .height(45.dp)
-                        .width(100.dp)
-                        .background(shimmerBrush())
-                )
-            } else {
-                DropDownWithSelect(list = profile.countries,
-                    title = profile.countries.find { it.name == profile.country }?.let {
-                        "${it.emoji} ${it.name}"
-                    } ?: stringResource(id = R.string.select),
-                    modifier = Modifier.padding(horizontal = 4.dp),
-                    itemString = { "${it.emoji} ${it.name}" }) {
-                    setCountry(it.name)
-                }
-            }
-        }
-        Spacer(modifier = Modifier.size(8.dp))
-        CategorySelect(
-            profile.profileLoading, profile.categories, profile.userCategories, onCategorySelect
-        )
-        Spacer(modifier = Modifier.size(20.dp))
-        ElevatedButton(
-            onClick = onUpdate,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = profile.allowUpdate && isConnected && !profile.profileLoading
+        Column(
+            modifier = Modifier
+                .padding(it)
+                .padding(all = 16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = stringResource(R.string.update))
+            val isConnected by connectivityState()
+            val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.PickVisualMedia(),
+                onResult = { uri ->
+                    uri?.let { onImageClick(it.toString()) }
+                })
+            Box {
+                if (profile.profileLoading) {
+                    Box(
+                        modifier = Modifier
+                            .size(160.dp)
+                            .background(shimmerBrush(), shape = RoundedCornerShape(20.dp))
+                    )
+                } else {
+                    with(sharedTransitionScope) {
+                        AppImage(url = profile.profilePic.getImage(ImageSizeType.SIZE_500),
+                            contentDescription = profile.name,
+                            contentScale = ContentScale.Fit,
+                            placeholder = R.drawable.baseline_account_box_24,
+                            error = R.drawable.baseline_account_box_24,
+                            modifier = Modifier.Companion
+                                .sharedElement(
+                                    sharedTransitionScope.rememberSharedContentState(
+                                        key = profile.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
+                                            ?: EMPTY
+                                    ), animatedVisibilityScope = animatedContentScope
+                                )
+                                .height(160.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .clickable {
+                                    profile.profilePic?.let {
+                                        onOpenImage(
+                                            it.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY
+                                        )
+                                    }
+                                })
+                    }
+                }
+                FilledIconButton(onClick = {
+                    singlePhotoPickerLauncher.launch(
+                        PickVisualMediaRequest(
+                            ActivityResultContracts.PickVisualMedia.ImageOnly
+                        )
+                    )
+                }, modifier = Modifier.align(Alignment.TopEnd)) {
+                    Icon(
+                        Icons.Outlined.Edit,
+                        contentDescription = stringResource(R.string.edit_image)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.size(20.dp))
+            if (profile.profileLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(65.dp)
+                        .background(shimmerBrush())
+                )
+            } else {
+                AppTextField(
+                    hint = stringResource(R.string.name),
+                    value = profile.name,
+                    onValueChange = setName,
+                    isError = profile.nameError != -1,
+                    errorMessage = profile.nameError.toErrorString(context),
+                )
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            if (profile.profileLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(65.dp)
+                        .background(shimmerBrush())
+                )
+            } else {
+                AppTextField(
+                    hint = stringResource(R.string.email),
+                    value = profile.email,
+                    onValueChange = setEmail,
+                    isError = profile.emailError != -1,
+                    errorMessage = profile.emailError.toErrorString(context),
+                )
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(id = R.string.gender),
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                if (profile.profileLoading) {
+                    Box(
+                        modifier = Modifier
+                            .height(45.dp)
+                            .width(100.dp)
+                            .background(shimmerBrush())
+                    )
+                } else {
+                    AppOptionTypeSelect(
+                        Modifier,
+                        profile.gender == Gender.MALE,
+                        { setGender(Gender.MALE) },
+                        stringResource(id = R.string.male),
+                        ImageVector.vectorResource(id = R.drawable.baseline_male_24)
+                    )
+                }
+                Spacer(modifier = Modifier.size(5.dp))
+                if (profile.profileLoading) {
+                    Box(
+                        modifier = Modifier
+                            .height(45.dp)
+                            .width(100.dp)
+                            .background(shimmerBrush())
+                    )
+                } else {
+                    AppOptionTypeSelect(
+                        Modifier,
+                        profile.gender == Gender.FEMALE,
+                        { setGender(Gender.FEMALE) },
+                        stringResource(id = R.string.female),
+                        ImageVector.vectorResource(id = R.drawable.baseline_female_24)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.age), style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                if (profile.profileLoading) {
+                    Box(
+                        modifier = Modifier
+                            .size(45.dp)
+                            .background(shimmerBrush())
+                    )
+                } else {
+                    DropDownWithSelect(
+                        list = (profile.minAgeRange..profile.maxAgeRange).map { it },
+                        title = profile.age?.toString() ?: "",
+                        onItemSelect = setAge,
+                        itemString = { it.toString() },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(id = R.string.location),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                if (profile.profileLoading) {
+                    Box(
+                        modifier = Modifier
+                            .height(45.dp)
+                            .width(100.dp)
+                            .background(shimmerBrush())
+                    )
+                } else {
+                    DropDownWithSelect(list = profile.countries,
+                        title = profile.countries.find { it.name == profile.country }?.let {
+                            "${it.emoji} ${it.name}"
+                        } ?: stringResource(id = R.string.select),
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        itemString = { "${it.emoji} ${it.name}" }) {
+                        setCountry(it.name)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            CategorySelect(
+                profile.profileLoading, profile.categories, profile.userCategories, onCategorySelect
+            )
+            Spacer(modifier = Modifier.size(20.dp))
+            ElevatedButton(
+                onClick = onUpdate,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = profile.allowUpdate && isConnected && !profile.profileLoading
+            ) {
+                Text(text = stringResource(R.string.update))
+            }
+            Spacer(modifier = Modifier.size(100.dp))
         }
-        Spacer(modifier = Modifier.size(100.dp))
     }
 }
 

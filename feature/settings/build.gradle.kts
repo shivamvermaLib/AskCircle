@@ -31,6 +31,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+    buildFeatures {
+        buildConfig = true
+        compose = true
+    }
     kotlinOptions {
         jvmTarget = "1.8"
     }
@@ -41,9 +45,11 @@ dependencies {
     implementation(libs.bundles.androidx.ui.navigation)
     implementation(libs.bundles.hilt.navigation.work)
     implementation(libs.kotlinx.serialization.json)
+    implementation(project(":feature:common"))
+    implementation(project(":domain:user"))
     ksp(libs.hilt.compiler)
 
-    implementation(libs.firebase.crashlytics)
+//    implementation(libs.firebase.crashlytics)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

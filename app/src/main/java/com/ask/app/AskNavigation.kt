@@ -22,6 +22,7 @@ import com.ask.home.R
 import com.ask.imageview.ImageViewModel
 import com.ask.imageview.ImageViewScreen
 import com.ask.profile.ProfileScreen
+import com.ask.settings.SettingsScreen
 import com.ask.splash.SplashScreen
 import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
@@ -86,6 +87,7 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                     },
                     {
                         //settings
+                        navController.navigate(SettingsScreen)
                     },
                     {
                         it?.let {
@@ -113,11 +115,15 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                     this@SharedTransitionLayout,
                     this@composable,
                     { msg, onDismiss ->
-
+                        //TODO: message snackbar
                     },
                     {
                         navController.navigate(ImageViewScreen(it))
-                    })
+                    },
+                    {
+                        navController.popBackStack()
+                    }
+                )
             }
             composable<ImageViewScreen> {
                 val imageViewScreen = it.toRoute<ImageViewScreen>()
@@ -170,6 +176,12 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                     }
                 )
             }
+            composable<SettingsScreen> {
+                SettingsScreen(
+                    { navController.navigate(ProfileScreen) },
+                    { navController.popBackStack() }
+                )
+            }
         }
     }
 }
@@ -195,6 +207,9 @@ data class WidgetDetailsScreen(val index: Int, val widgetId: String)
 
 @Serializable
 data object AdminScreen
+
+@Serializable
+data object SettingsScreen
 
 
 class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :

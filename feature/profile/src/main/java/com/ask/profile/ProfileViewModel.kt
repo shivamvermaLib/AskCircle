@@ -8,7 +8,6 @@ import com.ask.common.CheckModerationUseCase
 import com.ask.common.GetCreateWidgetRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
-import com.ask.core.ImageSizeType
 import com.ask.country.GetCountryUseCase
 import com.ask.user.Gender
 import com.ask.user.GetCurrentProfileUseCase
@@ -76,10 +75,8 @@ class ProfileViewModel @Inject constructor(
             else -1
         val emailError =
             if (email.isNotBlank() && isValidEmail(email).not()) R.string.email_is_not_valid
-//            else if (checkModerationUseCase(email))
-//                "Email cannot contain bad words"
             else -1
-        val allowUpdate = nameError != -1 && emailError != -1
+        val allowUpdate = nameError == -1 && emailError == -1
         ProfileUiState(
             name = name,
             nameError = nameError,
@@ -141,36 +138,6 @@ class ProfileViewModel @Inject constructor(
 
     fun setError(error: String?) {
         _errorFlow.value = error
-    }
-
-    fun onUpdate(
-        getExtension: (String) -> String?,
-        getBytes: suspend (String) -> Map<ImageSizeType, ByteArray>,
-        preloadImage: suspend (List<String>) -> Unit
-    ) {
-        val profile = uiStateFlow.value
-        safeApiCall({
-            _profileLoadingFlow.value = true
-        }, {
-            updateProfileUseCase.invoke(
-                profile.name,
-                profile.email,
-                profile.gender,
-                profile.age,
-                profile.profilePic,
-                profile.country,
-                profile.userCategories,
-                null,
-                getExtension,
-                getBytes,
-                preloadImage
-            )
-            _profileLoadingFlow.value = false
-        }, {
-            _profileLoadingFlow.value = false
-            _errorFlow.value = it
-        })
-
     }
 
     fun onImageClick(path: String) {

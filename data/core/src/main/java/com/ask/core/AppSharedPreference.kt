@@ -3,6 +3,7 @@ package com.ask.core
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -10,7 +11,9 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import javax.inject.Inject
@@ -23,78 +26,116 @@ class AppSharedPreference @Inject constructor(@ApplicationContext private val co
         name = APP_SHARED_PREFERENCE
     )
 
-//    private val sharedPreference =
-//        context.getSharedPreferences(APP_SHARED_PREFERENCE, Context.MODE_PRIVATE)
+    private val tableUpdatedTime = stringPreferencesKey(TABLE_UPDATED_TIME)
+    private val refreshCount = longPreferencesKey(REFRESH_COUNT)
+    private val dbVersion = intPreferencesKey(DB_VERSION)
+    private val widgetBookmarks = stringSetPreferencesKey(WIDGET_BOOKMARK)
+    private val aiSearchPrompt = stringSetPreferencesKey(AI_SEARCH_PROMPT)
+    private val newWidgetNotifications =
+        booleanPreferencesKey(NEW_WIDGET_NOTIFICATION)
+    private val voteOnWidgetNotifications =
+        booleanPreferencesKey(VOTE_ON_WIDGET_NOTIFICATION)
+    private val widgetResultNotifications =
+        booleanPreferencesKey(WIDGET_RESULT_NOTIFICATION)
+    private val widgetTimeEndNotification =
+        booleanPreferencesKey(WIDGET_TIME_END_NOTIFICATION)
+    private val votingReminderNotification =
+        booleanPreferencesKey(VOTING_REMINDER_NOTIFICATION)
 
-    private val TABLE_UPDATED_TIME = stringPreferencesKey(AppSharedPreference.TABLE_UPDATED_TIME)
-    private val REFRESH_COUNT = longPreferencesKey(AppSharedPreference.REFRESH_COUNT)
-    private val DB_VERSION = intPreferencesKey(AppSharedPreference.DB_VERSION)
-    private val WIDGET_BOOKMARK = stringSetPreferencesKey(AppSharedPreference.WIDGET_BOOKMARK)
-    private val AI_SEARCH_PROMPT = stringSetPreferencesKey(AppSharedPreference.AI_SEARCH_PROMPT)
 
     suspend fun setUpdatedTime(updatedTime: UpdatedTime) {
-//        sharedPreference.edit().putString(TABLE_UPDATED_TIME, Json.encodeToString(updatedTime))
-//            .apply()
         context.userPreferencesDataStore.edit { preferences ->
-            preferences[TABLE_UPDATED_TIME] = Json.encodeToString(updatedTime)
+            preferences[tableUpdatedTime] = Json.encodeToString(updatedTime)
         }
     }
 
     suspend fun getUpdatedTime(): UpdatedTime {
-//        sharedPreference.getString(TABLE_UPDATED_TIME, null)?.let {
-//            Json.decodeFromString<UpdatedTime>(it)
-//        } ?: UpdatedTime()
         return context.userPreferencesDataStore.data.firstOrNull()?.let {
-            it[TABLE_UPDATED_TIME]?.let { json -> Json.decodeFromString(json) }
+            it[tableUpdatedTime]?.let { json -> Json.decodeFromString(json) }
         } ?: UpdatedTime()
     }
 
     suspend fun getRefreshCount(): Long {
-//        sharedPreference.getLong(REFRESH_COUNT, 0)
         return context.userPreferencesDataStore.data.firstOrNull()?.let {
-            it[REFRESH_COUNT]?.toLong()
+            it[refreshCount]?.toLong()
         } ?: 0
     }
 
     suspend fun setRefreshCount(count: Long) {
-//        sharedPreference.edit().putLong(REFRESH_COUNT, count).apply()
         context.userPreferencesDataStore.edit { preferences ->
-            preferences[REFRESH_COUNT] = count
+            preferences[refreshCount] = count
         }
     }
 
     suspend fun getDbVersion(): Int {
-        //sharedPreference.getInt(DB_VERSION, 1)
         return context.userPreferencesDataStore.data.firstOrNull()?.let {
-            it[DB_VERSION]?.toInt()
+            it[dbVersion]?.toInt()
         } ?: 1
     }
 
     suspend fun setDbVersion(version: Int) {
-//        sharedPreference.edit().putInt(DB_VERSION, version).apply()
         context.userPreferencesDataStore.edit { preferences ->
-            preferences[DB_VERSION] = version
+            preferences[dbVersion] = version
         }
     }
 
-
     suspend fun setAiSearchPrompt(search: String) {
         context.userPreferencesDataStore.edit { preferences ->
-            preferences[AI_SEARCH_PROMPT] = getAiSearchPrompt() + search
+            preferences[aiSearchPrompt] = getAiSearchPrompt() + search
         }
     }
 
     suspend fun getAiSearchPrompt(): Set<String> {
         return context.userPreferencesDataStore.data.firstOrNull()?.let {
-            return it[AI_SEARCH_PROMPT] ?: emptySet()
+            return it[aiSearchPrompt] ?: emptySet()
         } ?: emptySet()
     }
 
-
     suspend fun clearData() {
-//        sharedPreference.edit().clear().apply()
         context.userPreferencesDataStore.edit { preferences ->
             preferences.clear()
+        }
+    }
+
+    fun getNotificationsFlow(): Flow<NotificationSettings> {
+        return context.userPreferencesDataStore.data.map {
+            NotificationSettings(
+                newWidgetNotification = it[newWidgetNotifications] ?: false,
+                voteOnYourWidgetNotification = it[voteOnWidgetNotifications] ?: false,
+                widgetResultNotification = it[widgetResultNotifications] ?: false,
+                widgetTimeEndNotification = it[widgetTimeEndNotification] ?: false,
+                votingReminderNotification = it[votingReminderNotification] ?: false
+            )
+        }
+    }
+
+    suspend fun setNewWidgetNotification(newWidgetNotification: Boolean) {
+        context.userPreferencesDataStore.edit { preferences ->
+            preferences[newWidgetNotifications] = newWidgetNotification
+        }
+    }
+
+    suspend fun setVoteOnWidgetNotification(voteOnWidgetNotification: Boolean) {
+        context.userPreferencesDataStore.edit { preferences ->
+            preferences[voteOnWidgetNotifications] = voteOnWidgetNotification
+        }
+    }
+
+    suspend fun setWidgetResultNotification(widgetResultNotification: Boolean) {
+        context.userPreferencesDataStore.edit { preferences ->
+            preferences[widgetResultNotifications] = widgetResultNotification
+        }
+    }
+
+    suspend fun setWidgetTimeEndNotification(notification: Boolean) {
+        context.userPreferencesDataStore.edit { preferences ->
+            preferences[widgetTimeEndNotification] = notification
+        }
+    }
+
+    suspend fun setVotingReminderNotification(notification: Boolean) {
+        context.userPreferencesDataStore.edit { preferences ->
+            preferences[votingReminderNotification] = notification
         }
     }
 
@@ -105,5 +146,18 @@ class AppSharedPreference @Inject constructor(@ApplicationContext private val co
         const val WIDGET_BOOKMARK = "Widget bookmark"
         const val TABLE_UPDATED_TIME = "updated_time"
         const val AI_SEARCH_PROMPT = "ai_search_prompt"
+        const val NEW_WIDGET_NOTIFICATION = "new_widget_notification"
+        const val VOTE_ON_WIDGET_NOTIFICATION = "vote_on_widget_notification"
+        const val WIDGET_RESULT_NOTIFICATION = "widget_result_notification"
+        const val WIDGET_TIME_END_NOTIFICATION = "widget_time_end_notification"
+        const val VOTING_REMINDER_NOTIFICATION = "voting_reminder_notification"
     }
 }
+
+data class NotificationSettings(
+    val newWidgetNotification: Boolean = false,
+    val voteOnYourWidgetNotification: Boolean = false,
+    val widgetResultNotification: Boolean = false,
+    val widgetTimeEndNotification: Boolean = false,
+    val votingReminderNotification: Boolean = false,
+)

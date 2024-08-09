@@ -146,6 +146,7 @@ dependencies {
     implementation(project(":feature:home"))
     implementation(project(":feature:create"))
     implementation(project(":feature:admin"))
+    implementation(project(":feature:settings"))
     implementation(project(":domain:common"))
     implementation(project(":workmanager"))
 
