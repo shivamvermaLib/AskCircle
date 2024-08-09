@@ -11,7 +11,6 @@ import com.ask.core.EMPTY
 import com.ask.country.GetCountryUseCase
 import com.ask.user.Gender
 import com.ask.user.GetCurrentProfileUseCase
-import com.ask.user.UpdateProfileUseCase
 import com.ask.user.User
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +24,6 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     getCurrentProfileUseCase: GetCurrentProfileUseCase,
-    private val updateProfileUseCase: UpdateProfileUseCase,
     getCountryUseCase: GetCountryUseCase,
     getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
     getCategoryUseCase: GetCategoryUseCase,

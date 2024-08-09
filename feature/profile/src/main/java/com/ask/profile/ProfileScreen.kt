@@ -163,13 +163,13 @@ private fun ProfileScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Profile")
+                    Text(text = stringResource(R.string.profile))
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = stringResource(R.string.back)
                         )
                     }
                 },
@@ -267,6 +267,11 @@ private fun ProfileScreen(
                     onValueChange = setEmail,
                     isError = profile.emailError != -1,
                     errorMessage = profile.emailError.toErrorString(context),
+                    trailingIcon = {
+                        TextButton(onClick = { /*TODO*/ }) {
+                            Text(text = "Verify")
+                        }
+                    }
                 )
             }
             Spacer(modifier = Modifier.size(8.dp))

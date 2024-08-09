@@ -29,6 +29,7 @@ data class User(
     val profilePic: String? = null,
     val age: Int? = null,
     val gender: Gender? = null,
+    val isVerified: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {

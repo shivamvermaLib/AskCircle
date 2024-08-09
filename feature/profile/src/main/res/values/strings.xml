@@ -14,5 +14,7 @@
     <string name="gender">Gender</string>
     <string name="select">Select</string>
     <string name="location">Location</string>
+    <string name="profile">Profile</string>
+    <string name="back">Back</string>
 
 </resources>
