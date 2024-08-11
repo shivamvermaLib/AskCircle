@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.ask.admin"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -42,20 +42,16 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material3.window.size)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.bundles.androidx.ui.navigation)
+    implementation(libs.bundles.hilt.navigation.work)
+    implementation(libs.kotlinx.serialization.json)
+    ksp(libs.hilt.compiler)
 
+    implementation(libs.generativeai)
+    implementation(libs.jsoup)
+    implementation(libs.coil.compose)
 
-    implementation(libs.androidx.hilt.navigation.compose)
-    implementation(libs.hilt.android)
     implementation(project(":feature:common"))
     implementation(project(":domain:widget"))
     implementation(project(":data:widget"))
@@ -67,13 +63,8 @@ dependencies {
     implementation(project(":domain:common"))
     implementation(project(":domain:country"))
     implementation(project(":data:country"))
-    ksp(libs.hilt.compiler)
-
-    implementation(libs.generativeai)
     implementation(project(":data:analytics"))
-    implementation("org.jsoup:jsoup:1.15.3")
-    implementation(libs.coil.compose)
-    implementation(libs.kotlinx.serialization.json)
+
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

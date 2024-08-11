@@ -17,7 +17,7 @@ android {
     }
 
     namespace = "com.ask.common"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -56,25 +56,17 @@ android {
 }
 
 dependencies {
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.lifecycle.runtime.ktx)
-    implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material3.window.size)
-    implementation(libs.androidx.navigation.compose)
+    implementation(libs.bundles.androidx.ui.navigation)
 
     implementation(libs.firebase.crashlytics)
     implementation(libs.coil.compose)
+    implementation(libs.play.services.ads.lite)
 
     implementation(project(":data:analytics"))
     implementation(project(":data:core"))
     implementation(project(":data:widget"))
     implementation(project(":data:user"))
-    implementation(libs.play.services.ads.lite)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

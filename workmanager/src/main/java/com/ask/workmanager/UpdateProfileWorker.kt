@@ -19,6 +19,7 @@ import com.ask.core.EMPTY
 import com.ask.user.Gender
 import com.ask.user.UpdateProfileUseCase
 import com.ask.user.User
+import com.ask.widget.NotificationType
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +35,11 @@ class UpdateProfileWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
+            NotificationUtils.showNotification(
+                applicationContext,
+                NotificationType.UPDATE_PROFILE_DATA,
+                -1f
+            )
             setProgress(workDataOf(STATUS to WorkerStatus.Loading.name))
             val name = inputData.getString(NAME)
             val email = inputData.getString(EMAIL)
@@ -58,12 +64,19 @@ class UpdateProfileWorker @AssistedInject constructor(
                 applicationContext::getResizedImageByteArray,
                 applicationContext::preLoadImages
             )
-
+            NotificationUtils.cancelNotification(
+                applicationContext,
+                NotificationType.UPDATE_PROFILE_DATA
+            )
             setProgress(workDataOf(STATUS to WorkerStatus.Success.name))
             Result.success(workDataOf(STATUS to WorkerStatus.Success.name))
         } catch (e: Exception) {
             setProgress(workDataOf(STATUS to WorkerStatus.Failed.name))
             e.printStackTrace()
+            NotificationUtils.cancelNotification(
+                applicationContext,
+                NotificationType.UPDATE_PROFILE_DATA
+            )
             Result.failure()
         }
     }

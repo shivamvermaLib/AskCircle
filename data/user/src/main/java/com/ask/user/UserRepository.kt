@@ -99,6 +99,9 @@ class UserRepository @Inject constructor(
                     )
                 } ?: userDetails.userWidgetBookmarks))
         }.also {
+            /*if (!email.isNullOrBlank()) {
+                firebaseAuthSource.assignEmailToAccount(email)
+            }*/
             userDao.deleteCategories()
             userDao.deleteWidgetBookmarks()
             userDao.insertAll(

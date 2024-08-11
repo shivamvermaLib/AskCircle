@@ -41,6 +41,13 @@ object UserFirebaseModules {
 
     @Singleton
     @Provides
+    @Named(TABLE_FEEDBACK)
+    fun provideFeedbackReference(@Named(FIREBASE_DB) databaseReference: DatabaseReference): DatabaseReference {
+        return databaseReference.child(TABLE_FEEDBACK)
+    }
+
+    @Singleton
+    @Provides
     fun provideUserDataSource(@Named(TABLE_USERS) userReference: DatabaseReference): FirebaseDataSource<UserWithLocationCategory> =
         object : FirebaseDataSource<UserWithLocationCategory>(userReference) {
             override fun updateIdForItem(
@@ -83,5 +90,29 @@ object UserFirebaseModules {
                 )
             }
         }
+
+    @Singleton
+    @Provides
+    @Named(TABLE_FEEDBACK)
+    fun provideFeedbackDataSource(@Named(TABLE_FEEDBACK) feedbackReference: DatabaseReference): FirebaseDataSource<Feedback> {
+        return object : FirebaseDataSource<Feedback>(feedbackReference) {
+            override fun updateIdForItem(t: Feedback, id: String): Feedback {
+                return t.copy(id = id)
+            }
+
+            override fun getIdForItem(t: Feedback): String {
+                return t.id
+            }
+
+            override fun getItemFromDataSnapshot(dataSnapshot: DataSnapshot): Feedback? {
+                return dataSnapshot.getValue(Feedback::class.java)
+            }
+
+            override fun getItemFromMutableData(mutableData: MutableData): Feedback? {
+                return mutableData.getValue(Feedback::class.java)
+            }
+
+        }
+    }
 
 }

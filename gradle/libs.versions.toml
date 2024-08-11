@@ -3,6 +3,7 @@ agp = "8.5.1"
 datastorePreferences = "1.1.1"
 hiltAndroidVersion = "2.51.1"
 hiltWork = "1.2.0"
+jsoup = "1.15.3"
 kotlin = "2.0.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -15,23 +16,23 @@ google-services = "4.4.2"
 firebaseBom = "33.1.2"
 hiltNavigationCompose = "1.2.0"
 multidex = "2.0.1"
-navigationCompose = "2.8.0-beta06"
-coilCompose = "2.6.0"
-pagingCompose = "3.3.1"
-pagingRuntimeKtx = "3.3.1"
+navigationCompose = "2.8.0-beta07"
+coilCompose = "2.7.0"
+pagingCompose = "3.3.2"
+pagingRuntimeKtx = "3.3.2"
 playServicesAds = "23.2.0"
 roomKtx = "2.6.1"
-kotlinxSerializationJson = "1.6.3"
+kotlinxSerializationJson = "1.7.1"
 roomPaging = "2.6.1"
 roomRuntime = "2.6.1"
 uiTextGoogleFonts = "1.6.8"
-workRuntimeKtx = "2.9.0"
+workRuntimeKtx = "2.9.1"
 firebaseCrashlytics = "3.0.2"
 appcompat = "1.7.0"
 material = "1.12.0"
 uiTooling = "1.6.8"
 playServicesAdsLite = "23.2.0"
-kspVersion = "2.0.0-1.0.21"
+kspVersion = "2.0.0-1.0.23"
 generativeai = "0.9.0"
 googleAndroidLibrariesMapsplatformSecretsGradlePlugin = "2.0.1"
 
@@ -50,6 +51,7 @@ androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 firebase-config = { module = "com.google.firebase:firebase-config" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -104,3 +106,9 @@ firebase-crashlytics = { id = "com.google.firebase.crashlytics", version.ref = "
 android-library = { id = "com.android.library", version.ref = "agp" }
 kspPlugin = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
 google-android-libraries-mapsplatform-secrets-gradle-plugin = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "googleAndroidLibrariesMapsplatformSecretsGradlePlugin" }
+
+
+[bundles]
+firebase = ["firebase-analytics", "firebase-auth", "firebase-database", "firebase-config", "firebase-crashlytics", "firebase-storage"]
+androidx-ui-navigation = ["androidx-activity-compose", "androidx-appcompat", "androidx-core-ktx", "androidx-ui", "androidx-ui-graphics", "androidx-ui-tooling-preview", "androidx-material3", "androidx-material3-window-size", "androidx-lifecycle-runtime-ktx", "androidx-navigation-compose", "ui-tooling"]
+hilt-navigation-work = ["androidx-hilt-navigation-compose", "hilt-android", "androidx-hilt-work"]
