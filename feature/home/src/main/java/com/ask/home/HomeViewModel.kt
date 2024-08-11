@@ -3,9 +3,11 @@ package com.ask.home
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import androidx.paging.filter
 import androidx.work.WorkInfo
 import com.ask.analytics.AnalyticsLogger
 import com.ask.common.BaseViewModel
+import com.ask.user.GetCurrentProfileUseCase
 import com.ask.widget.BookmarkWidgetUseCase
 import com.ask.widget.Filter
 import com.ask.widget.GetWidgetsUseCase
@@ -31,6 +33,7 @@ class HomeViewModel @Inject constructor(
     getWidgetsUseCase: GetWidgetsUseCase,
     private val bookmarkWidgetUseCase: BookmarkWidgetUseCase,
     private val startStopWidgetAcceptingVoteUseCase: StartStopWidgetAcceptingVoteUseCase,
+    private val currentProfileUseCase: GetCurrentProfileUseCase,
     private val analyticsLogger: AnalyticsLogger
 ) :
     BaseViewModel(analyticsLogger) {
@@ -54,14 +57,32 @@ class HomeViewModel @Inject constructor(
             Triple(filter, lastVotedEmptyOptions, triggerRefresh)
         }
 
+    private val _searchFlow = MutableStateFlow("")
 
-    val widgetsFlow = getWidgetsUseCase(_filterWithLastVotedEmptyOptionsFlow)
-        .cachedIn(viewModelScope)
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), PagingData.empty())
+    val widgetsFlow = combine(
+        getWidgetsUseCase(_filterWithLastVotedEmptyOptionsFlow).cachedIn(viewModelScope),
+        _searchFlow
+    ) { widgets, search ->
+        widgets.filter {
+            if (search.isNotEmpty()) {
+                it.widget.title.lowercase()
+                    .contains(search.lowercase()) || it.options.any { option ->
+                    option.option.text?.lowercase()?.contains(search.lowercase()) == true
+                } || it.user.name.lowercase().contains(search.lowercase())
+            } else {
+                true
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), PagingData.empty())
 
 
-    val uiStateFlow = combine(_workerStatusFlow, _errorFlow) { workerStatus, error ->
-        HomeUiState(workerStatus, error)
+    val uiStateFlow = combine(
+        _workerStatusFlow,
+        _errorFlow,
+        currentProfileUseCase(),
+        _searchFlow
+    ) { workerStatus, error, user, search ->
+        HomeUiState(workerStatus, error, user.user, search)
     }.catch {
         it.printStackTrace()
         FirebaseCrashlytics.getInstance().recordException(it)
@@ -82,6 +103,9 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun setSearch(search: String) {
+        _searchFlow.value = search
+    }
 
     fun setLastVotedEmptyOptions(list: List<String>) {
         _lastVotedEmptyOptionsFlow.value = list

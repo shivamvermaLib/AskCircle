@@ -9,7 +9,7 @@ import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,24 +17,26 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.rememberLazyStaggeredGridState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ElevatedFilterChip
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
@@ -42,7 +44,8 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
@@ -55,7 +58,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -68,8 +74,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.ask.common.AppImage
 import com.ask.common.WidgetWithUserView
 import com.ask.common.connectivityState
+import com.ask.user.User
 import com.ask.widget.Filter
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.workmanager.CreateWidgetWorker
@@ -134,14 +142,15 @@ fun HomeScreen(
         },
         homeViewModel::onBookmarkClick,
         homeViewModel::onStopVoteClick,
-        homeViewModel::onStartVoteClick
+        homeViewModel::onStartVoteClick,
+        homeViewModel::setSearch
     )
 }
 
 @OptIn(
     ExperimentalMaterial3WindowSizeClassApi::class,
     ExperimentalCoroutinesApi::class,
-    ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class
+    ExperimentalSharedTransitionApi::class
 )
 @Preview
 @Composable
@@ -163,9 +172,9 @@ private fun HomeScreen(
     onShareClick: (String) -> Unit,
     onBookmarkClick: (String) -> Unit,
     onStartVoteClick: (String) -> Unit,
-    onStopVoteClick: (String) -> Unit
+    onStopVoteClick: (String) -> Unit,
+    onSearch: (String) -> Unit
 ) {
-    var showMenu by remember { mutableStateOf(false) }
     val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
     var selectedFilter by remember { mutableStateOf(Filter.Latest) }
@@ -181,49 +190,28 @@ private fun HomeScreen(
     }
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = stringResource(id = R.string.app_name)
-                    )
-                },
-                actions = {
-                    IconButton(onClick = { showMenu = !showMenu }) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_filter_list_24),
-                            contentDescription = stringResource(R.string.filter)
-                        )
+            Column(
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 46.dp,
+                    bottom = 10.dp
+                )
+            ) {
+                SearchBarUi(homeUiState.search, homeUiState.user, onSettingsClick, onSearch)
+                Spacer(modifier = Modifier.size(5.dp))
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    items(Filter.entries) {
+                        ElevatedFilterChip(
+                            selected = selectedFilter == it,
+                            onClick = { selectedFilter = it },
+                            label = { Text(text = it.title) })
                     }
-                    DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                        Filter.entries.forEach {
-                            val modifier =
-                                if (selectedFilter == it) Modifier.background(color = MaterialTheme.colorScheme.primaryContainer)
-                                else Modifier
-
-                            DropdownMenuItem(
-                                text = { Text(text = it.title) },
-                                onClick = {
-                                    selectedFilter = it
-                                    showMenu = false
-                                },
-                                modifier = modifier
-                            )
-                        }
-                    }
-                    IconButton(onClick = onSettingsClick) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_settings_24),
-                            contentDescription = "Settings"
-                        )
-                    }
-                    IconButton(onClick = onAdminClick) {
-                        Icon(
-                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_supervisor_account_24),
-                            contentDescription = "Admin"
-                        )
-                    }
-                },
-            )
+                }
+            }
         },
         snackbarHost = {
             SnackbarHost(
@@ -369,6 +357,60 @@ private fun DashBoardScreen(
                 onStartVoteClick
             )
         }
+    }
+}
+
+@Composable
+fun SearchBarUi(
+    search: String,
+    user: User,
+    onSettingsClick: () -> Unit,
+    onSearch: (String) -> Unit
+) {
+    ElevatedCard(
+        shape = RoundedCornerShape(30.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        TextField(
+            value = search,
+            onValueChange = onSearch,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            placeholder = {
+                Text(text = stringResource(R.string.search))
+            },
+            singleLine = true,
+            maxLines = 1,
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                cursorColor = MaterialTheme.colorScheme.primary
+            ),
+            leadingIcon = {
+                Icon(
+                    imageVector = ImageVector.vectorResource(id = R.drawable.baseline_search_24),
+                    contentDescription = stringResource(R.string.search),
+                )
+            },
+            trailingIcon = {
+                AppImage(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(shape = CircleShape)
+                        .clickable { onSettingsClick() },
+                    url = user.profilePic,
+                    contentDescription = user.name,
+                    contentScale = ContentScale.Crop,
+                    placeholder = R.drawable.baseline_account_circle_24,
+                    error = R.drawable.baseline_account_circle_24
+                )
+            }
+        )
     }
 }
 
