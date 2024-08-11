@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
 import com.ask.common.BaseViewModel
-import com.ask.common.CheckModerationUseCase
+import com.ask.common.GetAllBadWordsUseCase
 import com.ask.common.GetCreateWidgetRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
@@ -15,6 +15,7 @@ import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -25,15 +26,15 @@ class CreateWidgetViewModel @Inject constructor(
     getCountryUseCase: GetCountryUseCase,
     getCategoriesUseCase: GetCategoryUseCase,
     getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
-    private val checkModerationUseCase: CheckModerationUseCase,
+    getAllBadWordsUseCase: GetAllBadWordsUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
+    private val _badWordsListFlow =
+        getAllBadWordsUseCase().map { it.map { badWord -> badWord.english } }
     private val minOptions = 2
     private val maxOptions = getCreateWidgetRemoteConfigUseCase().maxOptionSize
     private val _titleFlow = MutableStateFlow(EMPTY)
-    private val _titleErrorFlow = MutableStateFlow(-1)
     private val _descFlow = MutableStateFlow(EMPTY)
-    private val _descErrorFlow = MutableStateFlow(-1)
     private val _optionType = MutableStateFlow(CreateWidgetUiState.WidgetOptionType.Text)
     private val _options = MutableStateFlow(
         listOf(
@@ -51,29 +52,18 @@ class CreateWidgetViewModel @Inject constructor(
     private val _startAtFlow = MutableStateFlow(System.currentTimeMillis())
     private val _endAtFlow = MutableStateFlow<Long?>(null)
     private val _errorFlow = MutableStateFlow(-1)
-    private val _optionErrorFlow = MutableStateFlow(emptyList<String>())
+
 
     fun setTitle(title: String) {
         viewModelScope.launch {
             _titleFlow.value = title
-            _titleErrorFlow.value = if (title.isBlank()) {
-                R.string.title_is_required
-            } else if (checkModerationUseCase.invoke(title)) {
-                R.string.title_cannot_contain_bad_words
-            } else {
-                -1
-            }
         }
     }
 
     fun setDesc(desc: String) {
         viewModelScope.launch {
             _descFlow.value = desc
-            if (checkModerationUseCase.invoke(desc)) {
-                _descErrorFlow.value = R.string.description_cannot_contain_bad_words
-            } else {
-                _descErrorFlow.value = -1
-            }
+
         }
     }
 
@@ -108,15 +98,6 @@ class CreateWidgetViewModel @Inject constructor(
 
     fun updateOption(index: Int, option: Widget.Option) {
         viewModelScope.launch {
-            if (option.text.isNullOrBlank().not()) {
-                if (checkModerationUseCase.invoke(option.text!!)) {
-                    _optionErrorFlow.value += option.id
-                    setError(R.string.text_cannot_contain_bad_words)
-                } else {
-                    _optionErrorFlow.value -= option.id
-                    setError(-1)
-                }
-            }
             _options.value = _options.value.toMutableList().apply {
                 this[index] = option
             }.toList()
@@ -216,11 +197,10 @@ class CreateWidgetViewModel @Inject constructor(
         _errorFlow.value = id
     }
 
+
     val uiStateFlow = combine(
         _titleFlow,
-        _titleErrorFlow,
         _descFlow,
-        _descErrorFlow,
         _optionType,
         _options,
         _targetAudienceGender,
@@ -232,16 +212,27 @@ class CreateWidgetViewModel @Inject constructor(
         _startAtFlow,
         _endAtFlow,
         _errorFlow,
-        _optionErrorFlow
-    ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories, startAt, endAt, error, optionError ->
-        val textOptionValid = (optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all {
-            !it.text.isNullOrBlank() && checkModerationUseCase(
-                it.text!!
-            ).not()
-        })
-        val imageOptionValid = (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() })
-        val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size in 2..4
-            && (textOptionValid || imageOptionValid)
+        _badWordsListFlow
+    ) { title, desc, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories, startAt, endAt, error, badWords ->
+        val titleError = if (title.isBlank()) {
+            R.string.title_is_required
+        } else if (badWords.contains(title.lowercase())) {
+            R.string.title_cannot_contain_bad_words
+        } else {
+            -1
+        }
+        val descError = if (badWords.contains(desc.lowercase())) {
+            R.string.description_cannot_contain_bad_words
+        } else {
+            -1
+        }
+
+        val optionError = options.filter {
+            it.text.isNullOrBlank().not() && badWords.contains(it.text!!.lowercase())
+        }.map { it.id }
+
+        val allowCreate =
+            title.isNotBlank() && options.size in minOptions..maxOptions && optionError.isEmpty() && titleError == -1 && descError == -1
         CreateWidgetUiState(
             title,
             titleError,

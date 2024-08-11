@@ -42,6 +42,9 @@ object NotificationUtils {
             NotificationType.SYNC_DATA -> R.string.fetching_latest_data to R.string.we_re_fetching_the_latest_updates_for_you
             NotificationType.UPDATE_PROFILE_DATA -> R.string.updating_profile to R.string.your_profile_information_is_being_updated_please_wait
             NotificationType.CREATE_WIDGET -> R.string.creating_widget to R.string.your_widget_is_being_created_please_wait
+            NotificationType.WIDGET_TIME_END -> R.string.your_widget_timer_has_ended to
+                R.string.the_timer_for_your_widget_has_ended_tap_to_view_the_results_and_see_how_your_audience_responded
+
         }
         val builder = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
             .setSmallIcon(R.drawable.baseline_circle_notifications_24)

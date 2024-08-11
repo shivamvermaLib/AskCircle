@@ -24,8 +24,8 @@ sealed class SettingEvent {
     data class ToggleVoteOnYourWidgetNotification(val voteOnYourWidgetNotification: Boolean) :
         SettingEvent()
 
-    data class ToggleWidgetResultNotification(val widgetResultNotification: Boolean) :
-        SettingEvent()
+//    data class ToggleWidgetResultNotification(val widgetResultNotification: Boolean) :
+//        SettingEvent()
 
     data class ToggleWidgetTimeEndNotification(val widgetTimeEndNotification: Boolean) :
         SettingEvent()

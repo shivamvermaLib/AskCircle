@@ -129,12 +129,12 @@ private fun SettingsScreen(
                     )
                 }
             )
-            SwitchWithTitleAndDesc(
+            /*SwitchWithTitleAndDesc(
                 title = stringResource(R.string.widget_result),
                 desc = stringResource(R.string.when_the_widget_you_vote_is_done),
                 state = state.notificationSettings.widgetResultNotification,
                 onStateChange = { onEvent(SettingEvent.ToggleWidgetResultNotification(it)) }
-            )
+            )*/
             SwitchWithTitleAndDesc(
                 title = stringResource(R.string.widget_time_end),
                 desc = stringResource(R.string.when_your_widget_time_ends),

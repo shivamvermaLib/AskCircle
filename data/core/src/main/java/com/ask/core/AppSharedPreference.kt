@@ -41,6 +41,8 @@ class AppSharedPreference @Inject constructor(@ApplicationContext private val co
         booleanPreferencesKey(WIDGET_TIME_END_NOTIFICATION)
     private val votingReminderNotification =
         booleanPreferencesKey(VOTING_REMINDER_NOTIFICATION)
+    private val widgetTimerEndIds =
+        stringSetPreferencesKey(WIDGET_TIMER_END_IDS)
 
 
     suspend fun setUpdatedTime(updatedTime: UpdatedTime) {
@@ -102,7 +104,7 @@ class AppSharedPreference @Inject constructor(@ApplicationContext private val co
             NotificationSettings(
                 newWidgetNotification = it[newWidgetNotifications] ?: false,
                 voteOnYourWidgetNotification = it[voteOnWidgetNotifications] ?: false,
-                widgetResultNotification = it[widgetResultNotifications] ?: false,
+//                widgetResultNotification = it[widgetResultNotifications] ?: false,
                 widgetTimeEndNotification = it[widgetTimeEndNotification] ?: false,
                 votingReminderNotification = it[votingReminderNotification] ?: false
             )
@@ -139,6 +141,18 @@ class AppSharedPreference @Inject constructor(@ApplicationContext private val co
         }
     }
 
+    suspend fun setWidgetIdTimerEndsNotification(widgetIds: List<String>) {
+        context.userPreferencesDataStore.edit { preferences ->
+            preferences[widgetTimerEndIds] = widgetIds.toSet()
+        }
+    }
+
+    suspend fun getWidgetIdTimerEndNotification(): Set<String> {
+        return context.userPreferencesDataStore.data.firstOrNull()?.let {
+            it[widgetTimerEndIds]
+        } ?: emptySet()
+    }
+
     companion object {
         const val APP_SHARED_PREFERENCE = "app_shared_preference"
         const val REFRESH_COUNT = "Refresh count"
@@ -151,13 +165,14 @@ class AppSharedPreference @Inject constructor(@ApplicationContext private val co
         const val WIDGET_RESULT_NOTIFICATION = "widget_result_notification"
         const val WIDGET_TIME_END_NOTIFICATION = "widget_time_end_notification"
         const val VOTING_REMINDER_NOTIFICATION = "voting_reminder_notification"
+        const val WIDGET_TIMER_END_IDS = "widget_timer_end_ids"
     }
 }
 
 data class NotificationSettings(
     val newWidgetNotification: Boolean = false,
     val voteOnYourWidgetNotification: Boolean = false,
-    val widgetResultNotification: Boolean = false,
+//    val widgetResultNotification: Boolean = false,
     val widgetTimeEndNotification: Boolean = false,
     val votingReminderNotification: Boolean = false,
 )

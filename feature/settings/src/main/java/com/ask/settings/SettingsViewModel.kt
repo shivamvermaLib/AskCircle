@@ -53,9 +53,9 @@ class SettingsViewModel @Inject constructor(
                     settingEvent.votingReminderNotification
                 )
 
-                is SettingEvent.ToggleWidgetResultNotification -> appSharedPreference.setWidgetResultNotification(
-                    settingEvent.widgetResultNotification
-                )
+//                is SettingEvent.ToggleWidgetResultNotification -> appSharedPreference.setWidgetResultNotification(
+//                    settingEvent.widgetResultNotification
+//                )
 
                 is SettingEvent.ToggleWidgetTimeEndNotification -> appSharedPreference.setWidgetTimeEndNotification(
                     settingEvent.widgetTimeEndNotification

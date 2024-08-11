@@ -13,6 +13,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import com.ask.common.preLoadImages
+import com.ask.core.AppSharedPreference
 import com.ask.widget.NotificationType
 import com.ask.widget.SyncUsersAndWidgetsUseCase
 import com.ask.workmanager.NotificationUtils.cancelNotification
@@ -20,12 +21,14 @@ import com.ask.workmanager.NotificationUtils.showNotification
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import java.util.concurrent.TimeUnit
 
 
 @HiltWorker
 class SyncWidgetWorker @AssistedInject constructor(
     private val syncWidgetUseCase: SyncUsersAndWidgetsUseCase,
+    private val appSharedPreference: AppSharedPreference,
     @Assisted context: Context,
     @Assisted params: WorkerParameters
 ) : CoroutineWorker(context, params) {
@@ -34,12 +37,29 @@ class SyncWidgetWorker @AssistedInject constructor(
         return try {
             showNotification(applicationContext, NotificationType.SYNC_DATA, 0f)
             setProgress(workDataOf(STATUS to WorkerStatus.Loading.name))
-            syncWidgetUseCase.invoke(true, applicationContext::preLoadImages, {
-                println("Progress: $it")
-                showNotification(applicationContext, NotificationType.SYNC_DATA, it)
-            }, {
-                showNotification(applicationContext, it)
-            })
+            val notificationSettings = appSharedPreference.getNotificationsFlow().firstOrNull()
+            syncWidgetUseCase.invoke(
+                isSplash = false,
+                isConnected = true,
+                preloadImages = applicationContext::preLoadImages,
+                onProgress = {
+                    println("Progress: $it")
+                    showNotification(applicationContext, NotificationType.SYNC_DATA, it)
+                },
+                onNotification = {
+                    val show = when (it) {
+                        NotificationType.NEW_WIDGETS -> notificationSettings?.newWidgetNotification
+                        NotificationType.USER_VOTED_ON_YOUR_WIDGET -> notificationSettings?.voteOnYourWidgetNotification
+                        NotificationType.USER_NOT_VOTED_ON_WIDGET_REMINDER -> notificationSettings?.votingReminderNotification
+                        NotificationType.SYNC_DATA -> true
+                        NotificationType.UPDATE_PROFILE_DATA -> true
+                        NotificationType.CREATE_WIDGET -> true
+                        NotificationType.WIDGET_TIME_END -> notificationSettings?.widgetTimeEndNotification
+                    }
+                    if (show == null || show) {
+                        showNotification(applicationContext, it)
+                    }
+                })
             setProgress(workDataOf(STATUS to WorkerStatus.Success.name))
             cancelNotification(applicationContext, NotificationType.SYNC_DATA)
             Result.success()

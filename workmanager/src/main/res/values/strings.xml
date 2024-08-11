@@ -30,4 +30,6 @@
     <string name="your_profile_information_is_being_updated_please_wait">Your profile information is being updated. Please wait...</string>
     <string name="creating_widget">Creating Widget</string>
     <string name="your_widget_is_being_created_please_wait">Your widget is being created. Please wait...</string>
+    <string name="your_widget_timer_has_ended">Your Widget Timer Has Ended!</string>
+    <string name="the_timer_for_your_widget_has_ended_tap_to_view_the_results_and_see_how_your_audience_responded">The timer for your widget has ended. Tap to view the results and see how your audience responded.</string>
 </resources>
