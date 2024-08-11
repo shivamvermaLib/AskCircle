@@ -132,6 +132,7 @@ dependencies {
     kspTest(libs.hilt.compiler)
 
     implementation(libs.play.services.ads)
+    implementation(libs.play.services.auth)
 
     implementation(project(":data:category"))
     implementation(project(":data:widget"))

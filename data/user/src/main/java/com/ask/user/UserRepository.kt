@@ -259,4 +259,17 @@ class UserRepository @Inject constructor(
         userDao.deleteAll()
     }
 
+    suspend fun signInWithGoogle(idToken: String?, email: String?) = withContext(dispatcher) {
+        val user = idToken?.let { firebaseAuthSource.signInWithGoogle(idToken) }
+        if (user == null) {
+            if (email == null) {
+                throw Exception("Not GoogleToken found and email is null")
+            } else {
+                updateUser(email = email)
+            }
+        } else {
+            updateUser(email = user.email)
+        }
+    }
+
 }

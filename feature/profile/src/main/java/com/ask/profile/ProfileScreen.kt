@@ -83,6 +83,7 @@ import com.ask.core.getImage
 import com.ask.user.Gender
 import com.ask.user.User
 import com.ask.workmanager.UpdateProfileWorker
+import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
@@ -100,6 +101,20 @@ fun ProfileScreen(
     val context = LocalContext.current
     val viewModel = hiltViewModel<ProfileViewModel>()
     val profileUiState by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val authResultLauncher =
+        rememberLauncherForActivityResult(contract = AuthResultContract()) { task ->
+            try {
+                val account = task?.getResult(ApiException::class.java)
+                if (account == null) {
+                    viewModel.setError(context.getString(R.string.google_sign_in_failed))
+                } else {
+                    viewModel.signInGoogle(account)
+                }
+            } catch (e: ApiException) {
+                e.printStackTrace()
+                viewModel.setError(context.getString(R.string.google_sign_in_failed))
+            }
+        }
     LaunchedEffect(Unit) {
         launch {
             viewModel.uiStateFlow.mapNotNull { it.error }.collect {
@@ -135,11 +150,13 @@ fun ProfileScreen(
         viewModel::onImageClick,
         onOpenImage,
         viewModel::onCategorySelect,
-        onBack
+        onBack,
+        { authResultLauncher.launch(1) }
     )
 }
 
-@OptIn(ExperimentalCoroutinesApi::class, ExperimentalSharedTransitionApi::class,
+@OptIn(
+    ExperimentalCoroutinesApi::class, ExperimentalSharedTransitionApi::class,
     ExperimentalMaterial3Api::class
 )
 @Composable
@@ -156,7 +173,8 @@ private fun ProfileScreen(
     onImageClick: (String) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
     onCategorySelect: (List<User.UserCategory>) -> Unit,
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    googleSignIn: () -> Unit = {}
 ) {
     val context = LocalContext.current
     Scaffold(
@@ -268,8 +286,13 @@ private fun ProfileScreen(
                     isError = profile.emailError != -1,
                     errorMessage = profile.emailError.toErrorString(context),
                     trailingIcon = {
-                        TextButton(onClick = { /*TODO*/ }) {
-                            Text(text = "Verify")
+                        Row {
+                            IconButton(onClick = googleSignIn) {
+                                Icon(
+                                    imageVector = ImageVector.vectorResource(id = R.drawable.google_178_svgrepo_com),
+                                    contentDescription = "Google Sign in"
+                                )
+                            }
                         }
                     }
                 )
