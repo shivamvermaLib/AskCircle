@@ -50,7 +50,7 @@ object NotificationUtils {
             .setSmallIcon(R.drawable.baseline_circle_notifications_24)
             .setContentTitle(applicationContext.getString(title))
             .setContentText(applicationContext.getString(message))
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setAutoCancel(true)
 
         if (progress != null) {
@@ -59,6 +59,9 @@ object NotificationUtils {
             } else {
                 builder.setProgress(100, (progress * 100).toInt(), false)
             }
+        }
+        if (notificationType == NotificationType.SYNC_DATA) {
+            builder.setPriority(NotificationCompat.PRIORITY_LOW)
         }
 
         val notificationManager = NotificationManagerCompat.from(applicationContext)

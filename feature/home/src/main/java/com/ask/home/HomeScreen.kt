@@ -77,6 +77,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.ask.common.AppImage
 import com.ask.common.WidgetWithUserView
 import com.ask.common.connectivityState
+import com.ask.core.EMPTY
 import com.ask.user.User
 import com.ask.widget.Filter
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
@@ -152,7 +153,6 @@ fun HomeScreen(
     ExperimentalCoroutinesApi::class,
     ExperimentalSharedTransitionApi::class
 )
-@Preview
 @Composable
 private fun HomeScreen(
     homeUiState: HomeUiState = HomeUiState(),
@@ -198,7 +198,13 @@ private fun HomeScreen(
                     bottom = 10.dp
                 )
             ) {
-                SearchBarUi(homeUiState.search, homeUiState.user, onSettingsClick, onSearch)
+                SearchBarUi(
+                    homeUiState.search,
+                    homeUiState.user,
+                    onSettingsClick,
+                    onSearch,
+                    onAdminClick
+                )
                 Spacer(modifier = Modifier.size(5.dp))
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
@@ -284,9 +290,9 @@ fun CreatingCard(modifier: Modifier = Modifier, visible: Boolean = true) {
     }
 }
 
-@Preview(name = "phone", device = "spec:shape=Normal,width=360,height=640,unit=dp,dpi=480")
+/*@Preview(name = "phone", device = "spec:shape=Normal,width=360,height=640,unit=dp,dpi=480")
 @Preview(name = "pixel4", device = "id:pixel_4")
-@Preview(name = "tablet", device = "spec:shape=Normal,width=1280,height=800,unit=dp,dpi=480")
+@Preview(name = "tablet", device = "spec:shape=Normal,width=1280,height=800,unit=dp,dpi=480")*/
 @OptIn(
     ExperimentalMaterial3WindowSizeClassApi::class,
     ExperimentalSharedTransitionApi::class
@@ -365,11 +371,12 @@ fun SearchBarUi(
     search: String,
     user: User,
     onSettingsClick: () -> Unit,
-    onSearch: (String) -> Unit
+    onSearch: (String) -> Unit,
+    onAdminClick: () -> Unit
 ) {
     ElevatedCard(
         shape = RoundedCornerShape(30.dp),
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         TextField(
             value = search,
@@ -395,20 +402,39 @@ fun SearchBarUi(
                 Icon(
                     imageVector = ImageVector.vectorResource(id = R.drawable.baseline_search_24),
                     contentDescription = stringResource(R.string.search),
+                    modifier = Modifier.padding(start = 16.dp)
                 )
             },
             trailingIcon = {
-                AppImage(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(shape = CircleShape)
-                        .clickable { onSettingsClick() },
-                    url = user.profilePic,
-                    contentDescription = user.name,
-                    contentScale = ContentScale.Crop,
-                    placeholder = R.drawable.baseline_account_circle_24,
-                    error = R.drawable.baseline_account_circle_24
-                )
+                Row(
+                    modifier = Modifier.padding(end = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    if (search.isNotEmpty()) {
+                        Icon(
+                            imageVector = ImageVector.vectorResource(id = R.drawable.baseline_clear_24),
+                            contentDescription = stringResource(R.string.clear_search),
+                            modifier = Modifier.clickable { onSearch(EMPTY) }
+                        )
+                    }
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = R.drawable.baseline_supervisor_account_24),
+                        contentDescription = stringResource(R.string.admin),
+                        modifier = Modifier.clickable { onAdminClick() }
+                    )
+                    AppImage(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(shape = CircleShape)
+                            .clickable { onSettingsClick() },
+                        url = user.profilePic,
+                        contentDescription = user.name,
+                        contentScale = ContentScale.Crop,
+                        placeholder = R.drawable.baseline_account_circle_24,
+                        error = R.drawable.baseline_account_circle_24
+                    )
+                }
             }
         )
     }

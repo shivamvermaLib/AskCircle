@@ -23,6 +23,8 @@
     <string name="start_creating_widgets">Start creating widgets by clicking the ‘+ Create’ button.</string>
     <string name="widget_share_url" translatable="false">https://ask-app-36527.web.app/widget/%1$s</string>
     <string name="search">Search</string>
+    <string name="clear_search">Clear Search</string>
+    <string name="admin">Admin</string>
 
 
 </resources>
