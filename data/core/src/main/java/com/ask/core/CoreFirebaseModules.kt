@@ -104,7 +104,7 @@ object CoreFirebaseModules {
     fun provideRemoteConfig(): FirebaseRemoteConfig {
         return Firebase.remoteConfig.apply {
             val configSettings = remoteConfigSettings {
-                minimumFetchIntervalInSeconds = if (BuildConfig.DEBUG) 10 else 3600
+                minimumFetchIntervalInSeconds = /*if (BuildConfig.DEBUG) 10 else*/ 3600
             }
             setConfigSettingsAsync(configSettings)
         }

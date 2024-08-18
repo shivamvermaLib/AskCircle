@@ -22,7 +22,7 @@ android {
     }
 
     namespace = "com.ask.app"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.ask.app"
@@ -106,6 +106,9 @@ dependencies {
 
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
+    implementation(project(":feature:profile"))
+    implementation(project(":feature:imageview"))
+    implementation(project(":feature:widgetdetails"))
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.paging)
 
@@ -129,6 +132,7 @@ dependencies {
     kspTest(libs.hilt.compiler)
 
     implementation(libs.play.services.ads)
+    implementation(libs.play.services.auth)
 
     implementation(project(":data:category"))
     implementation(project(":data:widget"))
@@ -142,6 +146,8 @@ dependencies {
     implementation(project(":feature:common"))
     implementation(project(":feature:home"))
     implementation(project(":feature:create"))
+    implementation(project(":feature:admin"))
+    implementation(project(":feature:settings"))
     implementation(project(":domain:common"))
     implementation(project(":workmanager"))
 

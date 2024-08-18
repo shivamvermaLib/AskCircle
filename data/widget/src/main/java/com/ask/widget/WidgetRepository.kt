@@ -118,7 +118,8 @@ class WidgetRepository @Inject constructor(
                 }
             }.let { list ->
                 list + async {
-                    preloadImages(createdPollWithOptionsAndVotesForTargetAudience.options.map { it.option.imageUrl.getAllImages() }.flatten())
+                    preloadImages(createdPollWithOptionsAndVotesForTargetAudience.options.map { it.option.imageUrl.getAllImages() }
+                        .flatten())
                 } + async {
                     widgetDao.insertWidget(createdPollWithOptionsAndVotesForTargetAudience.widget,
                         createdPollWithOptionsAndVotesForTargetAudience.targetAudienceGender,
@@ -165,9 +166,11 @@ class WidgetRepository @Inject constructor(
         currentUserId: String,
         lastUpdatedTime: UpdatedTime,
         searchCombinations: Set<String>,
+        widgetIdWithTimerEnds:Set<String>,
         fetchUsersDetails: suspend (List<String>) -> List<UserWithLocationCategory>,
         preloadImages: suspend (List<String>) -> Unit,
         onNotification: (NotificationType) -> Unit,
+        onTimerEndWidgets: suspend (List<String>) -> Unit
     ) = withContext(dispatcher) {
         val widgetIds = searchCombinations.map {
             async {
@@ -182,7 +185,8 @@ class WidgetRepository @Inject constructor(
                     widgetWithOptionsAndVotesForTargetAudience.options.any { (it.option.imageUrl != null && it.option.text == null) || (it.option.imageUrl == null && it.option.text != null) }
                 }
 
-        val users = fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget.creatorId })
+        val users =
+            fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget.creatorId })
 
         widgetWithOptionsAndVotesForTargetAudiences =
             widgetWithOptionsAndVotesForTargetAudiences.map { widget ->
@@ -193,6 +197,8 @@ class WidgetRepository @Inject constructor(
         val totalWidgetsCount = widgetDao.getWidgetsCount()
         val totalUserWidgetVoteCount = widgetDao.getUserWidgetsVoteCount(currentUserId)
         val widgetIdsNotVotedByUser = widgetDao.getWidgetIdsOnWhichUserNotVoted(currentUserId)
+        val widgetIdWithTimerEndsLatest = widgetDao.getWidgetIdsWhichTimerEnds(currentUserId)
+
         awaitAll(async {
             fetchUsersDetails(widgetWithOptionsAndVotesForTargetAudiences.filter { it.isWidgetEnd }
                 .map { widgetWithOptionsAndVotesForTargetAudience ->
@@ -220,13 +226,23 @@ class WidgetRepository @Inject constructor(
         if (widgetWithOptionsAndVotesForTargetAudiences.size > totalWidgetsCount) {
             onNotification(NotificationType.NEW_WIDGETS)
         }
-        if (totalUserWidgetVoteCount < widgetWithOptionsAndVotesForTargetAudiences.map { it.options.map { it.votes.size } }
+        if (totalUserWidgetVoteCount < widgetWithOptionsAndVotesForTargetAudiences.map { targetAudience -> targetAudience.options.map { it.votes.size } }
                 .flatten().size) {
             onNotification(NotificationType.USER_VOTED_ON_YOUR_WIDGET)
         }
         if (widgetIdsNotVotedByUser.isNotEmpty()) {
             onNotification(NotificationType.USER_NOT_VOTED_ON_WIDGET_REMINDER)
         }
+        if (widgetIdWithTimerEndsLatest.isNotEmpty()) {
+            widgetIdWithTimerEndsLatest.filter { widgetIdWithTimerEnds.contains(it).not() }.let {
+                if(it.isNotEmpty()) {
+                    onTimerEndWidgets(widgetIdWithTimerEndsLatest)
+                    onNotification(NotificationType.WIDGET_TIME_END)
+                }
+            }
+
+        }
+
 
 //        return@withContext widgetWithOptionsAndVotesForTargetAudiences.any { it.widget.creatorId != currentUserId && it.widget.createdAt > lastUpdatedTime.widgetTime && lastUpdatedTime.widgetTime > 0 }
     }
@@ -348,6 +364,3 @@ class WidgetRepository @Inject constructor(
     }
 }
 
-enum class NotificationType {
-    NEW_WIDGETS, USER_VOTED_ON_YOUR_WIDGET, USER_NOT_VOTED_ON_WIDGET_REMINDER,
-}

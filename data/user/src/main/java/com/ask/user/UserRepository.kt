@@ -28,13 +28,39 @@ class UserRepository @Inject constructor(
     @Named(DISPATCHER_IO) private val dispatcher: CoroutineDispatcher
 ) {
 
-    suspend fun createUser(): UserWithLocationCategory = withContext(dispatcher) {
-        val user = firebaseAuthSource.getCurrentUserId()?.let {
+    suspend fun anonymousSignIn() = withContext(dispatcher) {
+        createUser(firebaseAuthSource.signInAnonymously(), null, null)
+    }
+
+    suspend fun googleLogin(idToken: String) =
+        withContext(dispatcher) {
+            val user = firebaseAuthSource.signInWithGoogle(idToken)
+            user?.let {
+                createUser(it.uid, it.email, it.displayName)
+            } ?: throw Exception("Unable to Google Login")
+        }
+
+    suspend fun connectWithGoogle(idToken: String) = withContext(dispatcher) {
+        firebaseAuthSource.connectWithGoogle(idToken).let {
+            updateUser(name = it.displayName, email = it.email)
+        }
+    }
+
+    suspend fun checkCurrentUser(): UserWithLocationCategory? = withContext(dispatcher) {
+        firebaseAuthSource.getCurrentUserId()?.let {
             getCurrentUserOptional(true)
-        } ?: firebaseAuthSource.signInAnonymously().let { id ->
+        }
+    }
+
+    private suspend fun createUser(
+        id: String,
+        email: String?,
+        name: String?
+    ): UserWithLocationCategory =
+        withContext(dispatcher) {
             userDataSource.addItem(
                 UserWithLocationCategory(
-                    user = User(id = id),
+                    user = User(id = id, email = email, name = name ?: ANONYMOUS_USER),
                     userLocation = User.UserLocation(userId = id),
                     userCategories = listOf(),
                     userWidgetBookmarks = listOf()
@@ -52,8 +78,6 @@ class UserRepository @Inject constructor(
                 }
             }
         }
-        user
-    }
 
     suspend fun updateUser(
         name: String? = null,
@@ -66,7 +90,6 @@ class UserRepository @Inject constructor(
         userCategories: List<User.UserCategory>? = null,
         widgetBookmarks: List<User.UserWidgetBookmarks>? = null
     ): UserWithLocationCategory = withContext(dispatcher) {
-        println("User repository called")
         val profilePic =
             if (profileByteArray != null && profilePicExtension != null) profileByteArray.map {
                 userStorageSource.upload(
@@ -99,6 +122,9 @@ class UserRepository @Inject constructor(
                     )
                 } ?: userDetails.userWidgetBookmarks))
         }.also {
+            /*if (!email.isNullOrBlank()) {
+                firebaseAuthSource.assignEmailToAccount(email)
+            }*/
             userDao.deleteCategories()
             userDao.deleteWidgetBookmarks()
             userDao.insertAll(
@@ -255,5 +281,6 @@ class UserRepository @Inject constructor(
     suspend fun clearAll() = withContext(dispatcher) {
         userDao.deleteAll()
     }
+
 
 }

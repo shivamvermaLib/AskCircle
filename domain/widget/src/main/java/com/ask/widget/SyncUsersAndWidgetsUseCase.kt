@@ -31,6 +31,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(
+        isSplash: Boolean = false,
         isConnected: Boolean = true,
         preloadImages: suspend (List<String>) -> Unit,
         onProgress: (Float) -> Unit,
@@ -50,7 +51,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         val lastUpdatedTime = sharedPreference.getUpdatedTime()
         val lastDbVersion = sharedPreference.getDbVersion()
         if (userRepository.getCurrentUserOptional() == null) {
-            refreshNeeded = true
+            return@withContext
         } else if (refreshCountServer != refreshCountLocal || lastDbVersion != dbVersion) {
             refreshNeeded = true
             widgetRepository.clearAll()
@@ -69,7 +70,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         onProgress(0.38f)
         if (refreshNeeded) {
             val time = System.currentTimeMillis()
-            userRepository.createUser().let { userWithLocation ->
+            userRepository.checkCurrentUser()?.let { userWithLocation ->
                 generateCombinationsForUsers(
                     userWithLocation.user.gender,
                     userWithLocation.user.age,
@@ -82,11 +83,16 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         userRepository.getCurrentUserId(),
                         lastUpdatedTime,
                         list,
+                        sharedPreference.getWidgetIdTimerEndNotification(),
                         {
                             userRepository.getUserDetailList(it, true, preloadImages)
                         },
                         preloadImages,
-                        onNotification
+                        onNotification,
+                        {
+                            if (isSplash.not())
+                                sharedPreference.setWidgetIdTimerEndsNotification(it)
+                        }
                     ).also {
                         onProgress(0.8f)
                         listOf(
@@ -96,20 +102,20 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         ).awaitAll()
                     }
                 }
-            }
-            onProgress(0.9f)
-            val duration = System.currentTimeMillis() - time
-            analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
-            sharedPreference.setRefreshCount(refreshCountServer)
-            sharedPreference.setDbVersion(dbVersion)
-            sharedPreference.setUpdatedTime(
-                UpdatedTime(
-                    widgetTime = System.currentTimeMillis(),
-                    voteTime = System.currentTimeMillis(),
-                    profileTime = System.currentTimeMillis()
+                onProgress(0.9f)
+                val duration = System.currentTimeMillis() - time
+                analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
+                sharedPreference.setRefreshCount(refreshCountServer)
+                sharedPreference.setDbVersion(dbVersion)
+                sharedPreference.setUpdatedTime(
+                    UpdatedTime(
+                        widgetTime = System.currentTimeMillis(),
+                        voteTime = System.currentTimeMillis(),
+                        profileTime = System.currentTimeMillis()
+                    )
                 )
-            )
-            onProgress(1f)
+                onProgress(1f)
+            }
             return@withContext
         } else {
             onProgress(1f)

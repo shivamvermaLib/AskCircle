@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.ask.analytics"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
