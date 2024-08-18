@@ -11,9 +11,7 @@ import com.ask.core.EMPTY
 import com.ask.country.GetCountryUseCase
 import com.ask.user.Gender
 import com.ask.user.GetCurrentProfileUseCase
-import com.ask.user.GoogleSignInUseCase
 import com.ask.user.User
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,7 +27,6 @@ class ProfileViewModel @Inject constructor(
     getCountryUseCase: GetCountryUseCase,
     getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
     getCategoryUseCase: GetCategoryUseCase,
-    private val googleSignInUseCase: GoogleSignInUseCase,
     private val checkModerationUseCase: CheckModerationUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
@@ -147,12 +144,6 @@ class ProfileViewModel @Inject constructor(
 
     fun onCategorySelect(userCategories: List<User.UserCategory>) {
         _userCategoriesFlow.value = userCategories
-    }
-
-    fun signInGoogle(account: GoogleSignInAccount) {
-        viewModelScope.launch {
-            googleSignInUseCase(account.idToken, account.email)
-        }
     }
 
 }

@@ -49,8 +49,6 @@ dependencies {
     implementation(project(":domain:user"))
     ksp(libs.hilt.compiler)
 
-//    implementation(libs.firebase.crashlytics)
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

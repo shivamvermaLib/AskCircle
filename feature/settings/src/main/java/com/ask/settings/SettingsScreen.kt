@@ -28,10 +28,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
@@ -41,15 +43,22 @@ import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ask.user.FeedbackType
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(onProfileClick: () -> Unit, onBack: () -> Unit) {
     val viewModel = hiltViewModel<SettingsViewModel>()
     val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     SettingsScreen(
         state, viewModel::onEvent, onProfileClick, onBack,
         viewModel::submitFeedback
-    )
+    ) {
+        scope.launch {
+
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,6 +69,7 @@ private fun SettingsScreen(
     onProfileClick: () -> Unit,
     onBack: () -> Unit,
     onSendFeedback: (FeedbackType, String) -> Unit = { _, _ -> },
+    onGoogleLogin: () -> Unit = {}
 ) {
     val uriHandler = LocalUriHandler.current
     var showFeedbackDialog by remember { mutableStateOf(false) }
@@ -104,6 +114,12 @@ private fun SettingsScreen(
                 title = stringResource(R.string.edit_profile),
                 desc = stringResource(R.string.view_and_edit_your_profile_information),
                 onClick = onProfileClick
+            )
+            Spacer(modifier = Modifier.size(10.dp))
+            ConnectTile(
+                title = "Connect Via Account",
+                desc = "Connect and sync your data, making it accessible from any device you log in to.",
+                onClick = onGoogleLogin
             )
             Spacer(modifier = Modifier.size(10.dp))
             Text(
@@ -248,6 +264,30 @@ fun SettingsTile(title: String, desc: String, onClick: () -> Unit = {}) {
     ) {
         Text(text = title, style = MaterialTheme.typography.titleMedium)
         Text(text = desc, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Composable
+fun ConnectTile(title: String, desc: String, onClick: () -> Unit = {}) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 6.dp),
+    ) {
+        Column(modifier = Modifier
+            .weight(2f)
+            .clickable { onClick() }
+        ) {
+            Text(text = title, style = MaterialTheme.typography.titleMedium)
+            Text(text = desc, style = MaterialTheme.typography.bodySmall)
+        }
+        Spacer(modifier = Modifier.weight(1f))
+//        IconButton(onClick = onClick) {
+//            Icon(
+//                imageVector = ImageVector.vectorResource(id = R.drawable.google_178_svgrepo_com),
+//                contentDescription = "Google Sign in"
+//            )
+//        }
     }
 }
 

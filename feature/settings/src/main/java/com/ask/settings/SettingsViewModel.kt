@@ -60,6 +60,8 @@ class SettingsViewModel @Inject constructor(
                 is SettingEvent.ToggleWidgetTimeEndNotification -> appSharedPreference.setWidgetTimeEndNotification(
                     settingEvent.widgetTimeEndNotification
                 )
+
+                SettingEvent.ProfileClick -> TODO()
             }
         }
     }

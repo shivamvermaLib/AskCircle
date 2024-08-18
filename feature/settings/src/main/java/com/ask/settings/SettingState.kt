@@ -32,4 +32,6 @@ sealed class SettingEvent {
 
     data class ToggleVotingReminderNotification(val votingReminderNotification: Boolean) :
         SettingEvent()
+
+    data object ProfileClick : SettingEvent()
 }
