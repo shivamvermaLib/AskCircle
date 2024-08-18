@@ -35,7 +35,7 @@ class SplashViewModel @Inject constructor(
             val user = when (splashUiEvent) {
                 is SplashUiEvent.GoogleLoginUiEvent -> {
                     googleLogin(splashUiEvent.context)?.let { credential ->
-                        googleLoginUseCase(credential.idToken)
+                        googleLoginUseCase(credential.idToken,true)
                     }
                 }
 

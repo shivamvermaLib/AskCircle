@@ -1,5 +1,6 @@
 package com.ask.profile
 
+import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -33,6 +34,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -135,7 +137,8 @@ fun ProfileScreen(
         viewModel::onImageClick,
         onOpenImage,
         viewModel::onCategorySelect,
-        onBack
+        onBack,
+        viewModel::connectWithGoogle
     )
 }
 
@@ -157,7 +160,8 @@ private fun ProfileScreen(
     onImageClick: (String) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
     onCategorySelect: (List<User.UserCategory>) -> Unit,
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onConnectWithGoogle: (context: Context) -> Unit = {}
 ) {
     val context = LocalContext.current
     Scaffold(
@@ -176,10 +180,10 @@ private fun ProfileScreen(
                 },
             )
         }
-    ) {
+    ) { paddingValues ->
         Column(
             modifier = Modifier
-                .padding(it)
+                .padding(paddingValues)
                 .padding(all = 16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
@@ -268,7 +272,19 @@ private fun ProfileScreen(
                     onValueChange = setEmail,
                     isError = profile.emailError != -1,
                     errorMessage = profile.emailError.toErrorString(context),
-                    trailingIcon = {}
+                    trailingIcon = {
+                        if (profile.googleLoginLoading) {
+                            CircularProgressIndicator()
+                        } else {
+                            IconButton(onClick = { onConnectWithGoogle(context) }) {
+                                Icon(
+                                    ImageVector.vectorResource(id = R.drawable.google_178_svgrepo_com),
+                                    contentDescription = "Connect with Google Account"
+                                )
+                            }
+                        }
+                    },
+                    enabled = false
                 )
             }
             Spacer(modifier = Modifier.size(8.dp))

@@ -40,13 +40,23 @@ class UserRepository @Inject constructor(
             } ?: throw Exception("Unable to Google Login")
         }
 
+    suspend fun connectWithGoogle(idToken: String) = withContext(dispatcher) {
+        firebaseAuthSource.connectWithGoogle(idToken).let {
+            updateUser(name = it.displayName, email = it.email)
+        }
+    }
+
     suspend fun checkCurrentUser(): UserWithLocationCategory? = withContext(dispatcher) {
         firebaseAuthSource.getCurrentUserId()?.let {
             getCurrentUserOptional(true)
         }
     }
 
-    private suspend fun createUser(id: String, email: String?, name: String?): UserWithLocationCategory =
+    private suspend fun createUser(
+        id: String,
+        email: String?,
+        name: String?
+    ): UserWithLocationCategory =
         withContext(dispatcher) {
             userDataSource.addItem(
                 UserWithLocationCategory(

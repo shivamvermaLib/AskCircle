@@ -24,5 +24,6 @@ data class ProfileUiState(
     val minAgeRange: Int = MIN_AGE_RANGE,
     val maxAgeRange: Int = MAX_AGE_RANGE,
     val categories: List<CategoryWithSubCategory> = emptyList(),
-    val userCategories: List<User.UserCategory> = emptyList()
+    val userCategories: List<User.UserCategory> = emptyList(),
+    val googleLoginLoading: Boolean = false
 )

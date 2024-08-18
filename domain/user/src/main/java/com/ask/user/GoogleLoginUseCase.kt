@@ -11,7 +11,10 @@ class GoogleLoginUseCase @Inject constructor(
     @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
 
-    suspend operator fun invoke(idToken: String) = withContext(dispatcher) {
-        userRepository.googleLogin(idToken)
+    suspend operator fun invoke(idToken: String, isNewUser: Boolean) = withContext(dispatcher) {
+        if (isNewUser)
+            userRepository.googleLogin(idToken)
+        else
+            userRepository.connectWithGoogle(idToken)
     }
 }

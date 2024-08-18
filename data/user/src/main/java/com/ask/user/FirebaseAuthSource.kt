@@ -31,11 +31,14 @@ class FirebaseAuthSource @Inject constructor(private val firebaseAuth: FirebaseA
 
     suspend fun connectWithGoogle(idToken: String) = suspendCoroutine { cont ->
         val credential = GoogleAuthProvider.getCredential(idToken, null)
-        firebaseAuth.currentUser!!.linkWithCredential(credential)
+        (firebaseAuth.currentUser
+            ?: throw Exception("User Not Logged In or Current User Not Found")).linkWithCredential(
+            credential
+        )
             .addOnFailureListener { cont.resumeWithException(it) }
             .addOnSuccessListener {
                 cont.resume(
-                    it.user?.uid ?: throw Exception("Firebase Unable to create user")
+                    it.user ?: throw Exception("Firebase Unable to create user")
                 )
             }
     }
