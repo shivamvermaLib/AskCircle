@@ -15,7 +15,6 @@ import com.ask.core.UpdatedTime
 import com.ask.core.checkIfFirebaseUrl
 import com.ask.core.fileNameWithExtension
 import com.ask.core.getAllImages
-import com.ask.core.getImage
 import com.ask.core.isUpdateRequired
 import com.ask.user.UserWithLocationCategory
 import kotlinx.coroutines.CoroutineDispatcher
@@ -166,7 +165,7 @@ class WidgetRepository @Inject constructor(
         currentUserId: String,
         lastUpdatedTime: UpdatedTime,
         searchCombinations: Set<String>,
-        widgetIdWithTimerEnds:Set<String>,
+        widgetIdWithTimerEnds: Set<String>,
         fetchUsersDetails: suspend (List<String>) -> List<UserWithLocationCategory>,
         preloadImages: suspend (List<String>) -> Unit,
         onNotification: (NotificationType) -> Unit,
@@ -208,7 +207,7 @@ class WidgetRepository @Inject constructor(
                 }.flatten())
         }, async {
             preloadImages(widgetWithOptionsAndVotesForTargetAudiences.map { it ->
-                it.options.mapNotNull { it.option.imageUrl.getImage(ImageSizeType.SIZE_300) }
+                it.options.map { it.option.imageUrl.getAllImages() }.flatten()
             }.flatten())
         }, async {
             widgetDao.insertWidgets(widgetWithOptionsAndVotesForTargetAudiences.map { it.widget },
@@ -235,7 +234,7 @@ class WidgetRepository @Inject constructor(
         }
         if (widgetIdWithTimerEndsLatest.isNotEmpty()) {
             widgetIdWithTimerEndsLatest.filter { widgetIdWithTimerEnds.contains(it).not() }.let {
-                if(it.isNotEmpty()) {
+                if (it.isNotEmpty()) {
                     onTimerEndWidgets(widgetIdWithTimerEndsLatest)
                     onNotification(NotificationType.WIDGET_TIME_END)
                 }

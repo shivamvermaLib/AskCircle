@@ -204,7 +204,7 @@ private fun ProfileScreen(
                     )
                 } else {
                     with(sharedTransitionScope) {
-                        AppImage(url = profile.profilePic.getImage(ImageSizeType.SIZE_500),
+                        AppImage(url = profile.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
                             contentDescription = profile.name,
                             contentScale = ContentScale.Fit,
                             placeholder = R.drawable.baseline_account_box_24,

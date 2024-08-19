@@ -53,21 +53,40 @@ class CreateWidgetViewModel @Inject constructor(
     private val _endAtFlow = MutableStateFlow<Long?>(null)
     private val _errorFlow = MutableStateFlow(-1)
 
-
-    fun setTitle(title: String) {
+    fun onEvent(event: CreateWidgetUiEvent) {
         viewModelScope.launch {
-            _titleFlow.value = title
+            when (event) {
+                CreateWidgetUiEvent.AddOptionEvent -> addOption()
+                is CreateWidgetUiEvent.DescChangedEvent -> setDesc(event.desc)
+                is CreateWidgetUiEvent.EndTimeChangedEvent -> onEndTimeChange(event.endTime)
+                is CreateWidgetUiEvent.ErrorEvent -> setError(event.error)
+                is CreateWidgetUiEvent.GenderChangedEvent -> setGender(event.gender)
+                is CreateWidgetUiEvent.MaxAgeChangedEvent -> setMaxAge(event.maxAge)
+                is CreateWidgetUiEvent.MinAgeChangedEvent -> setMinAge(event.minAge)
+                is CreateWidgetUiEvent.OptionChangedEvent -> updateOption(event.index, event.option)
+                is CreateWidgetUiEvent.OptionTypeChangedEvent -> setOptionType(event.optionType)
+                is CreateWidgetUiEvent.RemoveCountryEvent -> removeLocation(event.country)
+                is CreateWidgetUiEvent.RemoveOptionEvent -> removeOption(event.index)
+                is CreateWidgetUiEvent.SelectCategoryWidgetEvent -> selectCategoryWidget(event.categories)
+                is CreateWidgetUiEvent.SelectCountryEvent -> addLocation(event.country)
+                is CreateWidgetUiEvent.StartTimeChangedEvent -> onStartTimeChange(event.startTime)
+                is CreateWidgetUiEvent.TitleChangedEvent -> setTitle(event.title)
+                else -> {
+                    println("Event not handled")
+                }
+            }
         }
     }
 
-    fun setDesc(desc: String) {
-        viewModelScope.launch {
-            _descFlow.value = desc
-
-        }
+    private fun setTitle(title: String) {
+        _titleFlow.value = title
     }
 
-    fun setOptionType(type: CreateWidgetUiState.WidgetOptionType) {
+    private fun setDesc(desc: String) {
+        _descFlow.value = desc
+    }
+
+    private fun setOptionType(type: CreateWidgetUiState.WidgetOptionType) {
         when (type) {
             CreateWidgetUiState.WidgetOptionType.Text -> {
                 _options.value = listOf(Widget.Option(text = EMPTY), Widget.Option(text = EMPTY))
@@ -81,7 +100,7 @@ class CreateWidgetViewModel @Inject constructor(
         _optionType.value = type
     }
 
-    fun addOption() {
+    private fun addOption() {
         val optionType = _optionType.value
         if (_options.value.size in minOptions..<maxOptions) {
             when (optionType) {
@@ -96,7 +115,7 @@ class CreateWidgetViewModel @Inject constructor(
         }
     }
 
-    fun updateOption(index: Int, option: Widget.Option) {
+    private fun updateOption(index: Int, option: Widget.Option) {
         viewModelScope.launch {
             _options.value = _options.value.toMutableList().apply {
                 this[index] = option
@@ -104,7 +123,7 @@ class CreateWidgetViewModel @Inject constructor(
         }
     }
 
-    fun removeOption(index: Int) {
+    private fun removeOption(index: Int) {
         if (_options.value.size in (minOptions + 1)..maxOptions) {
             _options.value = _options.value.toMutableList().apply {
                 removeAt(index)
@@ -112,11 +131,11 @@ class CreateWidgetViewModel @Inject constructor(
         }
     }
 
-    fun setGender(genderFilter: Widget.GenderFilter) {
+    private fun setGender(genderFilter: Widget.GenderFilter) {
         _targetAudienceGender.value = _targetAudienceGender.value.copy(gender = genderFilter)
     }
 
-    fun setMinAge(minAge: Int) {
+    private fun setMinAge(minAge: Int) {
         _targetAudienceAgeRange.value = _targetAudienceAgeRange.value.copy(
             min = minAge,
             max = if (_targetAudienceAgeRange.value.max < minAge) {
@@ -127,7 +146,7 @@ class CreateWidgetViewModel @Inject constructor(
         )
     }
 
-    fun setMaxAge(maxAge: Int) {
+    private fun setMaxAge(maxAge: Int) {
         _targetAudienceAgeRange.value = _targetAudienceAgeRange.value.copy(
             max = maxAge,
             min = if (_targetAudienceAgeRange.value.min > maxAge) {
@@ -138,21 +157,21 @@ class CreateWidgetViewModel @Inject constructor(
         )
     }
 
-    fun addLocation(country: Country) {
+    private fun addLocation(country: Country) {
         _targetAudienceLocations.value += Widget.TargetAudienceLocation(country = country.name)
     }
 
-    fun removeLocation(country: Country) {
+    private fun removeLocation(country: Country) {
         _targetAudienceLocations.value = _targetAudienceLocations.value.toMutableList().apply {
             removeIf { it.country == country.name }
         }.toList()
     }
 
-    fun selectCategoryWidget(widgetCategories: List<Widget.WidgetCategory>) {
+    private fun selectCategoryWidget(widgetCategories: List<Widget.WidgetCategory>) {
         _selectedWidgetCategories.value = widgetCategories
     }
 
-    fun onStartTimeChange(startAt: Long) {
+    private fun onStartTimeChange(startAt: Long) {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
@@ -170,7 +189,7 @@ class CreateWidgetViewModel @Inject constructor(
         }
     }
 
-    fun onEndTimeChange(endAt: Long?) {
+    private fun onEndTimeChange(endAt: Long?) {
         if (endAt == null) {
             _endAtFlow.value = null
         } else if (endAt >= _startAtFlow.value) {
@@ -193,7 +212,7 @@ class CreateWidgetViewModel @Inject constructor(
         _errorFlow.value = -1
     }
 
-    fun setError(id: Int) {
+    private fun setError(id: Int) {
         _errorFlow.value = id
     }
 

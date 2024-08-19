@@ -108,34 +108,20 @@ fun CreateWidgetScreen(
             viewModel.setWidget(it)
         }
     }
-    CreateWidgetScreen(
-        sizeClass,
-        uiState,
-        viewModel::setTitle,
-        viewModel::setDesc,
-        viewModel::setOptionType,
-        viewModel::updateOption,
-        viewModel::addOption,
-        viewModel::setGender,
-        viewModel::setMinAge,
-        viewModel::setMaxAge,
-        viewModel::addLocation,
-        viewModel::removeLocation,
-        {
-            CreateWidgetWorker.sendRequest(
-                context, uiState.toWidgetWithOptionsAndVotesForTargetAudience()
-            )
-            onBack()
-        },
-        {
-            onBack()
-        },
-        onRemoveOption = viewModel::removeOption,
-        onSelectCategoryWidget = viewModel::selectCategoryWidget,
-        onStartTimeChange = viewModel::onStartTimeChange,
-        onEndTimeChange = viewModel::onEndTimeChange,
-        onError = viewModel::setError
-    )
+    CreateWidgetScreen(sizeClass, uiState) {
+        when (it) {
+            CreateWidgetUiEvent.BackEvent -> onBack()
+            CreateWidgetUiEvent.CreateWidgetEvent -> {
+                CreateWidgetWorker.sendRequest(
+                    context, uiState.toWidgetWithOptionsAndVotesForTargetAudience()
+                )
+                onBack()
+            }
+            else -> {
+                viewModel.onEvent(it)
+            }
+        }
+    }
 }
 
 @OptIn(
@@ -149,23 +135,7 @@ fun CreateWidgetScreen(
 private fun CreateWidgetScreen(
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     @PreviewParameter(CreateWidgetStatePreviewParameterProvider::class) createWidgetUiState: CreateWidgetUiState,
-    setTitle: (String) -> Unit = {},
-    setDesc: (String) -> Unit = {},
-    onOptionTypeChanged: (CreateWidgetUiState.WidgetOptionType) -> Unit = {},
-    onOptionChanged: (Int, Widget.Option) -> Unit = { _, _ -> },
-    onAddOption: () -> Unit = {},
-    onGenderChanged: (Widget.GenderFilter) -> Unit = {},
-    onMinAgeChanged: (Int) -> Unit = {},
-    onMaxAgeChanged: (Int) -> Unit = {},
-    onSelectCountry: (Country) -> Unit = {},
-    onRemoveCountry: (Country) -> Unit = {},
-    onCreateClick: () -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onRemoveOption: (Int) -> Unit = {},
-    onSelectCategoryWidget: (List<Widget.WidgetCategory>) -> Unit = {},
-    onStartTimeChange: (Long) -> Unit = {},
-    onEndTimeChange: (Long?) -> Unit = {},
-    onError: (Int) -> Unit = {},
+    onEvent: (CreateWidgetUiEvent) -> Unit = {},
 ) {
     val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -176,9 +146,11 @@ private fun CreateWidgetScreen(
             onResult = { uri ->
                 if (imagePickerIndex > -1) {
                     uri?.let {
-                        onOptionChanged(
-                            imagePickerIndex,
-                            createWidgetUiState.options[imagePickerIndex].copy(imageUrl = it.toString())
+                        onEvent(
+                            CreateWidgetUiEvent.OptionChangedEvent(
+                                imagePickerIndex,
+                                createWidgetUiState.options[imagePickerIndex].copy(imageUrl = it.toString())
+                            )
                         )
                     }
                 }
@@ -196,7 +168,7 @@ private fun CreateWidgetScreen(
             snackBarHostState.showSnackbar(
                 message = context.getString(createWidgetUiState.error)
             )
-            onError(-1)
+            onEvent(CreateWidgetUiEvent.ErrorEvent(-1))
         }
     }
     Scaffold(snackbarHost = {
@@ -213,7 +185,7 @@ private fun CreateWidgetScreen(
                 Text(text = "Create")
             },
             navigationIcon = {
-                IconButton(onClick = onBackClick) {
+                IconButton(onClick = { onEvent(CreateWidgetUiEvent.BackEvent) }) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
                         contentDescription = stringResource(R.string.close),
@@ -245,20 +217,26 @@ private fun CreateWidgetScreen(
                 AppTextField(
                     hint = stringResource(R.string.title),
                     value = createWidgetUiState.title,
-                    onValueChange = setTitle,
+                    onValueChange = {
+                        onEvent(CreateWidgetUiEvent.TitleChangedEvent(it))
+                    },
                     isError = createWidgetUiState.titleError != -1,
                     errorMessage = createWidgetUiState.titleError.toErrorString(context)
                 )
                 AppTextField(
                     hint = stringResource(R.string.description),
                     value = createWidgetUiState.desc,
-                    onValueChange = setDesc,
+                    onValueChange = {
+                        onEvent(CreateWidgetUiEvent.DescChangedEvent(it))
+                    },
                     minLines = 3,
                     maxLines = 8,
                     isError = createWidgetUiState.descError != -1,
                     errorMessage = createWidgetUiState.descError.toErrorString(context)
                 )
-                OptionTypeSelect(createWidgetUiState, onOptionTypeChanged)
+                OptionTypeSelect(createWidgetUiState) {
+                    onEvent(CreateWidgetUiEvent.OptionTypeChangedEvent(it))
+                }
                 Spacer(modifier = Modifier.size(5.dp))
                 when (createWidgetUiState.optionType) {
                     CreateWidgetUiState.WidgetOptionType.Image -> NonLazyGrid(
@@ -277,7 +255,9 @@ private fun CreateWidgetScreen(
                             didUserVoted = false,
                             totalOptions = createWidgetUiState.options.size,
                             isInput = true,
-                            onDeleteIconClick = onRemoveOption,
+                            onDeleteIconClick = {
+                                onEvent(CreateWidgetUiEvent.RemoveOptionEvent(index))
+                            },
                             onOptionClick = {
                                 imagePickerIndex = index
                                 singlePhotoPickerLauncher.launch(
@@ -305,13 +285,23 @@ private fun CreateWidgetScreen(
                                     didUserVoted = false,
                                     isInput = true,
                                     onValueChange = {
-                                        onOptionChanged(index, option.copy(text = it))
+                                        onEvent(
+                                            CreateWidgetUiEvent.OptionChangedEvent(
+                                                index,
+                                                option.copy(text = it)
+                                            )
+                                        )
                                     },
                                     onClearIconClick = {
-                                        onOptionChanged(index, option.copy(text = ""))
+                                        onEvent(
+                                            CreateWidgetUiEvent.OptionChangedEvent(
+                                                index,
+                                                option.copy(text = "")
+                                            )
+                                        )
                                     },
                                     onDeleteIconClick = {
-                                        onRemoveOption(index)
+                                        onEvent(CreateWidgetUiEvent.RemoveOptionEvent(index))
                                     },
                                     hasError = createWidgetUiState.optionError.contains(option.id)
                                 )
@@ -322,7 +312,9 @@ private fun CreateWidgetScreen(
 
                 TextButton(
                     modifier = Modifier.align(Alignment.Start),
-                    onClick = onAddOption,
+                    onClick = {
+                        onEvent(CreateWidgetUiEvent.AddOptionEvent)
+                    },
                     enabled = createWidgetUiState.options.size < 4
                 ) {
                     Text(text = stringResource(R.string.add_option))
@@ -333,9 +325,14 @@ private fun CreateWidgetScreen(
                     text = stringResource(R.string.target_audience),
                     style = MaterialTheme.typography.titleMedium
                 )
-                GenderSelect(createWidgetUiState, onGenderChanged)
+                GenderSelect(createWidgetUiState) {
+                    onEvent(CreateWidgetUiEvent.GenderChangedEvent(it))
+                }
                 Spacer(modifier = Modifier.size(10.dp))
-                AgeRangeSelect(createWidgetUiState, onMinAgeChanged, onMaxAgeChanged)
+                AgeRangeSelect(
+                    createWidgetUiState,
+                    { onEvent(CreateWidgetUiEvent.MinAgeChangedEvent(it)) },
+                    { onEvent(CreateWidgetUiEvent.MaxAgeChangedEvent(it)) })
                 Spacer(modifier = Modifier.size(10.dp))
                 SelectItemOnChipWithSearchDropDown(
                     stringResource(id = R.string.location),
@@ -348,28 +345,39 @@ private fun CreateWidgetScreen(
                     {
                         "${it.emoji} ${it.name}"
                     },
-                    onSelectCountry,
-                    onRemoveCountry,
+                    {
+                        onEvent(CreateWidgetUiEvent.SelectCountryEvent(it))
+                    },
+                    {
+                        onEvent(CreateWidgetUiEvent.RemoveCountryEvent(it))
+                    },
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 CategorySelect(
                     createWidgetUiState.categories,
-                    createWidgetUiState.widgetCategories,
-                    onSelectCategoryWidget
-                )
+                    createWidgetUiState.widgetCategories
+                ) {
+                    onEvent(CreateWidgetUiEvent.SelectCategoryWidgetEvent(it))
+                }
                 Spacer(modifier = Modifier.size(15.dp))
                 Text(
                     modifier = Modifier.align(Alignment.Start),
-                    text = "More Options",
+                    text = stringResource(R.string.more_options),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.size(10.dp))
-                StartTime(createWidgetUiState, onStartTimeChange)
+                StartTime(createWidgetUiState) {
+                    onEvent(
+                        CreateWidgetUiEvent.StartTimeChangedEvent(
+                            it
+                        )
+                    )
+                }
                 Spacer(modifier = Modifier.size(10.dp))
-                EndTime(createWidgetUiState, onEndTimeChange)
+                EndTime(createWidgetUiState) { onEvent(CreateWidgetUiEvent.EndTimeChangedEvent(it)) }
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
-                    onCreateClick,
+                    { onEvent(CreateWidgetUiEvent.CreateWidgetEvent) },
                     enabled = createWidgetUiState.allowCreate && isConnected,
                     modifier = Modifier.fillMaxWidth()
                 ) {

@@ -48,8 +48,7 @@ class UpdateProfileWorker @AssistedInject constructor(
             val profilePic = inputData.getString(PROFILE_PIC)
             val country = inputData.getString(COUNTRY)
             val userCategoriesString = inputData.getStringArray(USER_CATEGORIES)
-            val userCategories =
-                userCategoriesString?.map { Json.decodeFromString<User.UserCategory>(it) }
+            val userCategories = userCategoriesString?.map { Json.decodeFromString<User.UserCategory>(it) }
 
             updateProfileUseCase.invoke(
                 name ?: EMPTY,

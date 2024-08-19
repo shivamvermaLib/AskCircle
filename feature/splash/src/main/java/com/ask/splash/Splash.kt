@@ -116,9 +116,14 @@ private fun SplashScreen(
                     text = when (uiState) {
                         SplashUIState.Init -> stringResource(R.string.initializing)
                         is SplashUIState.Loading -> stringResource(R.string.loading)
-                        is SplashUIState.Success -> stringResource(R.string.success)
+                        is SplashUIState.Success -> stringResource(R.string.welcome_to) + stringResource(
+                            id = com.ask.common.R.string.app_name
+                        )
+
                         is SplashUIState.Error -> stringResource(R.string.error)
-                        SplashUIState.NotLoggedIn -> stringResource(id = com.ask.common.R.string.app_name)
+                        SplashUIState.NotLoggedIn -> stringResource(R.string.welcome_to) + stringResource(
+                            id = com.ask.common.R.string.app_name
+                        )
                     },
                     style = MaterialTheme.typography.displayLarge
                 )

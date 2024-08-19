@@ -115,12 +115,12 @@ private fun SettingsScreen(
                 desc = stringResource(R.string.view_and_edit_your_profile_information),
                 onClick = onProfileClick
             )
-            Spacer(modifier = Modifier.size(10.dp))
+            /*Spacer(modifier = Modifier.size(10.dp))
             ConnectTile(
                 title = "Connect Via Account",
                 desc = "Connect and sync your data, making it accessible from any device you log in to.",
                 onClick = onGoogleLogin
-            )
+            )*/
             Spacer(modifier = Modifier.size(10.dp))
             Text(
                 text = stringResource(R.string.notification_settings),

@@ -334,7 +334,7 @@ fun WidgetUserView(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (user.profilePic.isNullOrBlank()) {
-            AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_100),
+            AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
                 contentDescription = user.name,
                 contentScale = ContentScale.Crop,
                 placeholder = R.drawable.baseline_account_circle_24,
@@ -349,7 +349,7 @@ fun WidgetUserView(
                     })
         } else {
             with(sharedTransitionScope) {
-                AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_100),
+                AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
                     contentDescription = user.name,
                     contentScale = ContentScale.Crop,
                     placeholder = R.drawable.baseline_account_circle_24,
@@ -607,7 +607,7 @@ fun ImageOption(
     ) {
         if (sharedTransitionScope != null && animatedContentScope != null) {
             with(sharedTransitionScope) {
-                AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
+                AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY,
                     contentDescription = option.id,
                     contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                     placeholder = R.drawable.baseline_image_24,
@@ -624,7 +624,7 @@ fun ImageOption(
                         .onGloballyPositioned { sizeImage = it.size })
             }
         } else {
-            AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
+            AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY,
                 contentDescription = option.id,
                 contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                 placeholder = R.drawable.baseline_image_24,
@@ -665,11 +665,9 @@ fun ImageOption(
             if (isInput) {
                 Box(
                     modifier = Modifier
-                        .background(
-                            color = Color.White.copy(alpha = 0.8f), shape = CircleShape
-                        )
-                        .padding(bottom = 6.dp, end = 6.dp)
-                        .align(Alignment.Center)
+                        .padding(all = 6.dp)
+                        .align(Alignment.BottomEnd),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         ImageVector.vectorResource(id = R.drawable.baseline_delete_24),

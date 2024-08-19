@@ -55,3 +55,28 @@ data class CreateWidgetUiState(
             false
         )
 }
+
+
+sealed interface CreateWidgetUiEvent {
+    data object CreateWidgetEvent : CreateWidgetUiEvent
+    data class TitleChangedEvent(val title: String) : CreateWidgetUiEvent
+    data class DescChangedEvent(val desc: String) : CreateWidgetUiEvent
+    data class OptionTypeChangedEvent(val optionType: CreateWidgetUiState.WidgetOptionType) :
+        CreateWidgetUiEvent
+
+    data object BackEvent : CreateWidgetUiEvent
+    data class OptionChangedEvent(val index: Int, val option: Widget.Option) : CreateWidgetUiEvent
+    data object AddOptionEvent : CreateWidgetUiEvent
+    data class RemoveOptionEvent(val index: Int) : CreateWidgetUiEvent
+    data class GenderChangedEvent(val gender: Widget.GenderFilter) : CreateWidgetUiEvent
+    data class MinAgeChangedEvent(val minAge: Int) : CreateWidgetUiEvent
+    data class MaxAgeChangedEvent(val maxAge: Int) : CreateWidgetUiEvent
+    data class SelectCountryEvent(val country: Country) : CreateWidgetUiEvent
+    data class RemoveCountryEvent(val country: Country) : CreateWidgetUiEvent
+    data class SelectCategoryWidgetEvent(val categories: List<Widget.WidgetCategory>) :
+        CreateWidgetUiEvent
+
+    data class StartTimeChangedEvent(val startTime: Long) : CreateWidgetUiEvent
+    data class EndTimeChangedEvent(val endTime: Long?) : CreateWidgetUiEvent
+    data class ErrorEvent(val error: Int) : CreateWidgetUiEvent
+}

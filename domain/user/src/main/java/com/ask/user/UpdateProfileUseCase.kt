@@ -49,7 +49,9 @@ class UpdateProfileUseCase @Inject constructor(
             widgetBookmarks = widgetBookmarks,
             profilePicExtension = extension,
             profileByteArray = profilePic?.takeIf { it.checkIfFirebaseUrl().not() }
-                ?.let { path -> getBytes(path) },
+                ?.let { path ->
+                    getBytes(path)
+                },
         ).also {
             it.user.profilePic?.let { it1 -> preloadImage(it1.getAllImages()) }
         }.also {
