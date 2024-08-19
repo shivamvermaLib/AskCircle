@@ -260,10 +260,10 @@ private fun HomeScreen(
                 onStopVoteClick = onStopVoteClick,
                 onStartVoteClick = onStartVoteClick
             )
-            CreatingCard(
+            /*CreatingCard(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 homeUiState.createWidgetStatus == WorkerStatus.Loading
-            )
+            )*/
         }
     }
 }
