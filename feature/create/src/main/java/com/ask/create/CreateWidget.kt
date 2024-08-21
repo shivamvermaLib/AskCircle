@@ -42,6 +42,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -117,6 +118,7 @@ fun CreateWidgetScreen(
                 )
                 onBack()
             }
+
             else -> {
                 viewModel.onEvent(it)
             }
@@ -375,6 +377,19 @@ private fun CreateWidgetScreen(
                 }
                 Spacer(modifier = Modifier.size(10.dp))
                 EndTime(createWidgetUiState) { onEvent(CreateWidgetUiEvent.EndTimeChangedEvent(it)) }
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.allow_anonymous_voters),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(createWidgetUiState.allowAnonymous, {
+                        onEvent(CreateWidgetUiEvent.AllowAnonymousEvent(it))
+                    })
+                }
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
                     { onEvent(CreateWidgetUiEvent.CreateWidgetEvent) },

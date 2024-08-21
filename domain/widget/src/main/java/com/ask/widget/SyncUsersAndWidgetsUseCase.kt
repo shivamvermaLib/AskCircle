@@ -76,7 +76,8 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                     userWithLocation.user.age,
                     userWithLocation.userLocation,
                     userWithLocation.user.id,
-                    userWithLocation.userCategories
+                    userWithLocation.userCategories,
+                    userWithLocation.user.email.isNullOrBlank().not()
                 ).let { list ->
                     onProgress(0.56f)
                     widgetRepository.syncWidgetsFromServer(

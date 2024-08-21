@@ -52,6 +52,7 @@ class CreateWidgetViewModel @Inject constructor(
     private val _startAtFlow = MutableStateFlow(System.currentTimeMillis())
     private val _endAtFlow = MutableStateFlow<Long?>(null)
     private val _errorFlow = MutableStateFlow(-1)
+    private val _anonymousVoting = MutableStateFlow(true)
 
     fun onEvent(event: CreateWidgetUiEvent) {
         viewModelScope.launch {
@@ -71,6 +72,9 @@ class CreateWidgetViewModel @Inject constructor(
                 is CreateWidgetUiEvent.SelectCountryEvent -> addLocation(event.country)
                 is CreateWidgetUiEvent.StartTimeChangedEvent -> onStartTimeChange(event.startTime)
                 is CreateWidgetUiEvent.TitleChangedEvent -> setTitle(event.title)
+                is CreateWidgetUiEvent.AllowAnonymousEvent -> _anonymousVoting.value =
+                    event.allowAnonymous
+
                 else -> {
                     println("Event not handled")
                 }
@@ -231,8 +235,9 @@ class CreateWidgetViewModel @Inject constructor(
         _startAtFlow,
         _endAtFlow,
         _errorFlow,
-        _badWordsListFlow
-    ) { title, desc, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories, startAt, endAt, error, badWords ->
+        _badWordsListFlow,
+        _anonymousVoting
+    ) { title, desc, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories, startAt, endAt, error, badWords, anonymousVoting ->
         val titleError = if (title.isBlank()) {
             R.string.title_is_required
         } else if (badWords.contains(title.lowercase())) {
@@ -260,7 +265,7 @@ class CreateWidgetViewModel @Inject constructor(
             optionType,
             options,
             gender,
-            locations,
+            locations.distinctBy { it.country },
             countries,
             allowCreate,
             targetAudienceAgeRange = targetAudienceAgeRange,
@@ -271,7 +276,8 @@ class CreateWidgetViewModel @Inject constructor(
             startTime = startAt,
             endTime = endAt,
             error = error,
-            optionError = optionError
+            optionError = optionError,
+            allowAnonymous = anonymousVoting
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
 }

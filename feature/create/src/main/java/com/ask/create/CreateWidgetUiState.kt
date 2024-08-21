@@ -34,13 +34,22 @@ data class CreateWidgetUiState(
     val endTime: Long? = null,
     val error: Int = -1,
     val maxYearAllowed: Int = 0,
-    val optionError: List<String> = emptyList()
+    val optionError: List<String> = emptyList(),
+    val allowAnonymous: Boolean = true,
 ) {
+
+
     enum class WidgetOptionType { Text, Image }
 
     fun toWidgetWithOptionsAndVotesForTargetAudience() =
         WidgetWithOptionsAndVotesForTargetAudience(
-            Widget(title = title, description = desc, startAt = startTime, endAt = endTime),
+            Widget(
+                title = title,
+                description = desc,
+                startAt = startTime,
+                endAt = endTime,
+                allowAnonymous = allowAnonymous
+            ),
             options.map {
                 WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                     it,
@@ -52,7 +61,7 @@ data class CreateWidgetUiState(
             targetAudienceAgeRange,
             User(),
             widgetCategories,
-            false
+            false,
         )
 }
 
@@ -76,7 +85,10 @@ sealed interface CreateWidgetUiEvent {
     data class SelectCategoryWidgetEvent(val categories: List<Widget.WidgetCategory>) :
         CreateWidgetUiEvent
 
+    data class AnonymousVotingEvent(val isAnonymous: Boolean) : CreateWidgetUiEvent
+
     data class StartTimeChangedEvent(val startTime: Long) : CreateWidgetUiEvent
     data class EndTimeChangedEvent(val endTime: Long?) : CreateWidgetUiEvent
     data class ErrorEvent(val error: Int) : CreateWidgetUiEvent
+    data class AllowAnonymousEvent(val allowAnonymous: Boolean) : CreateWidgetUiEvent
 }

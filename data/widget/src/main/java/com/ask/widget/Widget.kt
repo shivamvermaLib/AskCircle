@@ -10,6 +10,7 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.ask.core.ALL
 import com.ask.core.EMPTY
+import com.ask.core.HAS_EMAIL
 import com.ask.core.ID
 import com.ask.core.UNDERSCORE
 import com.ask.core.toSearchNeededField
@@ -39,6 +40,7 @@ data class Widget(
     val widgetType: WidgetType = WidgetType.Poll,
     val startAt: Long = System.currentTimeMillis(),
     val endAt: Long? = null,
+    val allowAnonymous: Boolean = true,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -343,7 +345,8 @@ fun generateCombinationsForWidget(
     ageRange: Widget.TargetAudienceAgeRange,
     locations: List<Widget.TargetAudienceLocation>,
     userId: String,
-    widgetCategories: List<Widget.WidgetCategory>
+    widgetCategories: List<Widget.WidgetCategory>,
+    hasEmail: Boolean,
 ): List<String> {
     val locationCombinations = mutableListOf<String>()
 
@@ -392,26 +395,43 @@ fun generateCombinationsForWidget(
     }
 
     val categoriesCombination = mutableListOf<String>()
-    widgetCategories.forEach { widgetCategory ->
-        val category = widgetCategory.category.toSearchNeededField()
-        val subCategory = widgetCategory.subCategory.toSearchNeededField()
-        genderCombination.forEach {
-            if (subCategory != null && category != null) {
-                categoriesCombination.add("$it$UNDERSCORE${category}$UNDERSCORE${subCategory}")
-                categoriesCombination.add("$it$UNDERSCORE${category}")
-            } else if (category != null) {
-                categoriesCombination.add("$it$UNDERSCORE${category}")
+    if (widgetCategories.isEmpty()) {
+        categoriesCombination.addAll(genderCombination)
+    } else {
+        widgetCategories.forEach { widgetCategory ->
+            val category = widgetCategory.category.toSearchNeededField()
+            val subCategory = widgetCategory.subCategory.toSearchNeededField()
+            genderCombination.forEach {
+                if (subCategory != null && category != null) {
+                    categoriesCombination.add("$it$UNDERSCORE${category}$UNDERSCORE${subCategory}")
+                    categoriesCombination.add("$it$UNDERSCORE${category}")
+                } else if (category != null) {
+                    categoriesCombination.add("$it$UNDERSCORE${category}")
+                }
             }
-        }
-        if (subCategory != null && category != null) {
-            categoriesCombination.add("$ALL$UNDERSCORE${category}$UNDERSCORE${subCategory}")
-            categoriesCombination.add("$ALL$UNDERSCORE${category}")
-        } else if (category != null) {
-            categoriesCombination.add("$ALL$UNDERSCORE${category}")
+            if (subCategory != null && category != null) {
+                categoriesCombination.add("$ALL$UNDERSCORE${category}$UNDERSCORE${subCategory}")
+                categoriesCombination.add("$ALL$UNDERSCORE${category}")
+            } else if (category != null) {
+                categoriesCombination.add("$ALL$UNDERSCORE${category}")
+            }
         }
     }
 
-    categoriesCombination.add(ALL)
-    categoriesCombination.add(userId)
-    return categoriesCombination
+    val hasEmailCombinations = mutableListOf<String>()
+    if (hasEmail) {
+        if (categoriesCombination.isEmpty()) {
+            hasEmailCombinations.add("$ALL$UNDERSCORE$HAS_EMAIL")
+        } else {
+            categoriesCombination.forEach {
+                hasEmailCombinations.add("$it$UNDERSCORE$HAS_EMAIL")
+            }
+        }
+    } else {
+        hasEmailCombinations.addAll(categoriesCombination)
+    }
+
+    hasEmailCombinations.add(ALL)
+    hasEmailCombinations.add(userId)
+    return hasEmailCombinations
 }
