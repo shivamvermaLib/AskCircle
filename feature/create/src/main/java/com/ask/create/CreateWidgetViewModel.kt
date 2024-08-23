@@ -17,7 +17,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -42,11 +41,16 @@ class CreateWidgetViewModel @Inject constructor(
         _uiStateFlow.update {
             when (event) {
                 CreateWidgetUiEvent.AddOptionEvent -> addOption(it)
-                is CreateWidgetUiEvent.DescChangedEvent -> it.copy(desc = event.desc)
+                is CreateWidgetUiEvent.DescChangedEvent -> it.copy(
+                    widget = it.widget.copy(
+                        description = event.desc
+                    )
+                )
+
                 is CreateWidgetUiEvent.EndTimeChangedEvent -> if (event.endTime == null) {
-                    it.copy(endTime = null)
-                } else if (event.endTime >= it.startTime) {
-                    it.copy(endTime = event.endTime)
+                    it.copy(widget = it.widget.copy(endAt = null))
+                } else if (event.endTime >= it.widget.startAt) {
+                    it.copy(widget = it.widget.copy(endAt = event.endTime))
                 } else {
                     it
                 }
@@ -90,8 +94,7 @@ class CreateWidgetViewModel @Inject constructor(
                     CreateWidgetUiState.WidgetOptionType.Text -> {
                         it.copy(
                             options = listOf(
-                                Widget.Option(text = EMPTY),
-                                Widget.Option(text = EMPTY)
+                                Widget.Option(text = EMPTY), Widget.Option(text = EMPTY)
                             )
                         )
                     }
@@ -99,8 +102,7 @@ class CreateWidgetViewModel @Inject constructor(
                     CreateWidgetUiState.WidgetOptionType.Image -> {
                         it.copy(
                             options = listOf(
-                                Widget.Option(imageUrl = EMPTY),
-                                Widget.Option(imageUrl = EMPTY)
+                                Widget.Option(imageUrl = EMPTY), Widget.Option(imageUrl = EMPTY)
                             )
                         )
                     }
@@ -128,10 +130,25 @@ class CreateWidgetViewModel @Inject constructor(
                 )
 
                 is CreateWidgetUiEvent.StartTimeChangedEvent -> onStartTimeChange(event, it)
-                is CreateWidgetUiEvent.TitleChangedEvent -> it.copy(title = event.title)
-                is CreateWidgetUiEvent.AllowAnonymousEvent -> it.copy(allowAnonymous = event.allowAnonymous)
-                is CreateWidgetUiEvent.WidgetResultChangedEvent -> it.copy(widgetResult = event.result)
-                is CreateWidgetUiEvent.AllowMultipleSelection -> it.copy(allowMultipleSelection = event.allow)
+                is CreateWidgetUiEvent.TitleChangedEvent -> it.copy(widget = it.widget.copy(title = event.title))
+                is CreateWidgetUiEvent.AllowAnonymousEvent -> it.copy(
+                    widget = it.widget.copy(
+                        allowAnonymous = event.allowAnonymous
+                    )
+                )
+
+                is CreateWidgetUiEvent.WidgetResultChangedEvent -> it.copy(
+                    widget = it.widget.copy(
+                        widgetResult = event.result
+                    )
+                )
+
+                is CreateWidgetUiEvent.AllowMultipleSelection -> it.copy(
+                    widget = it.widget.copy(
+                        allowMultipleSelection = event.allow
+                    )
+                )
+
                 else -> {
                     it
                 }
@@ -157,8 +174,7 @@ class CreateWidgetViewModel @Inject constructor(
     }
 
     private fun onStartTimeChange(
-        event: CreateWidgetUiEvent.StartTimeChangedEvent,
-        it: CreateWidgetUiState
+        event: CreateWidgetUiEvent.StartTimeChangedEvent, it: CreateWidgetUiState
     ): CreateWidgetUiState {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -166,14 +182,20 @@ class CreateWidgetViewModel @Inject constructor(
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
         return if (event.startTime >= calendar.timeInMillis) {
-            if (it.endTime != null && it.endTime < event.startTime) {
+            if (it.widget.endAt != null && it.widget.endAt!! < event.startTime) {
                 val calendar2 = Calendar.getInstance().apply {
                     timeInMillis = event.startTime
                     add(Calendar.DATE, 1)
                 }
-                it.copy(endTime = calendar2.timeInMillis, startTime = event.startTime)
+                it.copy(
+                    widget = it.widget.copy(
+                        endAt = calendar2.timeInMillis, startAt = event.startTime
+                    )
+                )
             } else {
-                it.copy(startTime = event.startTime)
+                it.copy(
+                    widget = it.widget.copy(startAt = event.startTime)
+                )
             }
         } else {
             it
@@ -183,20 +205,14 @@ class CreateWidgetViewModel @Inject constructor(
     fun setWidget(widget: WidgetWithOptionsAndVotesForTargetAudience) {
         _uiStateFlow.update { widgetUiState ->
             widgetUiState.copy(
-                title = widget.widget.title,
-                desc = widget.widget.description ?: EMPTY,
+                widget = widget.widget,
                 optionType = if (widget.options.any { it.option.text == null && it.option.imageUrl != null }) CreateWidgetUiState.WidgetOptionType.Image else CreateWidgetUiState.WidgetOptionType.Text,
                 options = widget.options.map { it.option },
                 targetAudienceGender = widget.targetAudienceGender,
                 targetAudienceAgeRange = widget.targetAudienceAgeRange,
                 targetAudienceLocations = widget.targetAudienceLocations,
-                startTime = widget.widget.startAt,
-                endTime = widget.widget.endAt,
-                allowAnonymous = widget.widget.allowAnonymous,
                 widgetCategories = widget.categories,
                 error = -1,
-                widgetResult = widget.widget.widgetResult,
-                allowMultipleSelection = widget.widget.allowMultipleSelection
             )
         }
     }
@@ -207,14 +223,16 @@ class CreateWidgetViewModel @Inject constructor(
         _categoriesFlow,
         _badWordsListFlow,
     ) { uiState, countries, categories, badWords ->
-        val titleError = if (uiState.title.isBlank()) {
+        val titleError = if (uiState.widget.title.isBlank()) {
             R.string.title_is_required
-        } else if (badWords.any { uiState.title.lowercase().contains(it.lowercase()) }) {
+        } else if (badWords.any { uiState.widget.title.lowercase().contains(it.lowercase()) }) {
             R.string.title_cannot_contain_bad_words
         } else {
             -1
         }
-        val descError = if (badWords.any { uiState.desc.lowercase().contains(it.lowercase()) }) {
+        val descError = if (uiState.widget.description.isNullOrBlank().not() && badWords.any {
+                uiState.widget.description?.lowercase()?.contains(it.lowercase()) == true
+            }) {
             R.string.description_cannot_contain_bad_words
         } else {
             -1
@@ -227,7 +245,7 @@ class CreateWidgetViewModel @Inject constructor(
         }.map { it.id }
 
         val allowCreate =
-            uiState.title.isNotBlank() && uiState.options.size in minOptions..maxOptions && optionError.isEmpty() && titleError == -1 && descError == -1
+            uiState.widget.title.isNotBlank() && uiState.options.size in minOptions..maxOptions && optionError.isEmpty() && titleError == -1 && descError == -1
         uiState.copy(
             titleError = titleError,
             descError = descError,

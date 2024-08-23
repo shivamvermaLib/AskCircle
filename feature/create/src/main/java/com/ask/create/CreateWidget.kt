@@ -218,7 +218,7 @@ private fun CreateWidgetScreen(
             ) {
                 AppTextField(
                     hint = stringResource(R.string.title),
-                    value = createWidgetUiState.title,
+                    value = createWidgetUiState.widget.title,
                     onValueChange = {
                         onEvent(CreateWidgetUiEvent.TitleChangedEvent(it))
                     },
@@ -227,7 +227,7 @@ private fun CreateWidgetScreen(
                 )
                 AppTextField(
                     hint = stringResource(R.string.description),
-                    value = createWidgetUiState.desc,
+                    value = createWidgetUiState.widget.description ?: EMPTY,
                     onValueChange = {
                         onEvent(CreateWidgetUiEvent.DescChangedEvent(it))
                     },
@@ -386,7 +386,7 @@ private fun CreateWidgetScreen(
                         text = stringResource(R.string.allow_anonymous_voters),
                         modifier = Modifier.weight(1f)
                     )
-                    Switch(createWidgetUiState.allowAnonymous, {
+                    Switch(createWidgetUiState.widget.allowAnonymous, {
                         onEvent(CreateWidgetUiEvent.AllowAnonymousEvent(it))
                     })
                 }
@@ -399,7 +399,7 @@ private fun CreateWidgetScreen(
                         text = "Allow Multiple Selections",
                         modifier = Modifier.weight(1f)
                     )
-                    Switch(createWidgetUiState.allowMultipleSelection, {
+                    Switch(createWidgetUiState.widget.allowMultipleSelection, {
                         onEvent(CreateWidgetUiEvent.AllowMultipleSelection(it))
                     })
                 }
@@ -413,7 +413,7 @@ private fun CreateWidgetScreen(
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Widget.WidgetResult.entries.forEach { result ->
                             AppOptionTypeSelect(
-                                selected = createWidgetUiState.widgetResult == result,
+                                selected = createWidgetUiState.widget.widgetResult == result,
                                 onSelectedChange = {
                                     onEvent(CreateWidgetUiEvent.WidgetResultChangedEvent(result))
                                 },
@@ -447,7 +447,7 @@ fun EndTime(createWidgetUiState: CreateWidgetUiState, onTimeChanged: (Long?) -> 
     var openPicker by remember { mutableStateOf(false) }
     val calendar by remember {
         mutableStateOf(Calendar.getInstance().apply {
-            timeInMillis = createWidgetUiState.startTime
+            timeInMillis = createWidgetUiState.widget.startAt
             add(Calendar.DATE, 1)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
@@ -455,8 +455,8 @@ fun EndTime(createWidgetUiState: CreateWidgetUiState, onTimeChanged: (Long?) -> 
             set(Calendar.MILLISECOND, 0)
         })
     }
-    LaunchedEffect(createWidgetUiState.startTime) {
-        calendar.timeInMillis = createWidgetUiState.startTime
+    LaunchedEffect(createWidgetUiState.widget.startAt) {
+        calendar.timeInMillis = createWidgetUiState.widget.startAt
         calendar.add(Calendar.DATE, 1)
     }
     val datePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
@@ -496,14 +496,14 @@ fun EndTime(createWidgetUiState: CreateWidgetUiState, onTimeChanged: (Long?) -> 
         )
         Spacer(modifier = Modifier.weight(1f))
         AppOptionTypeSelect(
-            selected = createWidgetUiState.endTime != null,
+            selected = createWidgetUiState.widget.endAt != null,
             onSelectedChange = { openPicker = true },
-            title = createWidgetUiState.endTime?.toDate() ?: stringResource(id = R.string.select),
+            title = createWidgetUiState.widget.endAt?.toDate() ?: stringResource(id = R.string.select),
             icon = ImageVector.vectorResource(id = R.drawable.round_calendar_month_24)
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
-            selected = createWidgetUiState.endTime == null,
+            selected = createWidgetUiState.widget.endAt == null,
             onSelectedChange = { onTimeChanged(null) },
             title = stringResource(R.string.manual),
             icon = ImageVector.vectorResource(id = R.drawable.baseline_back_hand_24)
@@ -786,7 +786,7 @@ fun StartTime(
         AppOptionTypeSelect(
             selected = false,
             onSelectedChange = { openPicker = true },
-            title = createWidgetUiState.startTime.toDate(),
+            title = createWidgetUiState.widget.startAt.toDate(),
             icon = ImageVector.vectorResource(id = R.drawable.round_calendar_month_24)
         )
     }
@@ -825,9 +825,8 @@ class CreateWidgetStatePreviewParameterProvider :
     PreviewParameterProvider<CreateWidgetUiState> {
     override val values: Sequence<CreateWidgetUiState> = sequenceOf(
         CreateWidgetUiState(
-            "widget title",
+            Widget("widget title"),
             -1,
-            "desc",
             -1,
             CreateWidgetUiState.WidgetOptionType.Image,
             listOf(
@@ -852,9 +851,8 @@ class CreateWidgetStatePreviewParameterProvider :
                 min = 45, max = 66
             ),
         ), CreateWidgetUiState(
-            "widget title",
+            Widget(),
             R.string.title_cannot_contain_bad_words,
-            "desc",
             R.string.description_cannot_contain_bad_words,
             CreateWidgetUiState.WidgetOptionType.Text,
             listOf(

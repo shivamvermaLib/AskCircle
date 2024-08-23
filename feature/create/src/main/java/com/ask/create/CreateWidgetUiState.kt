@@ -10,9 +10,8 @@ import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
 data class CreateWidgetUiState(
-    val title: String = EMPTY,
+    val widget: Widget = Widget(),
     val titleError: Int = -1,
-    val desc: String = EMPTY,
     val descError: Int = -1,
     val optionType: WidgetOptionType = WidgetOptionType.Text,
     val options: List<Widget.Option> = listOf(
@@ -31,14 +30,9 @@ data class CreateWidgetUiState(
     ),
     val widgetCategories: List<Widget.WidgetCategory> = emptyList(),
     val categories: List<CategoryWithSubCategory> = emptyList(),
-    val startTime: Long = System.currentTimeMillis(),
-    val endTime: Long? = null,
     val error: Int = -1,
     val maxYearAllowed: Int = 0,
     val optionError: List<String> = emptyList(),
-    val allowAnonymous: Boolean = true,
-    val widgetResult: Widget.WidgetResult = Widget.WidgetResult.ALWAYS,
-    val allowMultipleSelection: Boolean = false,
 ) {
 
 
@@ -46,15 +40,7 @@ data class CreateWidgetUiState(
 
     fun toWidgetWithOptionsAndVotesForTargetAudience() =
         WidgetWithOptionsAndVotesForTargetAudience(
-            Widget(
-                title = title,
-                description = desc,
-                startAt = startTime,
-                endAt = endTime,
-                allowAnonymous = allowAnonymous,
-                widgetResult = widgetResult,
-                allowMultipleSelection = allowMultipleSelection,
-            ),
+            widget,
             options.map {
                 WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
                     it,
