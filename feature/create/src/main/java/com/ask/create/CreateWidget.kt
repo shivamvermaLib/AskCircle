@@ -390,6 +390,20 @@ private fun CreateWidgetScreen(
                         onEvent(CreateWidgetUiEvent.AllowAnonymousEvent(it))
                     })
                 }
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Allow Multiple Selections",
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(createWidgetUiState.allowMultipleSelection, {
+                        onEvent(CreateWidgetUiEvent.AllowMultipleSelection(it))
+                    })
+                }
+                Spacer(modifier = Modifier.size(10.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.fillMaxWidth()

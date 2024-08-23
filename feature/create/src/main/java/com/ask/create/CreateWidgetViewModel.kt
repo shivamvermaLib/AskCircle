@@ -131,6 +131,7 @@ class CreateWidgetViewModel @Inject constructor(
                 is CreateWidgetUiEvent.TitleChangedEvent -> it.copy(title = event.title)
                 is CreateWidgetUiEvent.AllowAnonymousEvent -> it.copy(allowAnonymous = event.allowAnonymous)
                 is CreateWidgetUiEvent.WidgetResultChangedEvent -> it.copy(widgetResult = event.result)
+                is CreateWidgetUiEvent.AllowMultipleSelection -> it.copy(allowMultipleSelection = event.allow)
                 else -> {
                     it
                 }
@@ -195,6 +196,7 @@ class CreateWidgetViewModel @Inject constructor(
                 widgetCategories = widget.categories,
                 error = -1,
                 widgetResult = widget.widget.widgetResult,
+                allowMultipleSelection = widget.widget.allowMultipleSelection
             )
         }
     }

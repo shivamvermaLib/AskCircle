@@ -283,12 +283,29 @@ class WidgetRepository @Inject constructor(
     }
 
     suspend fun vote(widgetId: String, optionId: String, userId: String) = withContext(dispatcher) {
-        /*widgetDao.getWidgetById(widgetId, userId)?.let { widgetWithOptionsAndVotesForTargetAudience ->
-                var removeVote: Widget.Option.Vote? = null
-                widgetWithOptionsAndVotesForTargetAudience.copy(
-                    options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
-                        val (option, votes) = optionWithVotes
-                        val mutableVotes = votes.toMutableList()
+        var removeVote: Widget.Option.Vote? = null
+        widgetDataSource.updateItemFromTransaction(widgetId) { widgetWithOptionsAndVotesForTargetAudience ->
+            widgetWithOptionsAndVotesForTargetAudience.copy(
+                options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
+                    val (option, votes) = optionWithVotes
+                    val mutableVotes = votes.toMutableList()
+                    if (widgetWithOptionsAndVotesForTargetAudience.widget.allowMultipleSelection) {
+                        if (option.id == optionId) {
+                            val index = mutableVotes.indexOfFirst { it.userId == userId }
+                            if (index != -1) {
+                                removeVote = mutableVotes.removeAt(index)
+                                optionWithVotes.copy(votes = mutableVotes)
+                            } else {
+                                optionWithVotes.copy(
+                                    votes = votes + Widget.Option.Vote(
+                                        userId = userId, optionId = optionId
+                                    )
+                                )
+                            }
+                        } else {
+                            optionWithVotes
+                        }
+                    } else {
                         val index = mutableVotes.indexOfFirst { it.userId == userId }
                         if (index != -1) {
                             removeVote = mutableVotes.removeAt(index)
@@ -303,31 +320,7 @@ class WidgetRepository @Inject constructor(
                             optionWithVotes
                         }
                     }
-                ).let { widgetWithOptionsAndVotesForTargetAudience1 ->
-                    removeVote?.let { widgetDao.deleteVote(it) }
-                    widgetDao.insertVotes(widgetWithOptionsAndVotesForTargetAudience1.options.map { it.votes }.flatten())
-                }
-            }*/
-
-        var removeVote: Widget.Option.Vote? = null
-        widgetDataSource.updateItemFromTransaction(widgetId) { widgetWithOptionsAndVotesForTargetAudience ->
-            widgetWithOptionsAndVotesForTargetAudience.copy(options = widgetWithOptionsAndVotesForTargetAudience.options.map { optionWithVotes ->
-                val (option, votes) = optionWithVotes
-                val mutableVotes = votes.toMutableList()
-                val index = mutableVotes.indexOfFirst { it.userId == userId }
-                if (index != -1) {
-                    removeVote = mutableVotes.removeAt(index)
-                    optionWithVotes.copy(votes = mutableVotes)
-                } else if (option.id == optionId) {
-                    optionWithVotes.copy(
-                        votes = votes + Widget.Option.Vote(
-                            userId = userId, optionId = optionId
-                        )
-                    )
-                } else {
-                    optionWithVotes
-                }
-            })
+                })
         }.also { widgetWithOptionsAndVotesForTargetAudience ->
             removeVote?.let { widgetDao.deleteVote(it) }
             widgetDao.insertVotes(widgetWithOptionsAndVotesForTargetAudience.options.map { it.votes }

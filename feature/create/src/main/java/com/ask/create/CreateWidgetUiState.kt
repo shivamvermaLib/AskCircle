@@ -25,7 +25,10 @@ data class CreateWidgetUiState(
     val allowCreate: Boolean = false,
     val minAge: Int = MIN_AGE_RANGE,
     val maxAge: Int = MAX_AGE_RANGE,
-    val targetAudienceAgeRange: Widget.TargetAudienceAgeRange = Widget.TargetAudienceAgeRange(min = 0, max = 0),
+    val targetAudienceAgeRange: Widget.TargetAudienceAgeRange = Widget.TargetAudienceAgeRange(
+        min = 0,
+        max = 0
+    ),
     val widgetCategories: List<Widget.WidgetCategory> = emptyList(),
     val categories: List<CategoryWithSubCategory> = emptyList(),
     val startTime: Long = System.currentTimeMillis(),
@@ -35,6 +38,7 @@ data class CreateWidgetUiState(
     val optionError: List<String> = emptyList(),
     val allowAnonymous: Boolean = true,
     val widgetResult: Widget.WidgetResult = Widget.WidgetResult.ALWAYS,
+    val allowMultipleSelection: Boolean = false,
 ) {
 
 
@@ -48,7 +52,8 @@ data class CreateWidgetUiState(
                 startAt = startTime,
                 endAt = endTime,
                 allowAnonymous = allowAnonymous,
-                widgetResult = widgetResult
+                widgetResult = widgetResult,
+                allowMultipleSelection = allowMultipleSelection,
             ),
             options.map {
                 WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
@@ -90,4 +95,5 @@ sealed interface CreateWidgetUiEvent {
     data class ErrorEvent(val error: Int) : CreateWidgetUiEvent
     data class AllowAnonymousEvent(val allowAnonymous: Boolean) : CreateWidgetUiEvent
     data class WidgetResultChangedEvent(val result: Widget.WidgetResult) : CreateWidgetUiEvent
+    data class AllowMultipleSelection(val allow: Boolean) : CreateWidgetUiEvent
 }

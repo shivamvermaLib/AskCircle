@@ -42,6 +42,7 @@ data class Widget(
     val endAt: Long? = null,
     val allowAnonymous: Boolean = true,
     val widgetResult: WidgetResult = WidgetResult.ALWAYS,
+    val allowMultipleSelection: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
