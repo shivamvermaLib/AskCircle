@@ -306,6 +306,19 @@ fun <T1, T2, T3, T4, T5, R> combine(
     transform(t1.first, t1.second, t1.third, t2, t3)
 }
 
+fun <T1, T2, T3, T4, R> combine(
+    flow: Flow<T1>,
+    flow2: Flow<T2>,
+    flow3: Flow<T3>,
+    flow4: Flow<T4>,
+    transform: suspend (T1, T2, T3, T4) -> R
+): Flow<R> = kotlinx.coroutines.flow.combine(
+    kotlinx.coroutines.flow.combine(flow, flow2, flow3, ::Triple),
+    flow4,
+) { t1, t2 ->
+    transform(t1.first, t1.second, t1.third, t2)
+}
+
 fun Int.toErrorString(context: Context): String {
     return takeIf { it != -1 }?.let {
         context.getString(it)

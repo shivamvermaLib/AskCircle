@@ -41,6 +41,7 @@ data class Widget(
     val startAt: Long = System.currentTimeMillis(),
     val endAt: Long? = null,
     val allowAnonymous: Boolean = true,
+    val widgetResult: WidgetResult = WidgetResult.ALWAYS,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -52,6 +53,10 @@ data class Widget(
     enum class WidgetType {
         Poll,
         Quiz
+    }
+
+    enum class WidgetResult {
+        AFTER_VOTE, ALWAYS, TIME_END
     }
 
     @Serializable
@@ -231,7 +236,7 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
 
     @get:Exclude
     @Ignore
-    var hasVotes: Boolean = false
+    var showVotes: Boolean = false
 
     @get:Exclude
     @Ignore
@@ -324,9 +329,12 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
                 }
             }
         ).apply {
-            hasVotes = options.any { it.votes.isNotEmpty() }
-            isCreatorOfTheWidget = userId == widget.creatorId
-            hasVotes = options.any { it.votes.isNotEmpty() }
+            showVotes = options.any { it.votes.isNotEmpty() }
+                && (widget.widgetResult == Widget.WidgetResult.ALWAYS ||
+                (widget.widgetResult == Widget.WidgetResult.AFTER_VOTE && options.any { it.didUserVoted })
+                || (widget.widgetResult == Widget.WidgetResult.TIME_END && isWidgetEnd)
+                )
+
             isCreatorOfTheWidget = userId == widget.creatorId
             showAdMob = showAds
             lastVotedAtOptional = lastVotedOption

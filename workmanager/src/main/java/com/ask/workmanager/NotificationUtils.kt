@@ -1,8 +1,11 @@
 package com.ask.workmanager
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -35,6 +38,14 @@ object NotificationUtils {
         notificationType: NotificationType,
         progress: Float? = null
     ) {
+        val notificationManager = NotificationManagerCompat.from(applicationContext)
+        if (ActivityCompat.checkSelfPermission(
+                applicationContext,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
         val (title, message) = when (notificationType) {
             NotificationType.NEW_WIDGETS -> createWidgetTitleMessage.random()
             NotificationType.USER_VOTED_ON_YOUR_WIDGET -> userVotedTitleMessage.random()
@@ -46,12 +57,24 @@ object NotificationUtils {
                 R.string.the_timer_for_your_widget_has_ended_tap_to_view_the_results_and_see_how_your_audience_responded
 
         }
-        val builder = NotificationCompat.Builder(applicationContext, NOTIFICATION_CHANNEL_ID)
+
+        createNotificationChannel(
+            applicationContext,
+            applicationContext.getString(title),
+            applicationContext.getString(message),
+            notificationType.name,
+            when (notificationType) {
+                NotificationType.SYNC_DATA -> NotificationManager.IMPORTANCE_LOW
+                else -> NotificationManager.IMPORTANCE_HIGH
+            }
+        )
+        val builder = NotificationCompat.Builder(applicationContext, notificationType.name)
             .setSmallIcon(R.drawable.baseline_circle_notifications_24)
             .setContentTitle(applicationContext.getString(title))
             .setContentText(applicationContext.getString(message))
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setAutoCancel(true)
+
 
         if (progress != null) {
             if (progress == -1f) {
@@ -62,20 +85,31 @@ object NotificationUtils {
         }
         if (notificationType == NotificationType.SYNC_DATA) {
             builder.setPriority(NotificationCompat.PRIORITY_LOW)
+            builder.setSilent(true)
         }
 
-        val notificationManager = NotificationManagerCompat.from(applicationContext)
-        if (ActivityCompat.checkSelfPermission(
-                applicationContext,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            return
-        }
+
         notificationManager.notify(
             notificationType.ordinal,
             builder.build()
         )
+    }
+
+    private fun createNotificationChannel(
+        context: Context,
+        title: String,
+        description: String,
+        channelId: String,
+        importance: Int = NotificationManager.IMPORTANCE_HIGH
+    ) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, title, importance).apply {
+                setDescription(description)
+            }
+            val notificationManager: NotificationManager =
+                context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     fun cancelNotification(applicationContext: Context, notificationType: NotificationType) {

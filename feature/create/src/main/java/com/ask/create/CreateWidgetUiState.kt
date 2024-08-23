@@ -25,9 +25,7 @@ data class CreateWidgetUiState(
     val allowCreate: Boolean = false,
     val minAge: Int = MIN_AGE_RANGE,
     val maxAge: Int = MAX_AGE_RANGE,
-    val targetAudienceAgeRange: Widget.TargetAudienceAgeRange = Widget.TargetAudienceAgeRange(
-        min = minAge, max = maxAge
-    ),
+    val targetAudienceAgeRange: Widget.TargetAudienceAgeRange = Widget.TargetAudienceAgeRange(min = 0, max = 0),
     val widgetCategories: List<Widget.WidgetCategory> = emptyList(),
     val categories: List<CategoryWithSubCategory> = emptyList(),
     val startTime: Long = System.currentTimeMillis(),
@@ -36,6 +34,7 @@ data class CreateWidgetUiState(
     val maxYearAllowed: Int = 0,
     val optionError: List<String> = emptyList(),
     val allowAnonymous: Boolean = true,
+    val widgetResult: Widget.WidgetResult = Widget.WidgetResult.ALWAYS,
 ) {
 
 
@@ -48,7 +47,8 @@ data class CreateWidgetUiState(
                 description = desc,
                 startAt = startTime,
                 endAt = endTime,
-                allowAnonymous = allowAnonymous
+                allowAnonymous = allowAnonymous,
+                widgetResult = widgetResult
             ),
             options.map {
                 WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
@@ -85,10 +85,9 @@ sealed interface CreateWidgetUiEvent {
     data class SelectCategoryWidgetEvent(val categories: List<Widget.WidgetCategory>) :
         CreateWidgetUiEvent
 
-    data class AnonymousVotingEvent(val isAnonymous: Boolean) : CreateWidgetUiEvent
-
     data class StartTimeChangedEvent(val startTime: Long) : CreateWidgetUiEvent
     data class EndTimeChangedEvent(val endTime: Long?) : CreateWidgetUiEvent
     data class ErrorEvent(val error: Int) : CreateWidgetUiEvent
     data class AllowAnonymousEvent(val allowAnonymous: Boolean) : CreateWidgetUiEvent
+    data class WidgetResultChangedEvent(val result: Widget.WidgetResult) : CreateWidgetUiEvent
 }

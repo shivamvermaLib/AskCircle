@@ -142,8 +142,8 @@ fun HomeScreen(
             startActivity(context, shareIntent, null)
         },
         homeViewModel::onBookmarkClick,
-        homeViewModel::onStopVoteClick,
         homeViewModel::onStartVoteClick,
+        homeViewModel::onStopVoteClick,
         homeViewModel::setSearch
     )
 }

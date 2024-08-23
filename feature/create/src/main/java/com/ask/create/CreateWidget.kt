@@ -130,7 +130,7 @@ fun CreateWidgetScreen(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3WindowSizeClassApi::class,
     ExperimentalCoroutinesApi::class,
-    ExperimentalSharedTransitionApi::class
+    ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class
 )
 @Preview
 @Composable
@@ -389,6 +389,29 @@ private fun CreateWidgetScreen(
                     Switch(createWidgetUiState.allowAnonymous, {
                         onEvent(CreateWidgetUiEvent.AllowAnonymousEvent(it))
                     })
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Result")
+                    Spacer(modifier = Modifier.weight(1f))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Widget.WidgetResult.entries.forEach { result ->
+                            AppOptionTypeSelect(
+                                selected = createWidgetUiState.widgetResult == result,
+                                onSelectedChange = {
+                                    onEvent(CreateWidgetUiEvent.WidgetResultChangedEvent(result))
+                                },
+                                title = when (result) {
+                                    Widget.WidgetResult.AFTER_VOTE -> "After Vote"
+                                    Widget.WidgetResult.ALWAYS -> "Always"
+                                    Widget.WidgetResult.TIME_END -> "After Ends At"
+                                },
+                                icon = null
+                            )
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
