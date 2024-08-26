@@ -162,11 +162,17 @@ data class Widget(
         @PrimaryKey val id: String = UUID.randomUUID().toString(),
         val widgetId: String = EMPTY,
         val gender: GenderFilter = GenderFilter.ALL,
+        val marriageStatusFilter: MarriageStatusFilter = MarriageStatusFilter.ALL,
+        val educationFilter: EducationFilter = EducationFilter.ALL,
+        val occupationFilter: OccupationFilter = OccupationFilter.ALL,
         val createdAt: Long = System.currentTimeMillis(),
         val updatedAt: Long = System.currentTimeMillis()
     )
 
     enum class GenderFilter { ALL, MALE, FEMALE }
+    enum class MarriageStatusFilter { ALL, SINGLE, MARRIED, DIVORCED, WIDOW }
+    enum class EducationFilter { ALL, PRIMARY, SECONDARY, HIGH_SCHOOL, UNDER_GRADUATE, POST_GRADUATE, DOC_OR_PHD }
+    enum class OccupationFilter { ALL, EMPLOYED, SELF_EMPLOYED, UNEMPLOYED, RETIRED }
 
     @Serializable
     @Entity(
@@ -360,6 +366,9 @@ fun generateCombinationsForWidget(
     val locationCombinations = mutableListOf<String>()
 
     val genderName = gender.gender.name.toSearchNeededField()
+    val marriageStatusName = gender.marriageStatusFilter.name.toSearchNeededField()
+    val educationName = gender.educationFilter.name.toSearchNeededField()
+    val occupationName = gender.occupationFilter.name.toSearchNeededField()
     for (location in locations) {
         val country = location.country.toSearchNeededField()
         val state = location.state.toSearchNeededField { country != null }
@@ -403,26 +412,62 @@ fun generateCombinationsForWidget(
         }
     }
 
+    val marriageCombination = mutableSetOf<String>()
+    if (marriageStatusName != null) {
+        if (genderCombination.isEmpty()) {
+            marriageCombination.add(marriageStatusName)
+        } else {
+            genderCombination.forEach { locationCombination ->
+                marriageCombination.add("${locationCombination}$UNDERSCORE$marriageStatusName")
+            }
+        }
+    }
+
+    val educationCombination = mutableSetOf<String>()
+    if (educationName != null) {
+        if (marriageCombination.isEmpty()) {
+            educationCombination.add(educationName)
+        } else {
+            marriageCombination.forEach { locationCombination ->
+                educationCombination.add("${locationCombination}$UNDERSCORE$educationName")
+            }
+        }
+    }
+
+    val occupationCombination = mutableSetOf<String>()
+    if (occupationName != null) {
+        if (marriageCombination.isEmpty()) {
+            occupationCombination.add(occupationName)
+        } else {
+            marriageCombination.forEach { locationCombination ->
+                occupationCombination.add("${locationCombination}$UNDERSCORE$occupationName")
+            }
+        }
+    }
+
     val categoriesCombination = mutableListOf<String>()
     if (widgetCategories.isEmpty()) {
-        categoriesCombination.addAll(genderCombination)
+        categoriesCombination.addAll(occupationCombination)
     } else {
         widgetCategories.forEach { widgetCategory ->
             val category = widgetCategory.category.toSearchNeededField()
             val subCategory = widgetCategory.subCategory.toSearchNeededField()
-            genderCombination.forEach {
-                if (subCategory != null && category != null) {
-                    categoriesCombination.add("$it$UNDERSCORE${category}$UNDERSCORE${subCategory}")
-                    categoriesCombination.add("$it$UNDERSCORE${category}")
-                } else if (category != null) {
-                    categoriesCombination.add("$it$UNDERSCORE${category}")
+            if (occupationCombination.isNotEmpty()) {
+                occupationCombination.forEach {
+                    if (subCategory != null && category != null) {
+                        categoriesCombination.add("$it$UNDERSCORE${category}$UNDERSCORE${subCategory}")
+                        categoriesCombination.add("$it$UNDERSCORE${category}")
+                    } else if (category != null) {
+                        categoriesCombination.add("$it$UNDERSCORE${category}")
+                    }
                 }
-            }
-            if (subCategory != null && category != null) {
-                categoriesCombination.add("$ALL$UNDERSCORE${category}$UNDERSCORE${subCategory}")
-                categoriesCombination.add("$ALL$UNDERSCORE${category}")
-            } else if (category != null) {
-                categoriesCombination.add("$ALL$UNDERSCORE${category}")
+            } else {
+                if (subCategory != null && category != null) {
+                    categoriesCombination.add("$ALL$UNDERSCORE${category}$UNDERSCORE${subCategory}")
+                    categoriesCombination.add("$ALL$UNDERSCORE${category}")
+                } else if (category != null) {
+                    categoriesCombination.add("$ALL$UNDERSCORE${category}")
+                }
             }
         }
     }

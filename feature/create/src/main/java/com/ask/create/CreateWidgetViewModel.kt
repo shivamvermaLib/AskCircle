@@ -149,6 +149,24 @@ class CreateWidgetViewModel @Inject constructor(
                     )
                 )
 
+                is CreateWidgetUiEvent.UpdateMarriageStatusFilterEvent -> it.copy(
+                    targetAudienceGender = it.targetAudienceGender.copy(
+                        marriageStatusFilter = event.marriageStatusFilterEvent
+                    )
+                )
+
+                is CreateWidgetUiEvent.UpdateEducationFilterEvent -> it.copy(
+                    targetAudienceGender = it.targetAudienceGender.copy(
+                        educationFilter = event.filter
+                    )
+                )
+
+                is CreateWidgetUiEvent.UpdateOccupationFilterEvent -> it.copy(
+                    targetAudienceGender = it.targetAudienceGender.copy(
+                        occupationFilter = event.occupationFilter
+                    )
+                )
+
                 else -> {
                     it
                 }

@@ -88,7 +88,10 @@ class UserRepository @Inject constructor(
         profilePicExtension: String? = null,
         profileByteArray: Map<ImageSizeType, ByteArray>? = null,
         userCategories: List<User.UserCategory>? = null,
-        widgetBookmarks: List<User.UserWidgetBookmarks>? = null
+        widgetBookmarks: List<User.UserWidgetBookmarks>? = null,
+        marriageStatus: MarriageStatus? = null,
+        education: Education? = null,
+        occupation: Occupation? = null
     ): UserWithLocationCategory = withContext(dispatcher) {
         val profilePic =
             if (profileByteArray != null && profilePicExtension != null) profileByteArray.map {
@@ -100,12 +103,18 @@ class UserRepository @Inject constructor(
             else null
 
         userDataSource.updateItemFromTransaction(getCurrentUserId()) { userDetails ->
-            userDetails.copy(user = userDetails.user.copy(updatedAt = System.currentTimeMillis(),
-                name = name?.takeIf { it.isNotBlank() } ?: userDetails.user.name,
-                email = email?.takeIf { it.isNotBlank() } ?: userDetails.user.email,
-                age = age ?: userDetails.user.age,
-                gender = gender ?: userDetails.user.gender,
-                profilePic = profilePic ?: userDetails.user.profilePic),
+            userDetails.copy(
+                user = userDetails.user.copy(
+                    updatedAt = System.currentTimeMillis(),
+                    name = name?.takeIf { it.isNotBlank() } ?: userDetails.user.name,
+                    email = email?.takeIf { it.isNotBlank() } ?: userDetails.user.email,
+                    age = age ?: userDetails.user.age,
+                    gender = gender ?: userDetails.user.gender,
+                    profilePic = profilePic ?: userDetails.user.profilePic,
+                    marriageStatus = marriageStatus ?: userDetails.user.marriageStatus,
+                    education = education ?: userDetails.user.education,
+                    occupation = occupation ?: userDetails.user.occupation
+                ),
                 userLocation = country?.takeIf { it.isNotBlank() }?.let {
                     userDetails.userLocation.copy(
                         country = it, updatedAt = System.currentTimeMillis()
@@ -120,11 +129,9 @@ class UserRepository @Inject constructor(
                     it.copy(
                         userId = getCurrentUserId(), updatedAt = System.currentTimeMillis()
                     )
-                } ?: userDetails.userWidgetBookmarks))
+                } ?: userDetails.userWidgetBookmarks),
+            )
         }.also {
-            /*if (!email.isNullOrBlank()) {
-                firebaseAuthSource.assignEmailToAccount(email)
-            }*/
             userDao.deleteCategories()
             userDao.deleteWidgetBookmarks()
             userDao.insertAll(

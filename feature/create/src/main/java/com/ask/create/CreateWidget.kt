@@ -331,6 +331,110 @@ private fun CreateWidgetScreen(
                     onEvent(CreateWidgetUiEvent.GenderChangedEvent(it))
                 }
                 Spacer(modifier = Modifier.size(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.marital_status),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DropDownWithSelect(
+                        list = Widget.MarriageStatusFilter.entries,
+                        title = when (createWidgetUiState.targetAudienceGender.marriageStatusFilter) {
+                            Widget.MarriageStatusFilter.ALL -> context.getString(R.string.all)
+                            Widget.MarriageStatusFilter.SINGLE -> context.getString(R.string.single)
+                            Widget.MarriageStatusFilter.MARRIED -> context.getString(R.string.married)
+                            Widget.MarriageStatusFilter.DIVORCED -> context.getString(R.string.divorced)
+                            Widget.MarriageStatusFilter.WIDOW -> context.getString(R.string.widow)
+                        },
+                        onItemSelect = {
+                            onEvent(
+                                CreateWidgetUiEvent.UpdateMarriageStatusFilterEvent(
+                                    it
+                                )
+                            )
+                        },
+                        itemString = {
+                            when (it) {
+                                Widget.MarriageStatusFilter.ALL -> context.getString(R.string.all)
+                                Widget.MarriageStatusFilter.SINGLE -> context.getString(R.string.single)
+                                Widget.MarriageStatusFilter.MARRIED -> context.getString(R.string.married)
+                                Widget.MarriageStatusFilter.DIVORCED -> context.getString(R.string.divorced)
+                                Widget.MarriageStatusFilter.WIDOW -> context.getString(R.string.widow)
+                            }
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.education), style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DropDownWithSelect(
+                        list = Widget.EducationFilter.entries,
+                        title = when (createWidgetUiState.targetAudienceGender.educationFilter) {
+                            Widget.EducationFilter.ALL -> context.getString(R.string.all)
+                            Widget.EducationFilter.PRIMARY -> context.getString(R.string.primary)
+                            Widget.EducationFilter.SECONDARY -> context.getString(R.string.secondary)
+                            Widget.EducationFilter.HIGH_SCHOOL -> context.getString(R.string.high_school)
+                            Widget.EducationFilter.UNDER_GRADUATE -> context.getString(R.string.under_graduate)
+                            Widget.EducationFilter.POST_GRADUATE -> context.getString(R.string.post_graduate)
+                            Widget.EducationFilter.DOC_OR_PHD -> context.getString(R.string.phd)
+                        },
+                        onItemSelect = {
+                            onEvent(
+                                CreateWidgetUiEvent.UpdateEducationFilterEvent(
+                                    it
+                                )
+                            )
+                        },
+                        itemString = {
+                            when (it) {
+                                Widget.EducationFilter.ALL -> context.getString(R.string.all)
+                                Widget.EducationFilter.PRIMARY -> context.getString(R.string.primary)
+                                Widget.EducationFilter.SECONDARY -> context.getString(R.string.secondary)
+                                Widget.EducationFilter.HIGH_SCHOOL -> context.getString(R.string.high_school)
+                                Widget.EducationFilter.UNDER_GRADUATE -> context.getString(R.string.under_graduate)
+                                Widget.EducationFilter.POST_GRADUATE -> context.getString(R.string.post_graduate)
+                                Widget.EducationFilter.DOC_OR_PHD -> context.getString(R.string.phd)
+                            }
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.occupation), style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DropDownWithSelect(
+                        list = Widget.OccupationFilter.entries,
+                        title = when (createWidgetUiState.targetAudienceGender.occupationFilter) {
+                            Widget.OccupationFilter.ALL -> context.getString(R.string.all)
+                            Widget.OccupationFilter.EMPLOYED -> context.getString(R.string.employed)
+                            Widget.OccupationFilter.SELF_EMPLOYED -> context.getString(R.string.self_employed)
+                            Widget.OccupationFilter.UNEMPLOYED -> context.getString(R.string.unemployed)
+                            Widget.OccupationFilter.RETIRED -> context.getString(R.string.retired)
+                        },
+                        onItemSelect = {
+                            onEvent(
+                                CreateWidgetUiEvent.UpdateOccupationFilterEvent(
+                                    it
+                                )
+                            )
+                        },
+                        itemString = {
+                            when (it) {
+                                Widget.OccupationFilter.ALL -> context.getString(R.string.all)
+                                Widget.OccupationFilter.EMPLOYED -> context.getString(R.string.employed)
+                                Widget.OccupationFilter.SELF_EMPLOYED -> context.getString(R.string.self_employed)
+                                Widget.OccupationFilter.UNEMPLOYED -> context.getString(R.string.unemployed)
+                                Widget.OccupationFilter.RETIRED -> context.getString(R.string.retired)
+                            }
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.size(10.dp))
                 AgeRangeSelect(
                     createWidgetUiState,
                     { onEvent(CreateWidgetUiEvent.MinAgeChangedEvent(it)) },
@@ -498,7 +602,8 @@ fun EndTime(createWidgetUiState: CreateWidgetUiState, onTimeChanged: (Long?) -> 
         AppOptionTypeSelect(
             selected = createWidgetUiState.widget.endAt != null,
             onSelectedChange = { openPicker = true },
-            title = createWidgetUiState.widget.endAt?.toDate() ?: stringResource(id = R.string.select),
+            title = createWidgetUiState.widget.endAt?.toDate()
+                ?: stringResource(id = R.string.select),
             icon = ImageVector.vectorResource(id = R.drawable.round_calendar_month_24)
         )
         Spacer(modifier = Modifier.size(5.dp))
@@ -709,26 +814,19 @@ fun GenderSelect(
             text = stringResource(R.string.gender), style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.weight(1f))
-        AppOptionTypeSelect(
-            selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.ALL,
-            onSelectedChange = { onGenderChanged(Widget.GenderFilter.ALL) },
-            title = stringResource(R.string.all),
-            icon = null
-        )
-        Spacer(modifier = Modifier.size(5.dp))
-        AppOptionTypeSelect(
-            selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.MALE,
-            onSelectedChange = { onGenderChanged(Widget.GenderFilter.MALE) },
-            title = stringResource(R.string.male),
-            icon = ImageVector.vectorResource(id = R.drawable.baseline_male_24)
-        )
-        Spacer(modifier = Modifier.size(5.dp))
-        AppOptionTypeSelect(
-            selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.FEMALE,
-            onSelectedChange = { onGenderChanged(Widget.GenderFilter.FEMALE) },
-            title = stringResource(R.string.female),
-            icon = ImageVector.vectorResource(id = R.drawable.baseline_female_24)
-        )
+        Widget.GenderFilter.entries.forEach { gender ->
+            Spacer(modifier = Modifier.size(6.dp))
+            AppOptionTypeSelect(
+                selected = createWidgetUiState.targetAudienceGender.gender == gender,
+                onSelectedChange = { onGenderChanged(gender) },
+                title = when (gender) {
+                    Widget.GenderFilter.ALL -> stringResource(R.string.all)
+                    Widget.GenderFilter.MALE -> stringResource(R.string.male)
+                    Widget.GenderFilter.FEMALE -> stringResource(id = R.string.female)
+                },
+                icon = null
+            )
+        }
     }
 }
 

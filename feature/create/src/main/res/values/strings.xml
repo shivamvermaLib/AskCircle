@@ -29,5 +29,22 @@
     <string name="no_internet_connection">No Internet Connection</string>
     <string name="more_options">More Options</string>
     <string name="allow_anonymous_voters">Allow Anonymous Voters</string>
+    <string name="marital_status">Marital Status</string>
+    <string name="single">Single</string>
+    <string name="married">Married</string>
+    <string name="divorced">Divorced</string>
+    <string name="widow">Widow</string>
+    <string name="primary">Primary</string>
+    <string name="secondary">Secondary</string>
+    <string name="high_school">High School</string>
+    <string name="under_graduate">Under Graduate</string>
+    <string name="post_graduate">Post Graduate</string>
+    <string name="phd">PHD</string>
+    <string name="employed">Employed</string>
+    <string name="self_employed">Self Employed</string>
+    <string name="unemployed">Unemployed</string>
+    <string name="retired">Retired</string>
+    <string name="occupation">Occupation</string>
+    <string name="education">Education</string>
 
 </resources>

@@ -17,5 +17,22 @@
     <string name="profile">Profile</string>
     <string name="back">Back</string>
     <string name="google_sign_in_failed">Google sign in failed</string>
+    <string name="martial_status">Martial Status</string>
+    <string name="single">Single</string>
+    <string name="married">Married</string>
+    <string name="divorced">Divorced</string>
+    <string name="widow">Widow</string>
+    <string name="education">Education</string>
+    <string name="primary">Primary</string>
+    <string name="secondary">Secondary</string>
+    <string name="high_school">High School</string>
+    <string name="under_graduate">Under Graduate</string>
+    <string name="post_graduate">Post Graduate</string>
+    <string name="phd">PHD</string>
+    <string name="occupation">Occupation</string>
+    <string name="employed">Employed</string>
+    <string name="self_employed">Self Employed</string>
+    <string name="unemployed">Unemployed</string>
+    <string name="retired">Retired</string>
 
 </resources>

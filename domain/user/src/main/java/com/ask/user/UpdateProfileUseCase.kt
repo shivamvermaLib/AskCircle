@@ -23,6 +23,9 @@ class UpdateProfileUseCase @Inject constructor(
         country: String?,
         userCategories: List<User.UserCategory>?,
         widgetBookmarks: List<User.UserWidgetBookmarks>?,
+        marriageStatus: MarriageStatus?,
+        education: Education?,
+        occupation: Occupation?,
         getExtension: (String) -> String?,
         getBytes: suspend (String) -> Map<ImageSizeType, ByteArray>,
         preloadImage: suspend (List<String>) -> Unit
@@ -45,7 +48,10 @@ class UpdateProfileUseCase @Inject constructor(
             gender = gender,
             age = age,
             country = country,
+            education = education,
+            occupation = occupation,
             userCategories = userCategories,
+            marriageStatus = marriageStatus,
             widgetBookmarks = widgetBookmarks,
             profilePicExtension = extension,
             profileByteArray = profilePic?.takeIf { it.checkIfFirebaseUrl().not() }

@@ -72,12 +72,11 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             val time = System.currentTimeMillis()
             userRepository.checkCurrentUser()?.let { userWithLocation ->
                 generateCombinationsForUsers(
-                    userWithLocation.user.gender,
-                    userWithLocation.user.age,
+                    userWithLocation.user,
                     userWithLocation.userLocation,
                     userWithLocation.user.id,
                     userWithLocation.userCategories,
-                    userWithLocation.user.email.isNullOrBlank().not()
+                    userWithLocation.user.email.isNullOrBlank().not(),
                 ).let { list ->
                     onProgress(0.56f)
                     widgetRepository.syncWidgetsFromServer(

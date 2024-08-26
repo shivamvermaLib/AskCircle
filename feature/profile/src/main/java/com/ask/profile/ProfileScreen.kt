@@ -1,6 +1,5 @@
 package com.ask.profile
 
-import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -82,7 +81,10 @@ import com.ask.common.toErrorString
 import com.ask.core.EMPTY
 import com.ask.core.ImageSizeType
 import com.ask.core.getImage
+import com.ask.user.Education
 import com.ask.user.Gender
+import com.ask.user.MarriageStatus
+import com.ask.user.Occupation
 import com.ask.user.User
 import com.ask.workmanager.UpdateProfileWorker
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -116,29 +118,26 @@ fun ProfileScreen(
         profileUiState,
         sharedTransitionScope,
         animatedContentScope,
-        viewModel::setName,
-        viewModel::setEmail,
-        viewModel::setGender,
-        viewModel::setCountry,
-        viewModel::setAge,
         {
             UpdateProfileWorker.sendRequest(
                 context,
-                profileUiState.name,
-                profileUiState.email,
-                profileUiState.gender,
-                profileUiState.age,
-                profileUiState.profilePic,
+                profileUiState.user.name,
+                profileUiState.user.email ?: EMPTY,
+                profileUiState.user.gender,
+                profileUiState.user.age,
+                profileUiState.user.profilePic,
                 profileUiState.country,
                 profileUiState.userCategories,
-            )
+                profileUiState.user.marriageStatus,
+                profileUiState.user.education,
+                profileUiState.user.occupation,
+
+                )
             onMessage(context.getString(R.string.profile_update_in_progress)) {}
         },
-        viewModel::onImageClick,
         onOpenImage,
-        viewModel::onCategorySelect,
         onBack,
-        viewModel::connectWithGoogle
+        viewModel::onEvent
     )
 }
 
@@ -151,17 +150,10 @@ private fun ProfileScreen(
     @PreviewParameter(ProfileTabViewPreviewParameter::class) profile: ProfileUiState,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
-    setName: (String) -> Unit = {},
-    setEmail: (String) -> Unit = {},
-    setGender: (Gender) -> Unit = {},
-    setCountry: (String) -> Unit = {},
-    setAge: (Int) -> Unit = {},
     onUpdate: () -> Unit = {},
-    onImageClick: (String) -> Unit = {},
     onOpenImage: (String) -> Unit = {},
-    onCategorySelect: (List<User.UserCategory>) -> Unit,
     onBack: () -> Unit = {},
-    onConnectWithGoogle: (context: Context) -> Unit = {}
+    onEvent: (ProfileUiEvent) -> Unit = {}
 ) {
     val context = LocalContext.current
     Scaffold(
@@ -193,7 +185,9 @@ private fun ProfileScreen(
             val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
                 contract = ActivityResultContracts.PickVisualMedia(),
                 onResult = { uri ->
-                    uri?.let { onImageClick(it.toString()) }
+                    uri?.let {
+                        onEvent(ProfileUiEvent.UpdateProfilePic(it.toString()))
+                    }
                 })
             Box {
                 if (profile.profileLoading) {
@@ -204,22 +198,22 @@ private fun ProfileScreen(
                     )
                 } else {
                     with(sharedTransitionScope) {
-                        AppImage(url = profile.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
-                            contentDescription = profile.name,
+                        AppImage(url = profile.user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
+                            contentDescription = profile.user.name,
                             contentScale = ContentScale.Fit,
                             placeholder = R.drawable.baseline_account_box_24,
                             error = R.drawable.baseline_account_box_24,
                             modifier = Modifier.Companion
                                 .sharedElement(
                                     sharedTransitionScope.rememberSharedContentState(
-                                        key = profile.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
+                                        key = profile.user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL)
                                             ?: EMPTY
                                     ), animatedVisibilityScope = animatedContentScope
                                 )
                                 .height(160.dp)
                                 .clip(RoundedCornerShape(20.dp))
                                 .clickable {
-                                    profile.profilePic?.let {
+                                    profile.user.profilePic?.let {
                                         onOpenImage(
                                             it.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY
                                         )
@@ -251,8 +245,10 @@ private fun ProfileScreen(
             } else {
                 AppTextField(
                     hint = stringResource(R.string.name),
-                    value = profile.name,
-                    onValueChange = setName,
+                    value = profile.user.name,
+                    onValueChange = {
+                        onEvent(ProfileUiEvent.UpdateName(it))
+                    },
                     isError = profile.nameError != -1,
                     errorMessage = profile.nameError.toErrorString(context),
                 )
@@ -268,15 +264,19 @@ private fun ProfileScreen(
             } else {
                 AppTextField(
                     hint = stringResource(R.string.email),
-                    value = profile.email,
-                    onValueChange = setEmail,
+                    value = profile.user.email ?: EMPTY,
+                    onValueChange = {
+                        onEvent(ProfileUiEvent.UpdateEmail(it))
+                    },
                     isError = profile.emailError != -1,
                     errorMessage = profile.emailError.toErrorString(context),
                     trailingIcon = {
                         if (profile.googleLoginLoading) {
                             CircularProgressIndicator()
                         } else {
-                            IconButton(onClick = { onConnectWithGoogle(context) }) {
+                            IconButton(onClick = {
+                                onEvent(ProfileUiEvent.ConnectWithGoogle(context))
+                            }) {
                                 Icon(
                                     ImageVector.vectorResource(id = R.drawable.google_178_svgrepo_com),
                                     contentDescription = "Connect with Google Account"
@@ -304,8 +304,8 @@ private fun ProfileScreen(
                 } else {
                     AppOptionTypeSelect(
                         Modifier,
-                        profile.gender == Gender.MALE,
-                        { setGender(Gender.MALE) },
+                        profile.user.gender == Gender.MALE,
+                        { onEvent(ProfileUiEvent.UpdateGender(Gender.MALE)) },
                         stringResource(id = R.string.male),
                         ImageVector.vectorResource(id = R.drawable.baseline_male_24)
                     )
@@ -321,8 +321,8 @@ private fun ProfileScreen(
                 } else {
                     AppOptionTypeSelect(
                         Modifier,
-                        profile.gender == Gender.FEMALE,
-                        { setGender(Gender.FEMALE) },
+                        profile.user.gender == Gender.FEMALE,
+                        { onEvent(ProfileUiEvent.UpdateGender(Gender.FEMALE)) },
                         stringResource(id = R.string.female),
                         ImageVector.vectorResource(id = R.drawable.baseline_female_24)
                     )
@@ -343,9 +343,126 @@ private fun ProfileScreen(
                 } else {
                     DropDownWithSelect(
                         list = (profile.minAgeRange..profile.maxAgeRange).map { it },
-                        title = profile.age?.toString() ?: "",
-                        onItemSelect = setAge,
+                        title = profile.user.age?.toString() ?: "",
+                        onItemSelect = {
+                            onEvent(ProfileUiEvent.UpdateAge(it))
+                        },
                         itemString = { it.toString() },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.martial_status),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                if (profile.profileLoading) {
+                    Box(
+                        modifier = Modifier
+                            .size(45.dp)
+                            .background(shimmerBrush())
+                    )
+                } else {
+                    DropDownWithSelect(
+                        list = MarriageStatus.entries,
+                        title = when (profile.user.marriageStatus) {
+                            MarriageStatus.SINGLE -> context.getString(R.string.single)
+                            MarriageStatus.MARRIED -> context.getString(R.string.married)
+                            MarriageStatus.DIVORCED -> context.getString(R.string.divorced)
+                            MarriageStatus.WIDOW -> context.getString(R.string.widow)
+                            else -> context.getString(R.string.select)
+                        },
+                        onItemSelect = {
+                            onEvent(ProfileUiEvent.UpdateMaritalStatus(it))
+                        },
+                        itemString = {
+                            when (it) {
+                                MarriageStatus.SINGLE -> context.getString(R.string.single)
+                                MarriageStatus.MARRIED -> context.getString(R.string.married)
+                                MarriageStatus.DIVORCED -> context.getString(R.string.divorced)
+                                MarriageStatus.WIDOW -> context.getString(R.string.widow)
+                            }
+                        },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.education),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                if (profile.profileLoading) {
+                    Box(
+                        modifier = Modifier
+                            .size(45.dp)
+                            .background(shimmerBrush())
+                    )
+                } else {
+                    DropDownWithSelect(
+                        list = Education.entries,
+                        title = when (profile.user.education) {
+                            Education.PRIMARY -> context.getString(R.string.primary)
+                            Education.SECONDARY -> context.getString(R.string.secondary)
+                            Education.HIGH_SCHOOL -> context.getString(R.string.high_school)
+                            Education.UNDER_GRADUATE -> context.getString(R.string.under_graduate)
+                            Education.POST_GRADUATE -> context.getString(R.string.post_graduate)
+                            Education.DOC_OR_PHD -> context.getString(R.string.phd)
+                            else -> context.getString(R.string.select)
+                        },
+                        onItemSelect = {
+                            onEvent(ProfileUiEvent.UpdateEducation(it))
+                        },
+                        itemString = {
+                            when (it) {
+                                Education.PRIMARY -> context.getString(R.string.primary)
+                                Education.SECONDARY -> context.getString(R.string.secondary)
+                                Education.HIGH_SCHOOL -> context.getString(R.string.high_school)
+                                Education.UNDER_GRADUATE -> context.getString(R.string.under_graduate)
+                                Education.POST_GRADUATE -> context.getString(R.string.post_graduate)
+                                Education.DOC_OR_PHD -> context.getString(R.string.phd)
+                            }
+                        },
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.size(8.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.occupation),
+                    style = MaterialTheme.typography.titleSmall
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                if (profile.profileLoading) {
+                    Box(
+                        modifier = Modifier
+                            .size(45.dp)
+                            .background(shimmerBrush())
+                    )
+                } else {
+                    DropDownWithSelect(
+                        list = Occupation.entries,
+                        title = when (profile.user.occupation) {
+                            Occupation.EMPLOYED -> context.getString(R.string.employed)
+                            Occupation.SELF_EMPLOYED -> context.getString(R.string.self_employed)
+                            Occupation.UNEMPLOYED -> context.getString(R.string.unemployed)
+                            Occupation.RETIRED -> context.getString(R.string.retired)
+                            else -> context.getString(R.string.select)
+                        },
+                        onItemSelect = {
+                            onEvent(ProfileUiEvent.UpdateOccupation(it))
+                        },
+                        itemString = {
+                            when (it) {
+                                Occupation.EMPLOYED -> context.getString(R.string.employed)
+                                Occupation.SELF_EMPLOYED -> context.getString(R.string.self_employed)
+                                Occupation.UNEMPLOYED -> context.getString(R.string.unemployed)
+                                Occupation.RETIRED -> context.getString(R.string.retired)
+                            }
+                        },
                     )
                 }
             }
@@ -370,14 +487,18 @@ private fun ProfileScreen(
                         } ?: stringResource(id = R.string.select),
                         modifier = Modifier.padding(horizontal = 4.dp),
                         itemString = { "${it.emoji} ${it.name}" }) {
-                        setCountry(it.name)
+                        onEvent(ProfileUiEvent.UpdateCountry(it.name))
                     }
                 }
             }
             Spacer(modifier = Modifier.size(8.dp))
             CategorySelect(
-                profile.profileLoading, profile.categories, profile.userCategories, onCategorySelect
-            )
+                profile.profileLoading,
+                profile.categories,
+                profile.userCategories
+            ) {
+                onEvent(ProfileUiEvent.UpdateCategories(it))
+            }
             Spacer(modifier = Modifier.size(20.dp))
             ElevatedButton(
                 onClick = onUpdate,
@@ -573,11 +694,13 @@ class ProfileTabViewPreviewParameter : PreviewParameterProvider<ProfileUiState> 
     override val values: Sequence<ProfileUiState>
         get() = sequenceOf(
             ProfileUiState(
-                name = "Shivam Verma",
-                email = "shivamverma@gmail.com",
-                gender = Gender.MALE,
+                user = User(
+                    name = "Shivam Verma",
+                    email = "shivamverma@gmail.com",
+                    gender = Gender.MALE,
+                    age = 22,
+                ),
                 country = "India",
-                age = 22,
             )
         )
 }

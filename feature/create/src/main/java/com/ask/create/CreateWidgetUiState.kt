@@ -18,7 +18,7 @@ data class CreateWidgetUiState(
         Widget.Option(text = EMPTY),
         Widget.Option(text = EMPTY),
     ),
-    val targetAudienceGender: Widget.TargetAudienceGender = Widget.TargetAudienceGender(gender = Widget.GenderFilter.ALL),
+    val targetAudienceGender: Widget.TargetAudienceGender = Widget.TargetAudienceGender(),
     val targetAudienceLocations: List<Widget.TargetAudienceLocation> = emptyList(),
     val countries: List<Country> = emptyList(),
     val allowCreate: Boolean = false,
@@ -82,4 +82,12 @@ sealed interface CreateWidgetUiEvent {
     data class AllowAnonymousEvent(val allowAnonymous: Boolean) : CreateWidgetUiEvent
     data class WidgetResultChangedEvent(val result: Widget.WidgetResult) : CreateWidgetUiEvent
     data class AllowMultipleSelection(val allow: Boolean) : CreateWidgetUiEvent
+    data class UpdateMarriageStatusFilterEvent(val marriageStatusFilterEvent: Widget.MarriageStatusFilter) :
+        CreateWidgetUiEvent
+
+    data class UpdateEducationFilterEvent(val filter: Widget.EducationFilter) :
+        CreateWidgetUiEvent
+
+    data class UpdateOccupationFilterEvent(val occupationFilter: Widget.OccupationFilter) :
+        CreateWidgetUiEvent
 }
