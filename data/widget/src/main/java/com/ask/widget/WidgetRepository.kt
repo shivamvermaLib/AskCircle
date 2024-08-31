@@ -100,14 +100,7 @@ class WidgetRepository @Inject constructor(
             )
 
         createdPollWithOptionsAndVotesForTargetAudience.run {
-            generateCombinationsForWidget(
-                targetAudienceGender,
-                targetAudienceAgeRange,
-                targetAudienceLocations,
-                createdPollWithOptionsAndVotesForTargetAudience.widget.creatorId,
-                categories,
-                widget.allowAnonymous.not()
-            ).map {
+            generateCombinationsForWidget().map {
                 async {
                     val widgetId = widgetIdDataSource.getItemOrNull(it)
                     if (widgetId == null) {
@@ -160,6 +153,26 @@ class WidgetRepository @Inject constructor(
     suspend fun doesSyncRequired(lastUpdatedTime: UpdatedTime): Boolean {
         val updatedTime = widgetUpdateTimeOneDataSource.getItem() ?: UpdatedTime()
         return isUpdateRequired(updatedTime, lastUpdatedTime)
+    }
+
+    suspend fun removeOldData() = withContext(dispatcher) {
+        widgetIdDataSource.clear()
+        val list = widgetDataSource.getAllItems()
+        list.map { widget ->
+            widget.widget.id to widget.generateCombinationsForWidget()
+        }.map { pair ->
+            pair.second.map {
+                val widgetId = widgetIdDataSource.getItemOrNull(it)
+                if (widgetId == null) {
+                    widgetIdDataSource.addItem(WidgetId(widgetIds = listOf(pair.first), id = it))
+                } else {
+                    widgetIdDataSource.updateItem(widgetId.copy(widgetIds = widgetId.widgetIds + pair.first))
+                }
+            }
+        }.flatten()
+            .let {
+                println("WidgetIds:${it.size}")
+            }
     }
 
     suspend fun syncWidgetsFromServer(

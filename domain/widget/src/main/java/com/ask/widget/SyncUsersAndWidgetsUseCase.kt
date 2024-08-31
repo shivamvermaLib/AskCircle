@@ -9,7 +9,6 @@ import com.ask.core.UpdatedTime
 import com.ask.core.badwords.BadWordRepository
 import com.ask.country.CountryRepository
 import com.ask.user.UserRepository
-import com.ask.user.generateCombinationsForUsers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -59,9 +58,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             countryRepository.clearAll()
             categoryRepository.clearAll()
             analyticsLogger.refreshTriggerEvent(
-                refreshCountServer,
-                refreshCountLocal,
-                userRepository.getCurrentUserId()
+                refreshCountServer, refreshCountLocal, userRepository.getCurrentUserId()
             )
             sharedPreference.setDbVersion(dbVersion)
         } else if (widgetRepository.doesSyncRequired(lastUpdatedTime)) {
@@ -71,16 +68,9 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         if (refreshNeeded) {
             val time = System.currentTimeMillis()
             userRepository.checkCurrentUser()?.let { userWithLocation ->
-                generateCombinationsForUsers(
-                    userWithLocation.user,
-                    userWithLocation.userLocation,
-                    userWithLocation.user.id,
-                    userWithLocation.userCategories,
-                    userWithLocation.user.email.isNullOrBlank().not(),
-                ).let { list ->
+                userWithLocation.generateCombinationsForUsers().let { list ->
                     onProgress(0.56f)
-                    widgetRepository.syncWidgetsFromServer(
-                        userRepository.getCurrentUserId(),
+                    widgetRepository.syncWidgetsFromServer(userRepository.getCurrentUserId(),
                         lastUpdatedTime,
                         list,
                         sharedPreference.getWidgetIdTimerEndNotification(),
@@ -90,16 +80,12 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         preloadImages,
                         onNotification,
                         {
-                            if (isSplash.not())
-                                sharedPreference.setWidgetIdTimerEndsNotification(it)
-                        }
-                    ).also {
+                            if (isSplash.not()) sharedPreference.setWidgetIdTimerEndsNotification(it)
+                        }).also {
                         onProgress(0.8f)
-                        listOf(
-                            async { countryRepository.syncCountries() },
+                        listOf(async { countryRepository.syncCountries() },
                             async { categoryRepository.syncCategories() },
-                            async { badWordRepository.syncBadWords() }
-                        ).awaitAll()
+                            async { badWordRepository.syncBadWords() }).awaitAll()
                     }
                 }
                 onProgress(0.9f)
