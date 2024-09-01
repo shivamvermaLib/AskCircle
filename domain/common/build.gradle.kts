@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.ask.common"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -35,15 +35,10 @@ android {
 }
 
 dependencies {
-    implementation(project(":data:core"))
+    api(project(":data:core"))
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
-
-    implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.generativeai)
 
     implementation(libs.coil.compose)
 

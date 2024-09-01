@@ -27,14 +27,20 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,6 +74,7 @@ fun AdminScreen(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     onAdminMoveToCreate: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
+    onBack: () -> Unit
 ) {
     val viewModel = hiltViewModel<AdminViewModel>()
     val state by viewModel.uiStateFlow.collectAsStateWithLifecycle()
@@ -92,11 +99,16 @@ fun AdminScreen(
         onWidgetSelectForImage = viewModel::selectWidgetForTextToImageOption,
         onFetchImage = viewModel::onFetchImage,
         onUpdateWidget = viewModel::updateWidget,
-        onOptionSelected = viewModel::onOptionSelected
+        onOptionSelected = viewModel::onOptionSelected,
+        onBack = onBack
     )
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalSharedTransitionApi::class)
+@OptIn(
+    ExperimentalLayoutApi::class,
+    ExperimentalSharedTransitionApi::class,
+    ExperimentalMaterial3Api::class
+)
 @Composable
 fun AdminContent(
     sharedTransitionScope: SharedTransitionScope,
@@ -112,6 +124,7 @@ fun AdminContent(
     onFetchImage: (String) -> Unit,
     onUpdateWidget: (WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
     onOptionSelected: (Widget.Option) -> Unit,
+    onBack: () -> Unit
 ) {
     var text by remember { mutableStateOf("") }
     var number by remember { mutableIntStateOf(10) }
@@ -128,136 +141,156 @@ fun AdminContent(
         onWidgetSelectForImage(null)
     }
 
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        item {
-            AppTextField(
-                hint = "Enter Text",
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.padding(all = 16.dp)
-            )
-        }
-        item {
-            FlowRow(modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)) {
-                for (item in state.searchList) {
-                    FilterChip(
-                        modifier = Modifier
-                            .padding(horizontal = 4.dp)
-                            .align(alignment = Alignment.CenterVertically),
-                        onClick = {
-                            text = item
-                        },
-                        label = { Text(item) },
-                        selected = true,
+    Scaffold(topBar = {
+        TopAppBar(
+            title = { Text(text = "Admin") },
+            navigationIcon = {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back"
                     )
                 }
             }
-        }
-        item {
-            Row(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Enter Number of Widgets", style = MaterialTheme.typography.titleSmall
+        )
+    }) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(it),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            item {
+                AppTextField(
+                    hint = "Enter Text",
+                    value = text,
+                    onValueChange = { text = it },
+                    modifier = Modifier.padding(all = 16.dp)
                 )
-                Spacer(modifier = Modifier.weight(1f))
-                DropDownWithSelect(list = (10..50).map { it },
-                    title = number.toString(),
-                    onItemSelect = { number = it },
-                    itemString = { it.toString() })
             }
-        }
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "Country")
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        state.selectedCountries.fastForEach {
-                            FilterChip(selected = true,
-                                onClick = { text = it.name },
-                                label = { Text(text = "${it.emoji} ${it.name}") })
-                        }
-                    }
-                }
-                Button(onClick = fetchCountries) {
-                    Text(text = "Refresh")
-                }
-            }
-        }
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(text = "Categories")
-                    FlowRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        state.selectedCategories.fastForEach {
-                            FilterChip(selected = true,
-                                onClick = { text = it },
-                                label = { Text(text = it) })
-                        }
-                    }
-                }
-                Button(onClick = fetchCategories) {
-                    Text(text = "Refresh")
-                }
-            }
-        }
-        item {
-            if (state.loading) {
-                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                Button(
-                    onClick = { onAskAI(text, number) }, modifier = Modifier.padding(all = 16.dp)
+            item {
+                FlowRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
                 ) {
-                    Text(text = "Ask AI")
+                    for (item in state.searchList) {
+                        FilterChip(
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .align(alignment = Alignment.CenterVertically),
+                            onClick = {
+                                text = item
+                            },
+                            label = { Text(item) },
+                            selected = true,
+                        )
+                    }
                 }
             }
-        }
-        if (state.error != null) {
-            item(key = state.error) {
-                Text(text = state.error, modifier = Modifier.padding(all = 16.dp))
+            item {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Enter Number of Widgets",
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DropDownWithSelect(list = (10..50).map { it },
+                        title = number.toString(),
+                        onItemSelect = { number = it },
+                        itemString = { it.toString() })
+                }
             }
-        }
-        item {
-            Spacer(modifier = Modifier.size(10.dp))
-        }
-        itemsIndexed(state.widgets) { index, widget ->
-            WidgetWithUserView(index = index,
-                isAdmin = true,
-                widgetWithOptionsAndVotesForTargetAudience = widget,
-                sharedTransitionScope = sharedTransitionScope,
-                animatedContentScope = animatedContentScope,
-                onOpenIndexImage = { _, _ -> },
-                onOpenImage = {},
-                onAdminCreate = { onCreateWidget(widget) },
-                onAdminRemove = { onRemoveWidget(widget) },
-                onAdminMoveToCreate = {
-                    onAdminMoveToCreate(widget)
-                },
-                onAdminUpdateTextToImage = {
-                    onWidgetSelectForImage(widget)
-                })
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = "Country")
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            state.selectedCountries.fastForEach {
+                                FilterChip(selected = true,
+                                    onClick = { text = it.name },
+                                    label = { Text(text = "${it.emoji} ${it.name}") })
+                            }
+                        }
+                    }
+                    Button(onClick = fetchCountries) {
+                        Text(text = "Refresh")
+                    }
+                }
+            }
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(text = "Categories")
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            state.selectedCategories.fastForEach {
+                                FilterChip(selected = true,
+                                    onClick = { text = it },
+                                    label = { Text(text = it) })
+                            }
+                        }
+                    }
+                    Button(onClick = fetchCategories) {
+                        Text(text = "Refresh")
+                    }
+                }
+            }
+            item {
+                if (state.loading) {
+                    Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    Button(
+                        onClick = { onAskAI(text, number) },
+                        modifier = Modifier.padding(all = 16.dp)
+                    ) {
+                        Text(text = "Ask AI")
+                    }
+                }
+            }
+            if (state.error != null) {
+                item(key = state.error) {
+                    Text(text = state.error, modifier = Modifier.padding(all = 16.dp))
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.size(10.dp))
+            }
+            itemsIndexed(state.widgets) { index, widget ->
+                WidgetWithUserView(index = index,
+                    isAdmin = true,
+                    widgetWithOptionsAndVotesForTargetAudience = widget,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope,
+                    onOpenIndexImage = { _, _ -> },
+                    onOpenImage = {},
+                    onAdminCreate = { onCreateWidget(widget) },
+                    onAdminRemove = { onRemoveWidget(widget) },
+                    onAdminMoveToCreate = {
+                        onAdminMoveToCreate(widget)
+                    },
+                    onAdminUpdateTextToImage = {
+                        onWidgetSelectForImage(widget)
+                    })
+            }
         }
     }
 }
@@ -306,9 +339,11 @@ fun WebViewComponent(query: String, collectedImageCount: Int, onFetchImage: (Str
                     }
                     loadUrl("https://www.google.com/search?hl=en&tbm=isch&q=$query")
                 }
-            }, update = {
+            },
+            update = {
                 it.loadUrl("https://www.google.com/search?hl=en&tbm=isch&q=$query")
-            }, modifier = Modifier
+            },
+            modifier = Modifier
                 .fillMaxSize()
                 .clipToBounds()
                 .verticalScroll(rememberScrollState())
@@ -410,18 +445,17 @@ fun BottomSheetForTextToImage(
                         items(images) { item ->
                             Box(modifier = Modifier) {
                                 AppImage(
-                                    modifier = Modifier
-                                        .clickable {
-                                            onSelectWidget(widget.copy(options = widget.options.map {
-                                                if (it.option.id == selectedOption?.id) {
-                                                    it.copy(
-                                                        option = it.option.copy(imageUrl = item)
-                                                    )
-                                                } else {
-                                                    it
-                                                }
-                                            }))
-                                        },
+                                    modifier = Modifier.clickable {
+                                        onSelectWidget(widget.copy(options = widget.options.map {
+                                            if (it.option.id == selectedOption?.id) {
+                                                it.copy(
+                                                    option = it.option.copy(imageUrl = item)
+                                                )
+                                            } else {
+                                                it
+                                            }
+                                        }))
+                                    },
                                     url = item,
                                     contentDescription = item,
                                     contentScale = ContentScale.Crop,

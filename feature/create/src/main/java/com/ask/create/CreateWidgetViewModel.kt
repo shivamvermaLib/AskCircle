@@ -4,19 +4,19 @@ import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
 import com.ask.common.BaseViewModel
-import com.ask.common.CheckModerationUseCase
+import com.ask.common.GetAllBadWordsUseCase
 import com.ask.common.GetCreateWidgetRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.core.EMPTY
-import com.ask.country.Country
 import com.ask.country.GetCountryUseCase
 import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.update
 import java.util.Calendar
 import javax.inject.Inject
 
@@ -25,241 +25,254 @@ class CreateWidgetViewModel @Inject constructor(
     getCountryUseCase: GetCountryUseCase,
     getCategoriesUseCase: GetCategoryUseCase,
     getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
-    private val checkModerationUseCase: CheckModerationUseCase,
+    getAllBadWordsUseCase: GetAllBadWordsUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
+    private val _badWordsListFlow =
+        getAllBadWordsUseCase().map { it.map { badWord -> badWord.english } }
     private val minOptions = 2
     private val maxOptions = getCreateWidgetRemoteConfigUseCase().maxOptionSize
-    private val _titleFlow = MutableStateFlow(EMPTY)
-    private val _titleErrorFlow = MutableStateFlow(-1)
-    private val _descFlow = MutableStateFlow(EMPTY)
-    private val _descErrorFlow = MutableStateFlow(-1)
-    private val _optionType = MutableStateFlow(CreateWidgetUiState.WidgetOptionType.Text)
-    private val _options = MutableStateFlow(
-        listOf(
-            Widget.Option(text = EMPTY),
-            Widget.Option(text = EMPTY),
-        )
-    )
-    private val _targetAudienceGender = MutableStateFlow(Widget.TargetAudienceGender())
-    private val _targetAudienceAgeRange = MutableStateFlow(Widget.TargetAudienceAgeRange())
-    private val _targetAudienceLocations =
-        MutableStateFlow(emptyList<Widget.TargetAudienceLocation>())
-    private val _selectedWidgetCategories = MutableStateFlow(emptyList<Widget.WidgetCategory>())
     private val _countriesFlow = getCountryUseCase()
     private val _categoriesFlow = getCategoriesUseCase()
-    private val _startAtFlow = MutableStateFlow(System.currentTimeMillis())
-    private val _endAtFlow = MutableStateFlow<Long?>(null)
-    private val _errorFlow = MutableStateFlow(-1)
-    private val _optionErrorFlow = MutableStateFlow(emptyList<String>())
 
-    fun setTitle(title: String) {
-        viewModelScope.launch {
-            _titleFlow.value = title
-            _titleErrorFlow.value = if (title.isBlank()) {
-                R.string.title_is_required
-            } else if (checkModerationUseCase.invoke(title)) {
-                R.string.title_cannot_contain_bad_words
-            } else {
-                -1
+    private val _uiStateFlow = MutableStateFlow(CreateWidgetUiState())
+
+    fun onEvent(event: CreateWidgetUiEvent) {
+        _uiStateFlow.update {
+            when (event) {
+                CreateWidgetUiEvent.AddOptionEvent -> addOption(it)
+                is CreateWidgetUiEvent.DescChangedEvent -> it.copy(
+                    widget = it.widget.copy(
+                        description = event.desc
+                    )
+                )
+
+                is CreateWidgetUiEvent.EndTimeChangedEvent -> if (event.endTime == null) {
+                    it.copy(widget = it.widget.copy(endAt = null))
+                } else if (event.endTime >= it.widget.startAt) {
+                    it.copy(widget = it.widget.copy(endAt = event.endTime))
+                } else {
+                    it
+                }
+
+                is CreateWidgetUiEvent.ErrorEvent -> it.copy(error = event.error)
+                is CreateWidgetUiEvent.GenderChangedEvent -> it.copy(
+                    targetAudienceGender = it.targetAudienceGender.copy(
+                        gender = event.gender
+                    )
+                )
+
+                is CreateWidgetUiEvent.MaxAgeChangedEvent -> it.copy(
+                    targetAudienceAgeRange = it.targetAudienceAgeRange.copy(
+                        max = event.maxAge,
+                        min = if (it.targetAudienceAgeRange.min > event.maxAge) {
+                            event.maxAge
+                        } else {
+                            it.targetAudienceAgeRange.min
+                        }
+                    )
+                )
+
+                is CreateWidgetUiEvent.MinAgeChangedEvent -> it.copy(
+                    targetAudienceAgeRange = it.targetAudienceAgeRange.copy(
+                        min = event.minAge,
+                        max = if (it.targetAudienceAgeRange.max < event.minAge) {
+                            event.minAge
+                        } else {
+                            it.targetAudienceAgeRange.max
+                        }
+                    )
+                )
+
+                is CreateWidgetUiEvent.OptionChangedEvent -> it.copy(
+                    options = it.options.toMutableList().apply {
+                        this[event.index] = event.option
+                    }.toList()
+                )
+
+                is CreateWidgetUiEvent.OptionTypeChangedEvent -> when (event.optionType) {
+                    CreateWidgetUiState.WidgetOptionType.Text -> {
+                        it.copy(
+                            options = listOf(
+                                Widget.Option(text = EMPTY), Widget.Option(text = EMPTY)
+                            )
+                        )
+                    }
+
+                    CreateWidgetUiState.WidgetOptionType.Image -> {
+                        it.copy(
+                            options = listOf(
+                                Widget.Option(imageUrl = EMPTY), Widget.Option(imageUrl = EMPTY)
+                            )
+                        )
+                    }
+                }
+
+                is CreateWidgetUiEvent.RemoveCountryEvent -> it.copy(
+                    targetAudienceLocations = it.targetAudienceLocations.toMutableList().apply {
+                        removeIf { it.country == event.country.name }
+                    }.toList()
+                )
+
+                is CreateWidgetUiEvent.RemoveOptionEvent -> it.copy(
+                    options = if (it.options.size in (minOptions + 1)..maxOptions) {
+                        it.options.toMutableList().apply {
+                            removeAt(event.index)
+                        }.toList()
+                    } else it.options
+                )
+
+                is CreateWidgetUiEvent.SelectCategoryWidgetEvent -> it.copy(widgetCategories = event.categories)
+                is CreateWidgetUiEvent.SelectCountryEvent -> it.copy(
+                    targetAudienceLocations = it.targetAudienceLocations + Widget.TargetAudienceLocation(
+                        country = event.country.name
+                    )
+                )
+
+                is CreateWidgetUiEvent.StartTimeChangedEvent -> onStartTimeChange(event, it)
+                is CreateWidgetUiEvent.TitleChangedEvent -> it.copy(widget = it.widget.copy(title = event.title))
+                is CreateWidgetUiEvent.AllowAnonymousEvent -> it.copy(
+                    widget = it.widget.copy(
+                        allowAnonymous = event.allowAnonymous
+                    )
+                )
+
+                is CreateWidgetUiEvent.WidgetResultChangedEvent -> it.copy(
+                    widget = it.widget.copy(
+                        widgetResult = event.result
+                    )
+                )
+
+                is CreateWidgetUiEvent.AllowMultipleSelection -> it.copy(
+                    widget = it.widget.copy(
+                        allowMultipleSelection = event.allow
+                    )
+                )
+
+                is CreateWidgetUiEvent.UpdateMarriageStatusFilterEvent -> it.copy(
+                    targetAudienceGender = it.targetAudienceGender.copy(
+                        marriageStatusFilter = event.marriageStatusFilterEvent
+                    )
+                )
+
+                is CreateWidgetUiEvent.UpdateEducationFilterEvent -> it.copy(
+                    targetAudienceGender = it.targetAudienceGender.copy(
+                        educationFilter = event.filter
+                    )
+                )
+
+                is CreateWidgetUiEvent.UpdateOccupationFilterEvent -> it.copy(
+                    targetAudienceGender = it.targetAudienceGender.copy(
+                        occupationFilter = event.occupationFilter
+                    )
+                )
+
+                else -> {
+                    it
+                }
             }
         }
     }
 
-    fun setDesc(desc: String) {
-        viewModelScope.launch {
-            _descFlow.value = desc
-            if (checkModerationUseCase.invoke(desc)) {
-                _descErrorFlow.value = R.string.description_cannot_contain_bad_words
-            } else {
-                _descErrorFlow.value = -1
-            }
-        }
-    }
-
-    fun setOptionType(type: CreateWidgetUiState.WidgetOptionType) {
-        when (type) {
-            CreateWidgetUiState.WidgetOptionType.Text -> {
-                _options.value = listOf(Widget.Option(text = EMPTY), Widget.Option(text = EMPTY))
-            }
-
-            CreateWidgetUiState.WidgetOptionType.Image -> {
-                _options.value =
-                    listOf(Widget.Option(imageUrl = EMPTY), Widget.Option(imageUrl = EMPTY))
-            }
-        }
-        _optionType.value = type
-    }
-
-    fun addOption() {
-        val optionType = _optionType.value
-        if (_options.value.size in minOptions..<maxOptions) {
+    private fun addOption(widgetUiState: CreateWidgetUiState): CreateWidgetUiState {
+        val optionType = widgetUiState.optionType
+        return if (widgetUiState.options.size in minOptions..<maxOptions) {
             when (optionType) {
                 CreateWidgetUiState.WidgetOptionType.Text -> {
-                    _options.value += Widget.Option(text = EMPTY)
+                    widgetUiState.copy(options = widgetUiState.options + Widget.Option(text = EMPTY))
                 }
 
                 CreateWidgetUiState.WidgetOptionType.Image -> {
-                    _options.value += Widget.Option(imageUrl = EMPTY)
+                    widgetUiState.copy(options = widgetUiState.options + Widget.Option(imageUrl = EMPTY))
                 }
             }
+        } else {
+            widgetUiState
         }
     }
 
-    fun updateOption(index: Int, option: Widget.Option) {
-        viewModelScope.launch {
-            if (option.text.isNullOrBlank().not()) {
-                if (checkModerationUseCase.invoke(option.text!!)) {
-                    _optionErrorFlow.value += option.id
-                    setError(R.string.text_cannot_contain_bad_words)
-                } else {
-                    _optionErrorFlow.value -= option.id
-                    setError(-1)
-                }
-            }
-            _options.value = _options.value.toMutableList().apply {
-                this[index] = option
-            }.toList()
-        }
-    }
-
-    fun removeOption(index: Int) {
-        if (_options.value.size in (minOptions + 1)..maxOptions) {
-            _options.value = _options.value.toMutableList().apply {
-                removeAt(index)
-            }.toList()
-        }
-    }
-
-    fun setGender(genderFilter: Widget.GenderFilter) {
-        _targetAudienceGender.value = _targetAudienceGender.value.copy(gender = genderFilter)
-    }
-
-    fun setMinAge(minAge: Int) {
-        _targetAudienceAgeRange.value = _targetAudienceAgeRange.value.copy(
-            min = minAge,
-            max = if (_targetAudienceAgeRange.value.max < minAge) {
-                minAge
-            } else {
-                _targetAudienceAgeRange.value.max
-            }
-        )
-    }
-
-    fun setMaxAge(maxAge: Int) {
-        _targetAudienceAgeRange.value = _targetAudienceAgeRange.value.copy(
-            max = maxAge,
-            min = if (_targetAudienceAgeRange.value.min > maxAge) {
-                maxAge
-            } else {
-                _targetAudienceAgeRange.value.min
-            }
-        )
-    }
-
-    fun addLocation(country: Country) {
-        _targetAudienceLocations.value += Widget.TargetAudienceLocation(country = country.name)
-    }
-
-    fun removeLocation(country: Country) {
-        _targetAudienceLocations.value = _targetAudienceLocations.value.toMutableList().apply {
-            removeIf { it.country == country.name }
-        }.toList()
-    }
-
-    fun selectCategoryWidget(widgetCategories: List<Widget.WidgetCategory>) {
-        _selectedWidgetCategories.value = widgetCategories
-    }
-
-    fun onStartTimeChange(startAt: Long) {
+    private fun onStartTimeChange(
+        event: CreateWidgetUiEvent.StartTimeChangedEvent, it: CreateWidgetUiState
+    ): CreateWidgetUiState {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
-        if (startAt >= calendar.timeInMillis) {
-            _startAtFlow.value = startAt
-            if (_endAtFlow.value != null && _endAtFlow.value!! < startAt) {
+        return if (event.startTime >= calendar.timeInMillis) {
+            if (it.widget.endAt != null && it.widget.endAt!! < event.startTime) {
                 val calendar2 = Calendar.getInstance().apply {
-                    timeInMillis = startAt
+                    timeInMillis = event.startTime
                     add(Calendar.DATE, 1)
                 }
-                _endAtFlow.value = calendar2.timeInMillis
+                it.copy(
+                    widget = it.widget.copy(
+                        endAt = calendar2.timeInMillis, startAt = event.startTime
+                    )
+                )
+            } else {
+                it.copy(
+                    widget = it.widget.copy(startAt = event.startTime)
+                )
             }
-        }
-    }
-
-    fun onEndTimeChange(endAt: Long?) {
-        if (endAt == null) {
-            _endAtFlow.value = null
-        } else if (endAt >= _startAtFlow.value) {
-            _endAtFlow.value = endAt
+        } else {
+            it
         }
     }
 
     fun setWidget(widget: WidgetWithOptionsAndVotesForTargetAudience) {
-        _titleFlow.value = widget.widget.title
-        _selectedWidgetCategories.value = widget.categories
-        _descFlow.value = widget.widget.description ?: EMPTY
-        _optionType.value =
-            if (widget.options.any { it.option.text == null && it.option.imageUrl != null }) CreateWidgetUiState.WidgetOptionType.Image else CreateWidgetUiState.WidgetOptionType.Text
-        _options.value = widget.options.map { it.option }
-        _targetAudienceGender.value = widget.targetAudienceGender
-        _targetAudienceAgeRange.value = widget.targetAudienceAgeRange
-        _targetAudienceLocations.value = widget.targetAudienceLocations
-        _startAtFlow.value = widget.widget.startAt
-        _endAtFlow.value = widget.widget.endAt
-        _errorFlow.value = -1
-    }
-
-    fun setError(id: Int) {
-        _errorFlow.value = id
+        _uiStateFlow.update { widgetUiState ->
+            widgetUiState.copy(
+                widget = widget.widget,
+                optionType = if (widget.options.any { it.option.text == null && it.option.imageUrl != null }) CreateWidgetUiState.WidgetOptionType.Image else CreateWidgetUiState.WidgetOptionType.Text,
+                options = widget.options.map { it.option },
+                targetAudienceGender = widget.targetAudienceGender,
+                targetAudienceAgeRange = widget.targetAudienceAgeRange,
+                targetAudienceLocations = widget.targetAudienceLocations,
+                widgetCategories = widget.categories,
+                error = -1,
+            )
+        }
     }
 
     val uiStateFlow = combine(
-        _titleFlow,
-        _titleErrorFlow,
-        _descFlow,
-        _descErrorFlow,
-        _optionType,
-        _options,
-        _targetAudienceGender,
-        _targetAudienceAgeRange,
-        _targetAudienceLocations,
+        _uiStateFlow,
         _countriesFlow,
         _categoriesFlow,
-        _selectedWidgetCategories,
-        _startAtFlow,
-        _endAtFlow,
-        _errorFlow,
-        _optionErrorFlow
-    ) { title, titleError, desc, descError, optionType, options, gender, targetAudienceAgeRange, locations, countries, categories, widgetCategories, startAt, endAt, error, optionError ->
-        val allowCreate = title.isNotBlank() && options.isNotEmpty() && options.size in 2..4
-            && ((optionType == CreateWidgetUiState.WidgetOptionType.Text && options.all {
-            !it.text.isNullOrBlank() && checkModerationUseCase(
-                it.text!!
-            )
-        }) || (optionType == CreateWidgetUiState.WidgetOptionType.Image && options.all { !it.imageUrl.isNullOrBlank() }))
-        CreateWidgetUiState(
-            title,
-            titleError,
-            desc,
-            descError,
-            optionType,
-            options,
-            gender,
-            locations,
-            countries,
-            allowCreate,
-            targetAudienceAgeRange = targetAudienceAgeRange,
+        _badWordsListFlow,
+    ) { uiState, countries, categories, badWords ->
+        val titleError = if (uiState.widget.title.isBlank()) {
+            R.string.title_is_required
+        } else if (badWords.any { uiState.widget.title.lowercase().contains(it.lowercase()) }) {
+            R.string.title_cannot_contain_bad_words
+        } else {
+            -1
+        }
+        val descError = if (uiState.widget.description.isNullOrBlank().not() && badWords.any {
+                uiState.widget.description?.lowercase()?.contains(it.lowercase()) == true
+            }) {
+            R.string.description_cannot_contain_bad_words
+        } else {
+            -1
+        }
+
+        val optionError = uiState.options.filter { option ->
+            option.text.isNullOrBlank().not() && badWords.any {
+                option.text?.lowercase()?.contains(it.lowercase()) == true
+            }
+        }.map { it.id }
+
+        val allowCreate =
+            uiState.widget.title.isNotBlank() && uiState.options.size in minOptions..maxOptions && optionError.isEmpty() && titleError == -1 && descError == -1
+        uiState.copy(
+            titleError = titleError,
+            descError = descError,
+            optionError = optionError,
+            allowCreate = allowCreate,
+            countries = countries,
+            categories = categories,
             minAge = getCreateWidgetRemoteConfigUseCase().minAge,
             maxAge = getCreateWidgetRemoteConfigUseCase().maxAge,
-            categories = categories,
-            widgetCategories = widgetCategories,
-            startTime = startAt,
-            endTime = endAt,
-            error = error,
-            optionError = optionError
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
 }

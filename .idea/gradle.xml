@@ -28,7 +28,12 @@
             <option value="$PROJECT_DIR$/feature/common" />
             <option value="$PROJECT_DIR$/feature/create" />
             <option value="$PROJECT_DIR$/feature/home" />
+            <option value="$PROJECT_DIR$/feature/imageview" />
+            <option value="$PROJECT_DIR$/feature/maintenancemode" />
+            <option value="$PROJECT_DIR$/feature/profile" />
+            <option value="$PROJECT_DIR$/feature/settings" />
             <option value="$PROJECT_DIR$/feature/splash" />
+            <option value="$PROJECT_DIR$/feature/widgetdetails" />
             <option value="$PROJECT_DIR$/workmanager" />
           </set>
         </option>

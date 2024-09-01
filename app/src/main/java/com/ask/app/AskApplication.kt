@@ -1,10 +1,6 @@
 package com.ask.app
 
 import android.app.Application
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.content.Context
-import android.os.Build
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import coil.ImageLoader
@@ -14,7 +10,6 @@ import coil.memory.MemoryCache
 import com.ask.analytics.AnalyticsLogger
 import com.ask.common.ConnectionState
 import com.ask.common.observeConnectivityAsFlow
-import com.ask.workmanager.NOTIFICATION_CHANNEL_ID
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
@@ -53,7 +48,6 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
     override fun onCreate() {
         super.onCreate()
         adMob()
-        createNotificationChannel()
         scope.launch {
             launch {
                 applicationContext.observeConnectivityAsFlow().collect { connectionState ->
@@ -74,20 +68,6 @@ class AskApplication : Application(), Configuration.Provider, ImageLoaderFactory
                 .setTestDeviceIds(listOf(AdRequest.DEVICE_ID_EMULATOR))
                 .build()
         )
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "My Channel"
-            val descriptionText = "Channel for new widget notifications"
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
-            val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance).apply {
-                description = descriptionText
-            }
-            val notificationManager: NotificationManager =
-                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
     }
 
     override fun newImageLoader(): ImageLoader {

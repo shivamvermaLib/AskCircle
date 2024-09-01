@@ -16,7 +16,7 @@ import com.ask.widget.WidgetDao
 
 @Database(
     entities = [User::class, User.UserLocation::class, User.UserCategory::class, User.UserWidgetBookmarks::class, Widget::class, Widget.Option::class, Widget.TargetAudienceGender::class, Widget.TargetAudienceLocation::class, Widget.TargetAudienceAgeRange::class, Widget.WidgetCategory::class, Widget.Option.Vote::class, Country::class, Category::class, SubCategory::class, BadWord::class],
-    version = 8,
+    version = 14,
     exportSchema = false
 )
 abstract class AskAppDatabase : RoomDatabase() {

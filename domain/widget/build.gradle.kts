@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.ask.widget"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -36,12 +36,13 @@ android {
 }
 
 dependencies {
-    implementation(project(":data:user"))
-    implementation(project(":data:widget"))
-    implementation(project(":data:country"))
-    implementation(project(":data:core"))
-    implementation(project(":data:analytics"))
-    implementation(project(":data:category"))
+    api(project(":data:user"))
+    api(project(":data:widget"))
+    api(project(":data:country"))
+    api(project(":data:core"))
+    api(project(":data:analytics"))
+    api(project(":data:category"))
+
     implementation(libs.generativeai)
 
     implementation(libs.hilt.android)

@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.ask.workmanager"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -37,17 +37,13 @@ android {
 
 dependencies {
     implementation(libs.androidx.hilt.work)
-    implementation(project(":domain:user"))
-    implementation(project(":data:user"))
     ksp(libs.androidx.hilt.compiler)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.kotlinx.serialization.json)
 
-    implementation(project(":data:analytics"))
-    implementation(project(":data:core"))
-    implementation(project(":data:widget"))
+    implementation(project(":domain:user"))
     implementation(project(":domain:widget"))
     implementation(project(":domain:common"))
     implementation(project(":feature:common"))

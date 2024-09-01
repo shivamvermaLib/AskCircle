@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.ask.category"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24
@@ -37,21 +37,17 @@ android {
 
 dependencies {
     implementation(platform(libs.firebase.bom))
-    implementation(libs.firebase.analytics)
-    implementation(libs.firebase.auth)
-    implementation(libs.firebase.database)
-    implementation(libs.firebase.storage)
-    implementation(libs.firebase.crashlytics)
-    implementation(libs.firebase.config)
+    implementation(libs.bundles.firebase)
 
     implementation(libs.hilt.android)
-    implementation(project(":data:core"))
     ksp(libs.hilt.compiler)
 
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.kotlinx.serialization.json)
+
+    implementation(project(":data:core"))
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -28,13 +28,39 @@ class UserRepository @Inject constructor(
     @Named(DISPATCHER_IO) private val dispatcher: CoroutineDispatcher
 ) {
 
-    suspend fun createUser(): UserWithLocationCategory = withContext(dispatcher) {
-        val user = firebaseAuthSource.getCurrentUserId()?.let {
+    suspend fun anonymousSignIn() = withContext(dispatcher) {
+        createUser(firebaseAuthSource.signInAnonymously(), null, null)
+    }
+
+    suspend fun googleLogin(idToken: String) =
+        withContext(dispatcher) {
+            val user = firebaseAuthSource.signInWithGoogle(idToken)
+            user?.let {
+                createUser(it.uid, it.email, it.displayName)
+            } ?: throw Exception("Unable to Google Login")
+        }
+
+    suspend fun connectWithGoogle(idToken: String) = withContext(dispatcher) {
+        firebaseAuthSource.connectWithGoogle(idToken).let {
+            updateUser(name = it.displayName, email = it.email)
+        }
+    }
+
+    suspend fun checkCurrentUser(): UserWithLocationCategory? = withContext(dispatcher) {
+        firebaseAuthSource.getCurrentUserId()?.let {
             getCurrentUserOptional(true)
-        } ?: firebaseAuthSource.signInAnonymously().let { id ->
+        }
+    }
+
+    private suspend fun createUser(
+        id: String,
+        email: String?,
+        name: String?
+    ): UserWithLocationCategory =
+        withContext(dispatcher) {
             userDataSource.addItem(
                 UserWithLocationCategory(
-                    user = User(id = id),
+                    user = User(id = id, email = email, name = name ?: ANONYMOUS_USER),
                     userLocation = User.UserLocation(userId = id),
                     userCategories = listOf(),
                     userWidgetBookmarks = listOf()
@@ -52,8 +78,6 @@ class UserRepository @Inject constructor(
                 }
             }
         }
-        user
-    }
 
     suspend fun updateUser(
         name: String? = null,
@@ -64,9 +88,11 @@ class UserRepository @Inject constructor(
         profilePicExtension: String? = null,
         profileByteArray: Map<ImageSizeType, ByteArray>? = null,
         userCategories: List<User.UserCategory>? = null,
-        widgetBookmarks: List<User.UserWidgetBookmarks>? = null
+        widgetBookmarks: List<User.UserWidgetBookmarks>? = null,
+        marriageStatus: MarriageStatus? = null,
+        education: Education? = null,
+        occupation: Occupation? = null
     ): UserWithLocationCategory = withContext(dispatcher) {
-        println("User repository called")
         val profilePic =
             if (profileByteArray != null && profilePicExtension != null) profileByteArray.map {
                 userStorageSource.upload(
@@ -77,12 +103,18 @@ class UserRepository @Inject constructor(
             else null
 
         userDataSource.updateItemFromTransaction(getCurrentUserId()) { userDetails ->
-            userDetails.copy(user = userDetails.user.copy(updatedAt = System.currentTimeMillis(),
-                name = name?.takeIf { it.isNotBlank() } ?: userDetails.user.name,
-                email = email?.takeIf { it.isNotBlank() } ?: userDetails.user.email,
-                age = age ?: userDetails.user.age,
-                gender = gender ?: userDetails.user.gender,
-                profilePic = profilePic ?: userDetails.user.profilePic),
+            userDetails.copy(
+                user = userDetails.user.copy(
+                    updatedAt = System.currentTimeMillis(),
+                    name = name?.takeIf { it.isNotBlank() } ?: userDetails.user.name,
+                    email = email?.takeIf { it.isNotBlank() } ?: userDetails.user.email,
+                    age = age ?: userDetails.user.age,
+                    gender = gender ?: userDetails.user.gender,
+                    profilePic = profilePic ?: userDetails.user.profilePic,
+                    marriageStatus = marriageStatus ?: userDetails.user.marriageStatus,
+                    education = education ?: userDetails.user.education,
+                    occupation = occupation ?: userDetails.user.occupation
+                ),
                 userLocation = country?.takeIf { it.isNotBlank() }?.let {
                     userDetails.userLocation.copy(
                         country = it, updatedAt = System.currentTimeMillis()
@@ -97,7 +129,8 @@ class UserRepository @Inject constructor(
                     it.copy(
                         userId = getCurrentUserId(), updatedAt = System.currentTimeMillis()
                     )
-                } ?: userDetails.userWidgetBookmarks))
+                } ?: userDetails.userWidgetBookmarks),
+            )
         }.also {
             userDao.deleteCategories()
             userDao.deleteWidgetBookmarks()
@@ -255,5 +288,6 @@ class UserRepository @Inject constructor(
     suspend fun clearAll() = withContext(dispatcher) {
         userDao.deleteAll()
     }
+
 
 }

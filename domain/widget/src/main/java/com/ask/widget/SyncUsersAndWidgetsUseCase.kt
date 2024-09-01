@@ -9,7 +9,6 @@ import com.ask.core.UpdatedTime
 import com.ask.core.badwords.BadWordRepository
 import com.ask.country.CountryRepository
 import com.ask.user.UserRepository
-import com.ask.user.generateCombinationsForUsers
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -31,6 +30,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(
+        isSplash: Boolean = false,
         isConnected: Boolean = true,
         preloadImages: suspend (List<String>) -> Unit,
         onProgress: (Float) -> Unit,
@@ -50,7 +50,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         val lastUpdatedTime = sharedPreference.getUpdatedTime()
         val lastDbVersion = sharedPreference.getDbVersion()
         if (userRepository.getCurrentUserOptional() == null) {
-            refreshNeeded = true
+            return@withContext
         } else if (refreshCountServer != refreshCountLocal || lastDbVersion != dbVersion) {
             refreshNeeded = true
             widgetRepository.clearAll()
@@ -58,9 +58,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
             countryRepository.clearAll()
             categoryRepository.clearAll()
             analyticsLogger.refreshTriggerEvent(
-                refreshCountServer,
-                refreshCountLocal,
-                userRepository.getCurrentUserId()
+                refreshCountServer, refreshCountLocal, userRepository.getCurrentUserId()
             )
             sharedPreference.setDbVersion(dbVersion)
         } else if (widgetRepository.doesSyncRequired(lastUpdatedTime)) {
@@ -69,47 +67,41 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
         onProgress(0.38f)
         if (refreshNeeded) {
             val time = System.currentTimeMillis()
-            userRepository.createUser().let { userWithLocation ->
-                generateCombinationsForUsers(
-                    userWithLocation.user.gender,
-                    userWithLocation.user.age,
-                    userWithLocation.userLocation,
-                    userWithLocation.user.id,
-                    userWithLocation.userCategories
-                ).let { list ->
+            userRepository.checkCurrentUser()?.let { userWithLocation ->
+                userWithLocation.generateCombinationsForUsers().let { list ->
                     onProgress(0.56f)
-                    widgetRepository.syncWidgetsFromServer(
-                        userRepository.getCurrentUserId(),
+                    widgetRepository.syncWidgetsFromServer(userRepository.getCurrentUserId(),
                         lastUpdatedTime,
                         list,
+                        sharedPreference.getWidgetIdTimerEndNotification(),
                         {
                             userRepository.getUserDetailList(it, true, preloadImages)
                         },
                         preloadImages,
-                        onNotification
-                    ).also {
+                        onNotification,
+                        {
+                            if (isSplash.not()) sharedPreference.setWidgetIdTimerEndsNotification(it)
+                        }).also {
                         onProgress(0.8f)
-                        listOf(
-                            async { countryRepository.syncCountries() },
+                        listOf(async { countryRepository.syncCountries() },
                             async { categoryRepository.syncCategories() },
-                            async { badWordRepository.syncBadWords() }
-                        ).awaitAll()
+                            async { badWordRepository.syncBadWords() }).awaitAll()
                     }
                 }
-            }
-            onProgress(0.9f)
-            val duration = System.currentTimeMillis() - time
-            analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
-            sharedPreference.setRefreshCount(refreshCountServer)
-            sharedPreference.setDbVersion(dbVersion)
-            sharedPreference.setUpdatedTime(
-                UpdatedTime(
-                    widgetTime = System.currentTimeMillis(),
-                    voteTime = System.currentTimeMillis(),
-                    profileTime = System.currentTimeMillis()
+                onProgress(0.9f)
+                val duration = System.currentTimeMillis() - time
+                analyticsLogger.syncUsersAndWidgetsEventDuration(duration)
+                sharedPreference.setRefreshCount(refreshCountServer)
+                sharedPreference.setDbVersion(dbVersion)
+                sharedPreference.setUpdatedTime(
+                    UpdatedTime(
+                        widgetTime = System.currentTimeMillis(),
+                        voteTime = System.currentTimeMillis(),
+                        profileTime = System.currentTimeMillis()
+                    )
                 )
-            )
-            onProgress(1f)
+                onProgress(1f)
+            }
             return@withContext
         } else {
             onProgress(1f)

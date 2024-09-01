@@ -11,7 +11,6 @@ import androidx.room.Relation
 import com.ask.core.ALL
 import com.ask.core.EMPTY
 import com.ask.core.ID
-import com.ask.core.UNDERSCORE
 import com.ask.core.toSearchNeededField
 import com.ask.core.toTimeAgo
 import com.ask.user.User
@@ -39,6 +38,9 @@ data class Widget(
     val widgetType: WidgetType = WidgetType.Poll,
     val startAt: Long = System.currentTimeMillis(),
     val endAt: Long? = null,
+    val allowAnonymous: Boolean = true,
+    val widgetResult: WidgetResult = WidgetResult.ALWAYS,
+    val allowMultipleSelection: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -50,6 +52,10 @@ data class Widget(
     enum class WidgetType {
         Poll,
         Quiz
+    }
+
+    enum class WidgetResult {
+        AFTER_VOTE, ALWAYS, TIME_END
     }
 
     @Serializable
@@ -154,11 +160,17 @@ data class Widget(
         @PrimaryKey val id: String = UUID.randomUUID().toString(),
         val widgetId: String = EMPTY,
         val gender: GenderFilter = GenderFilter.ALL,
+        val marriageStatusFilter: MarriageStatusFilter = MarriageStatusFilter.ALL,
+        val educationFilter: EducationFilter = EducationFilter.ALL,
+        val occupationFilter: OccupationFilter = OccupationFilter.ALL,
         val createdAt: Long = System.currentTimeMillis(),
         val updatedAt: Long = System.currentTimeMillis()
     )
 
     enum class GenderFilter { ALL, MALE, FEMALE }
+    enum class MarriageStatusFilter { ALL, SINGLE, MARRIED, DIVORCED, WIDOW }
+    enum class EducationFilter { ALL, PRIMARY, SECONDARY, HIGH_SCHOOL, UNDER_GRADUATE, POST_GRADUATE, DOC_OR_PHD }
+    enum class OccupationFilter { ALL, EMPLOYED, SELF_EMPLOYED, UNEMPLOYED, RETIRED }
 
     @Serializable
     @Entity(
@@ -229,7 +241,7 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
 
     @get:Exclude
     @Ignore
-    var hasVotes: Boolean = false
+    var showVotes: Boolean = false
 
     @get:Exclude
     @Ignore
@@ -322,13 +334,182 @@ data class WidgetWithOptionsAndVotesForTargetAudience(
                 }
             }
         ).apply {
-            hasVotes = options.any { it.votes.isNotEmpty() }
-            isCreatorOfTheWidget = userId == widget.creatorId
-            hasVotes = options.any { it.votes.isNotEmpty() }
+            showVotes = options.any { it.votes.isNotEmpty() }
+                && (widget.widgetResult == Widget.WidgetResult.ALWAYS ||
+                (widget.widgetResult == Widget.WidgetResult.AFTER_VOTE && options.any { it.didUserVoted })
+                || (widget.widgetResult == Widget.WidgetResult.TIME_END && isWidgetEnd)
+                )
+
             isCreatorOfTheWidget = userId == widget.creatorId
             showAdMob = showAds
             lastVotedAtOptional = lastVotedOption
         }
+    }
+
+    fun generateCombinationsForWidget(): List<String> {
+        val locationCombinations = mutableListOf<String>()
+
+        val genderName = targetAudienceGender.gender.name.toSearchNeededField()
+        val marriageStatusName =
+            targetAudienceGender.marriageStatusFilter.name.toSearchNeededField()
+        val educationName = targetAudienceGender.educationFilter.name.toSearchNeededField()
+        val occupationName = targetAudienceGender.occupationFilter.name.toSearchNeededField()
+        if(targetAudienceLocations.isNotEmpty()){
+            for (location in targetAudienceLocations) {
+                val country = location.country.toSearchNeededField()
+                val state = location.state.toSearchNeededField { country != null }
+                val city = location.city.toSearchNeededField { state != null }
+
+                locationCombinations.add(buildString {
+                    if (country != null) {
+                        append("country:$country")
+                    }else{
+                        append("country:$ALL")
+                    }
+                    if (state != null) {
+                        append(",")
+                        append("state:$state")
+                    }else{
+                        append(",")
+                        append("state:$ALL")
+                    }
+                    if (city != null) {
+                        append(",")
+                        append("city:$city")
+                    }else{
+                        append(",")
+                        append("city:$ALL")
+                    }
+                })
+            }
+        }else{
+            locationCombinations.add("country:$ALL,state:$ALL,city:$ALL")
+        }
+
+        val ageRangeCombination = mutableListOf<String>()
+        // Generate combinations for each age in the range
+        for (age in targetAudienceAgeRange.min..targetAudienceAgeRange.max) {
+            locationCombinations.forEach { locationCombination ->
+                ageRangeCombination.add(buildString {
+                    append(locationCombination)
+                    append(",")
+                    if(age>0)
+                        append("age:$age")
+                    else
+                        append("age:$ALL")
+                })
+            }
+        }
+
+
+        val genderCombination = mutableListOf<String>()
+
+        ageRangeCombination.forEach {
+            genderCombination.add(buildString {
+                append(it)
+                append(",")
+                append("gender:$genderName")
+            })
+        }
+
+
+        val marriageCombination = mutableSetOf<String>()
+        if (marriageStatusName != null) {
+
+            genderCombination.forEach { locationCombination ->
+                marriageCombination.add(buildString {
+                    append(locationCombination)
+                    append(",")
+                    append("marriage:$marriageStatusName")
+                })
+            }
+
+        } else {
+            marriageCombination.addAll(genderCombination)
+        }
+
+        val educationCombination = mutableSetOf<String>()
+        if (educationName != null) {
+
+            marriageCombination.forEach { locationCombination ->
+                educationCombination.add(buildString {
+                    append(locationCombination)
+                    append(",")
+                    append("education:$educationName")
+                })
+            }
+
+        } else {
+            educationCombination.addAll(marriageCombination)
+        }
+
+        val occupationCombination = mutableSetOf<String>()
+        if (occupationName != null) {
+
+            marriageCombination.forEach { locationCombination ->
+                occupationCombination.add(buildString {
+                    append(locationCombination)
+                    append(",")
+                    append("occupation:$occupationName")
+                })
+            }
+
+        } else {
+            occupationCombination.addAll(educationCombination)
+        }
+
+        val categoriesCombination = mutableListOf<String>()
+        occupationCombination.forEach {
+            if(categories.isNotEmpty()){
+                categories.forEach { widgetCategory ->
+                    val category = widgetCategory.category.toSearchNeededField()
+                    val subCategory = widgetCategory.subCategory.toSearchNeededField()
+
+
+                    if (subCategory != null && category != null) {
+                        categoriesCombination.add(buildString {
+                            append(it)
+                            append(",")
+                            append("category:$category")
+                            append(",")
+                            append("subCategory:$subCategory")
+                        })
+                        categoriesCombination.add(buildString {
+                            append(it)
+                            append(",")
+                            append("category:$category")
+                        })
+                    } else if (category != null) {
+                        categoriesCombination.add(buildString {
+                            append(it)
+                            append(",")
+                            append("category:$category")
+                        })
+                    }
+                }
+            }else{
+                categoriesCombination.add(buildString {
+                    append(it)
+                    append(",")
+                    append("category:$ALL")
+                    append(",")
+                    append("subCategory:$ALL")
+                })
+            }
+        }
+
+
+        val hasEmailCombinations = mutableListOf<String>()
+        categoriesCombination.forEach {
+            hasEmailCombinations.add(buildString {
+                append(it)
+                append(",")
+                append("anonymous:${widget.allowAnonymous}")
+            })
+        }
+
+        hasEmailCombinations.add("creator:${widget.creatorId}")
+        return hasEmailCombinations.distinct()
     }
 }
 
@@ -337,81 +518,3 @@ data class WidgetId(
     val widgetIds: List<String> = emptyList(),
     val createdAt: Long = System.currentTimeMillis(),
 )
-
-fun generateCombinationsForWidget(
-    gender: Widget.TargetAudienceGender,
-    ageRange: Widget.TargetAudienceAgeRange,
-    locations: List<Widget.TargetAudienceLocation>,
-    userId: String,
-    widgetCategories: List<Widget.WidgetCategory>
-): List<String> {
-    val locationCombinations = mutableListOf<String>()
-
-    val genderName = gender.gender.name.toSearchNeededField()
-    for (location in locations) {
-        val country = location.country.toSearchNeededField()
-        val state = location.state.toSearchNeededField { country != null }
-        val city = location.city.toSearchNeededField { state != null }
-
-        if (country != null) {
-            if (state != null) {
-                if (city != null) {
-                    locationCombinations.add("${country}$UNDERSCORE${state}$UNDERSCORE${city}")
-                } else {
-                    locationCombinations.add("${country}$UNDERSCORE${state}")
-                }
-            } else {
-                locationCombinations.add(country)
-            }
-        }
-    }
-
-    val ageRangeCombination = mutableListOf<String>()
-    // Generate combinations for each age in the range
-    for (age in ageRange.min..ageRange.max) {
-        if (age > 0) {
-            if (locationCombinations.isEmpty()) {
-                ageRangeCombination.add("$age")
-            } else {
-                locationCombinations.forEach { locationCombination ->
-                    ageRangeCombination.add("${locationCombination}$UNDERSCORE$age")
-                }
-            }
-        } else {
-            ageRangeCombination.addAll(locationCombinations)
-        }
-    }
-
-    val genderCombination = mutableListOf<String>()
-    if (ageRangeCombination.isEmpty()) {
-        genderName?.let { genderCombination.add(it) }
-    } else {
-        ageRangeCombination.forEach {
-            genderCombination.add("${it}$UNDERSCORE$genderName")
-        }
-    }
-
-    val categoriesCombination = mutableListOf<String>()
-    widgetCategories.forEach { widgetCategory ->
-        val category = widgetCategory.category.toSearchNeededField()
-        val subCategory = widgetCategory.subCategory.toSearchNeededField()
-        genderCombination.forEach {
-            if (subCategory != null && category != null) {
-                categoriesCombination.add("$it$UNDERSCORE${category}$UNDERSCORE${subCategory}")
-                categoriesCombination.add("$it$UNDERSCORE${category}")
-            } else if (category != null) {
-                categoriesCombination.add("$it$UNDERSCORE${category}")
-            }
-        }
-        if (subCategory != null && category != null) {
-            categoriesCombination.add("$ALL$UNDERSCORE${category}$UNDERSCORE${subCategory}")
-            categoriesCombination.add("$ALL$UNDERSCORE${category}")
-        } else if (category != null) {
-            categoriesCombination.add("$ALL$UNDERSCORE${category}")
-        }
-    }
-
-    categoriesCombination.add(ALL)
-    categoriesCombination.add(userId)
-    return categoriesCombination
-}

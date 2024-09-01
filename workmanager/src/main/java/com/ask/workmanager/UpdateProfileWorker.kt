@@ -16,9 +16,13 @@ import com.ask.common.getExtension
 import com.ask.common.getResizedImageByteArray
 import com.ask.common.preLoadImages
 import com.ask.core.EMPTY
+import com.ask.user.Education
 import com.ask.user.Gender
+import com.ask.user.MarriageStatus
+import com.ask.user.Occupation
 import com.ask.user.UpdateProfileUseCase
 import com.ask.user.User
+import com.ask.widget.NotificationType
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.Flow
@@ -34,6 +38,11 @@ class UpdateProfileWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
+            NotificationUtils.showNotification(
+                applicationContext,
+                NotificationType.UPDATE_PROFILE_DATA,
+                -1f
+            )
             setProgress(workDataOf(STATUS to WorkerStatus.Loading.name))
             val name = inputData.getString(NAME)
             val email = inputData.getString(EMAIL)
@@ -41,9 +50,12 @@ class UpdateProfileWorker @AssistedInject constructor(
             val age = inputData.getString(AGE)?.toInt()
             val profilePic = inputData.getString(PROFILE_PIC)
             val country = inputData.getString(COUNTRY)
+            val marriageStatus = inputData.getString(MARRIAGE_STATUS)?.let { MarriageStatus.valueOf(it) }
             val userCategoriesString = inputData.getStringArray(USER_CATEGORIES)
             val userCategories =
                 userCategoriesString?.map { Json.decodeFromString<User.UserCategory>(it) }
+            val education = inputData.getString(EDUCATION)?.let { Education.valueOf(it) }
+            val occupation = inputData.getString(OCCUPATION)?.let { Occupation.valueOf(it) }
 
             updateProfileUseCase.invoke(
                 name ?: EMPTY,
@@ -54,16 +66,26 @@ class UpdateProfileWorker @AssistedInject constructor(
                 country,
                 userCategories,
                 null,
+                marriageStatus,
+                education,
+                occupation,
                 applicationContext::getExtension,
                 applicationContext::getResizedImageByteArray,
                 applicationContext::preLoadImages
             )
-
+            NotificationUtils.cancelNotification(
+                applicationContext,
+                NotificationType.UPDATE_PROFILE_DATA
+            )
             setProgress(workDataOf(STATUS to WorkerStatus.Success.name))
             Result.success(workDataOf(STATUS to WorkerStatus.Success.name))
         } catch (e: Exception) {
             setProgress(workDataOf(STATUS to WorkerStatus.Failed.name))
             e.printStackTrace()
+            NotificationUtils.cancelNotification(
+                applicationContext,
+                NotificationType.UPDATE_PROFILE_DATA
+            )
             Result.failure()
         }
     }
@@ -77,7 +99,11 @@ class UpdateProfileWorker @AssistedInject constructor(
         const val PROFILE_PIC = "user_profile_pic"
         const val COUNTRY = "user_country"
         const val USER_CATEGORIES = "user_categories"
+        const val MARRIAGE_STATUS = "user_marriage_status"
+        const val EDUCATION = "user_education"
+        const val OCCUPATION = "user_occupation"
         private const val UPDATE_PROFILE = "update_profile"
+
 
         fun sendRequest(
             context: Context,
@@ -88,6 +114,9 @@ class UpdateProfileWorker @AssistedInject constructor(
             profilePic: String?,
             country: String?,
             userCategories: List<User.UserCategory>?,
+            marriageStatus: MarriageStatus?,
+            education: Education?,
+            occupation: Occupation?
         ) {
             val workManager = WorkManager.getInstance(context)
             val workData = Data.Builder().apply {
@@ -103,6 +132,9 @@ class UpdateProfileWorker @AssistedInject constructor(
                         userCategories.map { Json.encodeToString(it) }.toTypedArray()
                     )
                 }
+                putString(MARRIAGE_STATUS, marriageStatus?.name)
+                putString(EDUCATION, education?.name)
+                putString(OCCUPATION, occupation?.name)
             }
             val constraints: Constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.CONNECTED)

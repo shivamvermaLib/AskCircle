@@ -42,6 +42,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
@@ -108,64 +109,35 @@ fun CreateWidgetScreen(
             viewModel.setWidget(it)
         }
     }
-    CreateWidgetScreen(
-        sizeClass,
-        uiState,
-        viewModel::setTitle,
-        viewModel::setDesc,
-        viewModel::setOptionType,
-        viewModel::updateOption,
-        viewModel::addOption,
-        viewModel::setGender,
-        viewModel::setMinAge,
-        viewModel::setMaxAge,
-        viewModel::addLocation,
-        viewModel::removeLocation,
-        {
-            CreateWidgetWorker.sendRequest(
-                context, uiState.toWidgetWithOptionsAndVotesForTargetAudience()
-            )
-            onBack()
-        },
-        {
-            onBack()
-        },
-        onRemoveOption = viewModel::removeOption,
-        onSelectCategoryWidget = viewModel::selectCategoryWidget,
-        onStartTimeChange = viewModel::onStartTimeChange,
-        onEndTimeChange = viewModel::onEndTimeChange,
-        onError = viewModel::setError
-    )
+    CreateWidgetScreen(sizeClass, uiState) {
+        when (it) {
+            CreateWidgetUiEvent.BackEvent -> onBack()
+            CreateWidgetUiEvent.CreateWidgetEvent -> {
+                CreateWidgetWorker.sendRequest(
+                    context, uiState.toWidgetWithOptionsAndVotesForTargetAudience()
+                )
+                onBack()
+            }
+
+            else -> {
+                viewModel.onEvent(it)
+            }
+        }
+    }
 }
 
 @OptIn(
     ExperimentalMaterial3Api::class,
     ExperimentalMaterial3WindowSizeClassApi::class,
     ExperimentalCoroutinesApi::class,
-    ExperimentalSharedTransitionApi::class
+    ExperimentalSharedTransitionApi::class, ExperimentalLayoutApi::class
 )
 @Preview
 @Composable
 private fun CreateWidgetScreen(
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     @PreviewParameter(CreateWidgetStatePreviewParameterProvider::class) createWidgetUiState: CreateWidgetUiState,
-    setTitle: (String) -> Unit = {},
-    setDesc: (String) -> Unit = {},
-    onOptionTypeChanged: (CreateWidgetUiState.WidgetOptionType) -> Unit = {},
-    onOptionChanged: (Int, Widget.Option) -> Unit = { _, _ -> },
-    onAddOption: () -> Unit = {},
-    onGenderChanged: (Widget.GenderFilter) -> Unit = {},
-    onMinAgeChanged: (Int) -> Unit = {},
-    onMaxAgeChanged: (Int) -> Unit = {},
-    onSelectCountry: (Country) -> Unit = {},
-    onRemoveCountry: (Country) -> Unit = {},
-    onCreateClick: () -> Unit = {},
-    onBackClick: () -> Unit = {},
-    onRemoveOption: (Int) -> Unit = {},
-    onSelectCategoryWidget: (List<Widget.WidgetCategory>) -> Unit = {},
-    onStartTimeChange: (Long) -> Unit = {},
-    onEndTimeChange: (Long?) -> Unit = {},
-    onError: (Int) -> Unit = {},
+    onEvent: (CreateWidgetUiEvent) -> Unit = {},
 ) {
     val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -176,9 +148,11 @@ private fun CreateWidgetScreen(
             onResult = { uri ->
                 if (imagePickerIndex > -1) {
                     uri?.let {
-                        onOptionChanged(
-                            imagePickerIndex,
-                            createWidgetUiState.options[imagePickerIndex].copy(imageUrl = it.toString())
+                        onEvent(
+                            CreateWidgetUiEvent.OptionChangedEvent(
+                                imagePickerIndex,
+                                createWidgetUiState.options[imagePickerIndex].copy(imageUrl = it.toString())
+                            )
                         )
                     }
                 }
@@ -196,7 +170,7 @@ private fun CreateWidgetScreen(
             snackBarHostState.showSnackbar(
                 message = context.getString(createWidgetUiState.error)
             )
-            onError(-1)
+            onEvent(CreateWidgetUiEvent.ErrorEvent(-1))
         }
     }
     Scaffold(snackbarHost = {
@@ -213,7 +187,7 @@ private fun CreateWidgetScreen(
                 Text(text = "Create")
             },
             navigationIcon = {
-                IconButton(onClick = onBackClick) {
+                IconButton(onClick = { onEvent(CreateWidgetUiEvent.BackEvent) }) {
                     Icon(
                         imageVector = Icons.Rounded.Close,
                         contentDescription = stringResource(R.string.close),
@@ -244,21 +218,27 @@ private fun CreateWidgetScreen(
             ) {
                 AppTextField(
                     hint = stringResource(R.string.title),
-                    value = createWidgetUiState.title,
-                    onValueChange = setTitle,
+                    value = createWidgetUiState.widget.title,
+                    onValueChange = {
+                        onEvent(CreateWidgetUiEvent.TitleChangedEvent(it))
+                    },
                     isError = createWidgetUiState.titleError != -1,
                     errorMessage = createWidgetUiState.titleError.toErrorString(context)
                 )
                 AppTextField(
                     hint = stringResource(R.string.description),
-                    value = createWidgetUiState.desc,
-                    onValueChange = setDesc,
+                    value = createWidgetUiState.widget.description ?: EMPTY,
+                    onValueChange = {
+                        onEvent(CreateWidgetUiEvent.DescChangedEvent(it))
+                    },
                     minLines = 3,
                     maxLines = 8,
                     isError = createWidgetUiState.descError != -1,
                     errorMessage = createWidgetUiState.descError.toErrorString(context)
                 )
-                OptionTypeSelect(createWidgetUiState, onOptionTypeChanged)
+                OptionTypeSelect(createWidgetUiState) {
+                    onEvent(CreateWidgetUiEvent.OptionTypeChangedEvent(it))
+                }
                 Spacer(modifier = Modifier.size(5.dp))
                 when (createWidgetUiState.optionType) {
                     CreateWidgetUiState.WidgetOptionType.Image -> NonLazyGrid(
@@ -277,7 +257,9 @@ private fun CreateWidgetScreen(
                             didUserVoted = false,
                             totalOptions = createWidgetUiState.options.size,
                             isInput = true,
-                            onDeleteIconClick = onRemoveOption,
+                            onDeleteIconClick = {
+                                onEvent(CreateWidgetUiEvent.RemoveOptionEvent(index))
+                            },
                             onOptionClick = {
                                 imagePickerIndex = index
                                 singlePhotoPickerLauncher.launch(
@@ -305,13 +287,23 @@ private fun CreateWidgetScreen(
                                     didUserVoted = false,
                                     isInput = true,
                                     onValueChange = {
-                                        onOptionChanged(index, option.copy(text = it))
+                                        onEvent(
+                                            CreateWidgetUiEvent.OptionChangedEvent(
+                                                index,
+                                                option.copy(text = it)
+                                            )
+                                        )
                                     },
                                     onClearIconClick = {
-                                        onOptionChanged(index, option.copy(text = ""))
+                                        onEvent(
+                                            CreateWidgetUiEvent.OptionChangedEvent(
+                                                index,
+                                                option.copy(text = "")
+                                            )
+                                        )
                                     },
                                     onDeleteIconClick = {
-                                        onRemoveOption(index)
+                                        onEvent(CreateWidgetUiEvent.RemoveOptionEvent(index))
                                     },
                                     hasError = createWidgetUiState.optionError.contains(option.id)
                                 )
@@ -322,7 +314,9 @@ private fun CreateWidgetScreen(
 
                 TextButton(
                     modifier = Modifier.align(Alignment.Start),
-                    onClick = onAddOption,
+                    onClick = {
+                        onEvent(CreateWidgetUiEvent.AddOptionEvent)
+                    },
                     enabled = createWidgetUiState.options.size < 4
                 ) {
                     Text(text = stringResource(R.string.add_option))
@@ -333,9 +327,118 @@ private fun CreateWidgetScreen(
                     text = stringResource(R.string.target_audience),
                     style = MaterialTheme.typography.titleMedium
                 )
-                GenderSelect(createWidgetUiState, onGenderChanged)
+                GenderSelect(createWidgetUiState) {
+                    onEvent(CreateWidgetUiEvent.GenderChangedEvent(it))
+                }
                 Spacer(modifier = Modifier.size(10.dp))
-                AgeRangeSelect(createWidgetUiState, onMinAgeChanged, onMaxAgeChanged)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.marital_status),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DropDownWithSelect(
+                        list = Widget.MarriageStatusFilter.entries,
+                        title = when (createWidgetUiState.targetAudienceGender.marriageStatusFilter) {
+                            Widget.MarriageStatusFilter.ALL -> context.getString(R.string.all)
+                            Widget.MarriageStatusFilter.SINGLE -> context.getString(R.string.single)
+                            Widget.MarriageStatusFilter.MARRIED -> context.getString(R.string.married)
+                            Widget.MarriageStatusFilter.DIVORCED -> context.getString(R.string.divorced)
+                            Widget.MarriageStatusFilter.WIDOW -> context.getString(R.string.widow)
+                        },
+                        onItemSelect = {
+                            onEvent(
+                                CreateWidgetUiEvent.UpdateMarriageStatusFilterEvent(
+                                    it
+                                )
+                            )
+                        },
+                        itemString = {
+                            when (it) {
+                                Widget.MarriageStatusFilter.ALL -> context.getString(R.string.all)
+                                Widget.MarriageStatusFilter.SINGLE -> context.getString(R.string.single)
+                                Widget.MarriageStatusFilter.MARRIED -> context.getString(R.string.married)
+                                Widget.MarriageStatusFilter.DIVORCED -> context.getString(R.string.divorced)
+                                Widget.MarriageStatusFilter.WIDOW -> context.getString(R.string.widow)
+                            }
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.education), style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DropDownWithSelect(
+                        list = Widget.EducationFilter.entries,
+                        title = when (createWidgetUiState.targetAudienceGender.educationFilter) {
+                            Widget.EducationFilter.ALL -> context.getString(R.string.all)
+                            Widget.EducationFilter.PRIMARY -> context.getString(R.string.primary)
+                            Widget.EducationFilter.SECONDARY -> context.getString(R.string.secondary)
+                            Widget.EducationFilter.HIGH_SCHOOL -> context.getString(R.string.high_school)
+                            Widget.EducationFilter.UNDER_GRADUATE -> context.getString(R.string.under_graduate)
+                            Widget.EducationFilter.POST_GRADUATE -> context.getString(R.string.post_graduate)
+                            Widget.EducationFilter.DOC_OR_PHD -> context.getString(R.string.phd)
+                        },
+                        onItemSelect = {
+                            onEvent(
+                                CreateWidgetUiEvent.UpdateEducationFilterEvent(
+                                    it
+                                )
+                            )
+                        },
+                        itemString = {
+                            when (it) {
+                                Widget.EducationFilter.ALL -> context.getString(R.string.all)
+                                Widget.EducationFilter.PRIMARY -> context.getString(R.string.primary)
+                                Widget.EducationFilter.SECONDARY -> context.getString(R.string.secondary)
+                                Widget.EducationFilter.HIGH_SCHOOL -> context.getString(R.string.high_school)
+                                Widget.EducationFilter.UNDER_GRADUATE -> context.getString(R.string.under_graduate)
+                                Widget.EducationFilter.POST_GRADUATE -> context.getString(R.string.post_graduate)
+                                Widget.EducationFilter.DOC_OR_PHD -> context.getString(R.string.phd)
+                            }
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.occupation), style = MaterialTheme.typography.titleSmall
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    DropDownWithSelect(
+                        list = Widget.OccupationFilter.entries,
+                        title = when (createWidgetUiState.targetAudienceGender.occupationFilter) {
+                            Widget.OccupationFilter.ALL -> context.getString(R.string.all)
+                            Widget.OccupationFilter.EMPLOYED -> context.getString(R.string.employed)
+                            Widget.OccupationFilter.SELF_EMPLOYED -> context.getString(R.string.self_employed)
+                            Widget.OccupationFilter.UNEMPLOYED -> context.getString(R.string.unemployed)
+                            Widget.OccupationFilter.RETIRED -> context.getString(R.string.retired)
+                        },
+                        onItemSelect = {
+                            onEvent(
+                                CreateWidgetUiEvent.UpdateOccupationFilterEvent(
+                                    it
+                                )
+                            )
+                        },
+                        itemString = {
+                            when (it) {
+                                Widget.OccupationFilter.ALL -> context.getString(R.string.all)
+                                Widget.OccupationFilter.EMPLOYED -> context.getString(R.string.employed)
+                                Widget.OccupationFilter.SELF_EMPLOYED -> context.getString(R.string.self_employed)
+                                Widget.OccupationFilter.UNEMPLOYED -> context.getString(R.string.unemployed)
+                                Widget.OccupationFilter.RETIRED -> context.getString(R.string.retired)
+                            }
+                        }
+                    )
+                }
+                Spacer(modifier = Modifier.size(10.dp))
+                AgeRangeSelect(
+                    createWidgetUiState,
+                    { onEvent(CreateWidgetUiEvent.MinAgeChangedEvent(it)) },
+                    { onEvent(CreateWidgetUiEvent.MaxAgeChangedEvent(it)) })
                 Spacer(modifier = Modifier.size(10.dp))
                 SelectItemOnChipWithSearchDropDown(
                     stringResource(id = R.string.location),
@@ -348,28 +451,89 @@ private fun CreateWidgetScreen(
                     {
                         "${it.emoji} ${it.name}"
                     },
-                    onSelectCountry,
-                    onRemoveCountry,
+                    {
+                        onEvent(CreateWidgetUiEvent.SelectCountryEvent(it))
+                    },
+                    {
+                        onEvent(CreateWidgetUiEvent.RemoveCountryEvent(it))
+                    },
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 CategorySelect(
                     createWidgetUiState.categories,
-                    createWidgetUiState.widgetCategories,
-                    onSelectCategoryWidget
-                )
+                    createWidgetUiState.widgetCategories
+                ) {
+                    onEvent(CreateWidgetUiEvent.SelectCategoryWidgetEvent(it))
+                }
                 Spacer(modifier = Modifier.size(15.dp))
                 Text(
                     modifier = Modifier.align(Alignment.Start),
-                    text = "More Options",
+                    text = stringResource(R.string.more_options),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.size(10.dp))
-                StartTime(createWidgetUiState, onStartTimeChange)
+                StartTime(createWidgetUiState) {
+                    onEvent(
+                        CreateWidgetUiEvent.StartTimeChangedEvent(
+                            it
+                        )
+                    )
+                }
                 Spacer(modifier = Modifier.size(10.dp))
-                EndTime(createWidgetUiState, onEndTimeChange)
+                EndTime(createWidgetUiState) { onEvent(CreateWidgetUiEvent.EndTimeChangedEvent(it)) }
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.allow_anonymous_voters),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(createWidgetUiState.widget.allowAnonymous, {
+                        onEvent(CreateWidgetUiEvent.AllowAnonymousEvent(it))
+                    })
+                }
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Allow Multiple Selections",
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(createWidgetUiState.widget.allowMultipleSelection, {
+                        onEvent(CreateWidgetUiEvent.AllowMultipleSelection(it))
+                    })
+                }
+                Spacer(modifier = Modifier.size(10.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Result")
+                    Spacer(modifier = Modifier.weight(1f))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Widget.WidgetResult.entries.forEach { result ->
+                            AppOptionTypeSelect(
+                                selected = createWidgetUiState.widget.widgetResult == result,
+                                onSelectedChange = {
+                                    onEvent(CreateWidgetUiEvent.WidgetResultChangedEvent(result))
+                                },
+                                title = when (result) {
+                                    Widget.WidgetResult.AFTER_VOTE -> "After Vote"
+                                    Widget.WidgetResult.ALWAYS -> "Always"
+                                    Widget.WidgetResult.TIME_END -> "After Ends At"
+                                },
+                                icon = null
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.size(20.dp))
                 Button(
-                    onCreateClick,
+                    { onEvent(CreateWidgetUiEvent.CreateWidgetEvent) },
                     enabled = createWidgetUiState.allowCreate && isConnected,
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -387,7 +551,7 @@ fun EndTime(createWidgetUiState: CreateWidgetUiState, onTimeChanged: (Long?) -> 
     var openPicker by remember { mutableStateOf(false) }
     val calendar by remember {
         mutableStateOf(Calendar.getInstance().apply {
-            timeInMillis = createWidgetUiState.startTime
+            timeInMillis = createWidgetUiState.widget.startAt
             add(Calendar.DATE, 1)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
@@ -395,8 +559,8 @@ fun EndTime(createWidgetUiState: CreateWidgetUiState, onTimeChanged: (Long?) -> 
             set(Calendar.MILLISECOND, 0)
         })
     }
-    LaunchedEffect(createWidgetUiState.startTime) {
-        calendar.timeInMillis = createWidgetUiState.startTime
+    LaunchedEffect(createWidgetUiState.widget.startAt) {
+        calendar.timeInMillis = createWidgetUiState.widget.startAt
         calendar.add(Calendar.DATE, 1)
     }
     val datePickerState = rememberDatePickerState(selectableDates = object : SelectableDates {
@@ -436,14 +600,15 @@ fun EndTime(createWidgetUiState: CreateWidgetUiState, onTimeChanged: (Long?) -> 
         )
         Spacer(modifier = Modifier.weight(1f))
         AppOptionTypeSelect(
-            selected = createWidgetUiState.endTime != null,
+            selected = createWidgetUiState.widget.endAt != null,
             onSelectedChange = { openPicker = true },
-            title = createWidgetUiState.endTime?.toDate() ?: stringResource(id = R.string.select),
+            title = createWidgetUiState.widget.endAt?.toDate()
+                ?: stringResource(id = R.string.select),
             icon = ImageVector.vectorResource(id = R.drawable.round_calendar_month_24)
         )
         Spacer(modifier = Modifier.size(5.dp))
         AppOptionTypeSelect(
-            selected = createWidgetUiState.endTime == null,
+            selected = createWidgetUiState.widget.endAt == null,
             onSelectedChange = { onTimeChanged(null) },
             title = stringResource(R.string.manual),
             icon = ImageVector.vectorResource(id = R.drawable.baseline_back_hand_24)
@@ -649,26 +814,19 @@ fun GenderSelect(
             text = stringResource(R.string.gender), style = MaterialTheme.typography.titleSmall
         )
         Spacer(modifier = Modifier.weight(1f))
-        AppOptionTypeSelect(
-            selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.ALL,
-            onSelectedChange = { onGenderChanged(Widget.GenderFilter.ALL) },
-            title = stringResource(R.string.all),
-            icon = null
-        )
-        Spacer(modifier = Modifier.size(5.dp))
-        AppOptionTypeSelect(
-            selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.MALE,
-            onSelectedChange = { onGenderChanged(Widget.GenderFilter.MALE) },
-            title = stringResource(R.string.male),
-            icon = ImageVector.vectorResource(id = R.drawable.baseline_male_24)
-        )
-        Spacer(modifier = Modifier.size(5.dp))
-        AppOptionTypeSelect(
-            selected = createWidgetUiState.targetAudienceGender.gender == Widget.GenderFilter.FEMALE,
-            onSelectedChange = { onGenderChanged(Widget.GenderFilter.FEMALE) },
-            title = stringResource(R.string.female),
-            icon = ImageVector.vectorResource(id = R.drawable.baseline_female_24)
-        )
+        Widget.GenderFilter.entries.forEach { gender ->
+            Spacer(modifier = Modifier.size(6.dp))
+            AppOptionTypeSelect(
+                selected = createWidgetUiState.targetAudienceGender.gender == gender,
+                onSelectedChange = { onGenderChanged(gender) },
+                title = when (gender) {
+                    Widget.GenderFilter.ALL -> stringResource(R.string.all)
+                    Widget.GenderFilter.MALE -> stringResource(R.string.male)
+                    Widget.GenderFilter.FEMALE -> stringResource(id = R.string.female)
+                },
+                icon = null
+            )
+        }
     }
 }
 
@@ -726,7 +884,7 @@ fun StartTime(
         AppOptionTypeSelect(
             selected = false,
             onSelectedChange = { openPicker = true },
-            title = createWidgetUiState.startTime.toDate(),
+            title = createWidgetUiState.widget.startAt.toDate(),
             icon = ImageVector.vectorResource(id = R.drawable.round_calendar_month_24)
         )
     }
@@ -765,9 +923,8 @@ class CreateWidgetStatePreviewParameterProvider :
     PreviewParameterProvider<CreateWidgetUiState> {
     override val values: Sequence<CreateWidgetUiState> = sequenceOf(
         CreateWidgetUiState(
-            "widget title",
+            Widget("widget title"),
             -1,
-            "desc",
             -1,
             CreateWidgetUiState.WidgetOptionType.Image,
             listOf(
@@ -792,9 +949,8 @@ class CreateWidgetStatePreviewParameterProvider :
                 min = 45, max = 66
             ),
         ), CreateWidgetUiState(
-            "widget title",
+            Widget(),
             R.string.title_cannot_contain_bad_words,
-            "desc",
             R.string.description_cannot_contain_bad_words,
             CreateWidgetUiState.WidgetOptionType.Text,
             listOf(
