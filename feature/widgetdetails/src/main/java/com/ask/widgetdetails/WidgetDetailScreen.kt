@@ -131,11 +131,11 @@ private fun WidgetDetailScreen(
                 }
             )
         }
-    ) {
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it)
+                .padding(paddingValues)
         ) {
             if (widgetUiState.loading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -164,7 +164,7 @@ private fun WidgetDetailScreen(
                     Spacer(modifier = Modifier.size(10.dp))
                     PieChartGroup(
                         showAds = false,
-                        title = "Result",
+                        title = stringResource(R.string.result),
                         resultData = widgetUiState.widgetDetailsWithResult.widgetResults
                     )
                     widgetUiState.widgetDetailsWithResult.widgetOptionResults.forEach {
