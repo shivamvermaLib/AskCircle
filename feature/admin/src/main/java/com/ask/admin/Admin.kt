@@ -277,7 +277,7 @@ fun AdminContent(
             itemsIndexed(state.widgets) { index, widget ->
                 WidgetWithUserView(index = index,
                     isAdmin = true,
-                    widgetWithOptionsAndVotesForTargetAudience = widget,
+                    widgetWithOptionsAndVotesForTargetAudience = widget.toWidgetWithOptionsAndVoteCountAndCommentCount(),
                     sharedTransitionScope = sharedTransitionScope,
                     animatedContentScope = animatedContentScope,
                     onOpenIndexImage = { _, _ -> },

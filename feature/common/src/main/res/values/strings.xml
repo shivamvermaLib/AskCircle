@@ -11,11 +11,14 @@
     <string name="no_widgets">No Widgets</string>
     <string name="create">Create</string>
     <string name="last_voted">LAST VOTED %1$s</string>
-    <string name="total_votes">%1$s Total Votes</string>
+    <string name="total_votes">%1$s Votes</string>
+    <string name="comments">%1$s Comments</string>
     <string name="search">Search</string>
     <string name="start">START</string>
     <string name="end">END</string>
     <string name="share">Share</string>
     <string name="bookmark">Bookmark</string>
     <string name="client_id" translatable="false">1047951754429-5j0pv72436mid0fitaf0obgrq92hqbvf.apps.googleusercontent.com</string>
+    <string name="comment">Comment</string>
+
 </resources>

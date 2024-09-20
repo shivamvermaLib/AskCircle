@@ -251,9 +251,7 @@ private fun CreateWidgetScreen(
                         val option = createWidgetUiState.options[index]
                         ImageOption(
                             index = index,
-                            optionWithVotes = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                                option = option, votes = emptyList()
-                            ),
+                            option = option,
                             didUserVoted = false,
                             totalOptions = createWidgetUiState.options.size,
                             isInput = true,
@@ -270,7 +268,8 @@ private fun CreateWidgetScreen(
                             },
                             onOpenImage = {},
                             animatedContentScope = null,
-                            sharedTransitionScope = null
+                            sharedTransitionScope = null,
+                            votesPercentFormat = EMPTY
                         )
                     }
 
@@ -281,9 +280,7 @@ private fun CreateWidgetScreen(
                             Row(modifier = Modifier.fillMaxWidth()) {
                                 TextOption(
                                     index = index,
-                                    widgetOption = WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes(
-                                        option = option, votes = emptyList()
-                                    ),
+                                    option = option,
                                     didUserVoted = false,
                                     isInput = true,
                                     onValueChange = {
@@ -305,7 +302,8 @@ private fun CreateWidgetScreen(
                                     onDeleteIconClick = {
                                         onEvent(CreateWidgetUiEvent.RemoveOptionEvent(index))
                                     },
-                                    hasError = createWidgetUiState.optionError.contains(option.id)
+                                    hasError = createWidgetUiState.optionError.contains(option.id),
+                                    votesPercentFormat = EMPTY
                                 )
                             }
                         }
@@ -367,7 +365,8 @@ private fun CreateWidgetScreen(
                 Spacer(modifier = Modifier.size(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = stringResource(R.string.education), style = MaterialTheme.typography.titleSmall
+                        text = stringResource(R.string.education),
+                        style = MaterialTheme.typography.titleSmall
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     DropDownWithSelect(
@@ -404,7 +403,8 @@ private fun CreateWidgetScreen(
                 Spacer(modifier = Modifier.size(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = stringResource(R.string.occupation), style = MaterialTheme.typography.titleSmall
+                        text = stringResource(R.string.occupation),
+                        style = MaterialTheme.typography.titleSmall
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     DropDownWithSelect(

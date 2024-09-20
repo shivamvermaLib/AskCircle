@@ -72,7 +72,8 @@ class GetWidgetsFromAiUseCase @Inject constructor(
                         ),
                         targetAudienceGender = Widget.TargetAudienceGender(),
                         targetAudienceAgeRange = Widget.TargetAudienceAgeRange(),
-                        targetAudienceLocations = emptyList()
+                        targetAudienceLocations = emptyList(),
+                        comments = emptyList()
                     )
                 }
             }.also {

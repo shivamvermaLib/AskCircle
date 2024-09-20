@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -23,7 +24,7 @@ class GetWidgetsUseCase @Inject constructor(
     @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
     @OptIn(ExperimentalCoroutinesApi::class)
-    operator fun invoke(filterWithLastVotedEmptyOptionsFlow: Flow<Triple<Filter, List<String>, Long>>): Flow<PagingData<WidgetWithOptionsAndVotesForTargetAudience>> {
+    operator fun invoke(filterWithLastVotedEmptyOptionsFlow: Flow<Triple<Filter, List<String>, Long>>): Flow<PagingData<WidgetWithOptionsAndVoteCountAndCommentCount>> {
         val adMobIndexList = remoteConfigRepository.dashBoardAdMobIndexList()
         val currentTimeFlow = flow {
             while (true) {
@@ -42,8 +43,9 @@ class GetWidgetsUseCase @Inject constructor(
                     filterWithLastVotedEmptyOptionsWithCurrentTime.second,
                     remoteConfigRepository.getDashBoardPageSize()
                 )
+                else -> emptyFlow()
 
-                Filter.MostVoted -> widgetRepository.getMostVotedWidgets(
+                /*Filter.MostVoted -> widgetRepository.getMostVotedWidgets(
                     userRepository.getCurrentUserId(), remoteConfigRepository.getDashBoardPageSize()
                 )
 
@@ -58,7 +60,7 @@ class GetWidgetsUseCase @Inject constructor(
 
                 Filter.Trending -> widgetRepository.getTrendingWidgets(
                     userRepository.getCurrentUserId(), remoteConfigRepository.getDashBoardPageSize()
-                )
+                )*/
             }.mapWithComputePagingData(
                 userRepository.getCurrentUserId(),
                 adMobIndexList,

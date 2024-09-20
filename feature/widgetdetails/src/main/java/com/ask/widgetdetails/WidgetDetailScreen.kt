@@ -153,7 +153,7 @@ private fun WidgetDetailScreen(
                     WidgetWithUserView(
                         index,
                         false,
-                        it,
+                        it.toWidgetWithOptionsAndVoteCountAndCommentCount(),
                         sharedTransitionScope,
                         animatedContentScope,
                         onOptionClick,

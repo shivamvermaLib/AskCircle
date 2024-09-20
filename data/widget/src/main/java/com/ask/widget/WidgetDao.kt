@@ -10,11 +10,11 @@ import androidx.room.Upsert
 @Dao
 interface WidgetDao {
     @Transaction
-    @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :currentUserId) AS isBookmarked from widgets where startAt < :currentTime order by createdAt desc")
+    @Query("select *, widgets.id in (select widgetId from `user-widget-bookmark` where userId = :currentUserId) AS isBookmarked,(select count(*) from `widget-comments` where widgetId = widgets.id) AS commentCount,(select max(votedAt) from `widget-option-votes` where optionId in (select id from `widgets-options` where widgetId = widgets.id)) AS lastVotedAt,(select count(id) from `widget-option-votes` where optionId = `widgets-options`.id) AS voteCount,EXISTS(select userId from `widget-option-votes` where optionId = `widgets-options`.id and userId = :currentUserId) AS didUserVote from widgets inner join `widgets-options` on widgets.id = `widgets-options`.widgetId where startAt < :currentTime order by createdAt desc")
     fun getWidgets(
         currentUserId: String,
         currentTime: Long
-    ): PagingSource<Int, WidgetWithOptionsAndVotesForTargetAudience>
+    ): PagingSource<Int, WidgetWithOptionsAndVoteCountAndCommentCount>
 
     @Transaction
     @Query("select *, id in (select widgetId from `user-widget-bookmark` where userId = :userId) AS isBookmarked from widgets where creatorId = :userId order by createdAt desc")
@@ -108,10 +108,13 @@ interface WidgetDao {
     suspend fun getWidgetIdsOnWhichUserNotVoted(userId: String): List<String>
 
     @Query("select id from widgets where (ROUND((strftime('%s', 'now') * 1000 - endAt) / 2000)) % 2 = 0 AND createdAt <= strftime('%s', 'now') * 1000 AND endAt > strftime('%s', 'now') * 1000 AND creatorId = :userId")
-    suspend fun getWidgetIdsWhichTimerEnds(userId: String):List<String>
+    suspend fun getWidgetIdsWhichTimerEnds(userId: String): List<String>
 
     @Upsert
     suspend fun insertVotes(voteList: List<Widget.Option.Vote>)
+
+    @Upsert
+    suspend fun insertComments(comments: List<Widget.WidgetComment>)
 
     @Delete
     suspend fun deleteVote(vote: Widget.Option.Vote)

@@ -90,7 +90,10 @@ object WidgetFirebaseModules {
                     dataSnapshot.child(TABLE_WIDGET_CATEGORIES).children.map {
                         it.getValue(Widget.WidgetCategory::class.java)!!
                     },
-                    false
+                    false,
+                    dataSnapshot.child(TABLE_WIDGETS_COMMENTS).children.map {
+                        it.getValue(Widget.WidgetComment::class.java)!!
+                    }
                 )
             }
 
@@ -118,7 +121,10 @@ object WidgetFirebaseModules {
                     mutableData.child(TABLE_WIDGET_CATEGORIES).children.map {
                         it.getValue(Widget.WidgetCategory::class.java)!!
                     },
-                    false
+                    false,
+                    mutableData.child(TABLE_WIDGETS_COMMENTS).children.map {
+                        it.getValue(Widget.WidgetComment::class.java)!!
+                    }
                 )
             }
         }

@@ -7,6 +7,7 @@ data class UpdatedTime(
     val widgetTime: Long = 0,
     val voteTime: Long = 0,
     val profileTime: Long = 0,
+    val commentTime: Long = 0
 )
 
 fun isUpdateRequired(updatedTime: UpdatedTime, lastUpdatedTime: UpdatedTime): Boolean {

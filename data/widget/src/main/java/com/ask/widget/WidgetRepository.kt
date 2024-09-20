@@ -368,5 +368,24 @@ class WidgetRepository @Inject constructor(
             widgetDao.insertWidget(it.widget)
         }
     }
+
+    suspend fun addComment(widgetId: String, userId: String, comment: String) =
+        withContext(dispatcher) {
+            widgetDataSource.updateItemFromTransaction(widgetId) { widgetWithOptionsAndVotesForTargetAudience ->
+                widgetWithOptionsAndVotesForTargetAudience.copy(
+                    comments = widgetWithOptionsAndVotesForTargetAudience.comments +
+                        Widget.WidgetComment(
+                            userId = userId,
+                            comment = comment
+                        )
+                )
+            }.also {
+                widgetDao.insertComments(it.comments)
+            }.also {
+                widgetUpdateTimeOneDataSource.updateItemFromTransaction { updatedTime ->
+                    updatedTime.copy(commentTime = System.currentTimeMillis())
+                }
+            }
+        }
 }
 

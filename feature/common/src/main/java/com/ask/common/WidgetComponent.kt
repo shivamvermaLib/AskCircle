@@ -67,14 +67,15 @@ import com.ask.core.EMPTY
 import com.ask.core.ImageSizeType
 import com.ask.core.getImage
 import com.ask.user.User
-import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
+import com.ask.widget.Widget
+import com.ask.widget.WidgetWithOptionsAndVoteCountAndCommentCount
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun WidgetWithUserView(
     index: Int,
     isAdmin: Boolean = false,
-    widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
+    widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVoteCountAndCommentCount,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     onOptionClick: (String, String) -> Unit = { _, _ -> },
@@ -191,7 +192,7 @@ fun AdminButton(
 @Composable
 fun CardItem(
     index: Int,
-    widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience,
+    widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVoteCountAndCommentCount,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     onOptionClick: (String, String) -> Unit = { _, _ -> },
@@ -239,7 +240,7 @@ fun CardItem(
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier
+            modifier = Modifier.fillMaxWidth()
         ) {
             IconButton(
                 title = stringResource(R.string.start),
@@ -264,6 +265,16 @@ fun CardItem(
                 })
 
             Icon(
+                imageVector = ImageVector.vectorResource(id = R.drawable.comment_svgrepo_com),
+                contentDescription = stringResource(R.string.comment),
+                modifier = Modifier
+                    .size(28.dp)
+                    .clickable {
+
+                    },
+            )
+
+            Icon(
                 imageVector = ImageVector.vectorResource(id = R.drawable.share),
                 contentDescription = "Share",
                 modifier = Modifier
@@ -272,7 +283,8 @@ fun CardItem(
                         onShareClick(
                             widgetWithOptionsAndVotesForTargetAudience.widget.id
                         )
-                    })
+                    },
+            )
             Spacer(modifier = Modifier.weight(1f))
             Icon(
                 imageVector = ImageVector.vectorResource(id = if (widgetWithOptionsAndVotesForTargetAudience.isBookmarked) R.drawable.baseline_bookmark_24 else R.drawable.round_bookmark_border_24),
@@ -284,15 +296,24 @@ fun CardItem(
                     })
         }
         Spacer(modifier = Modifier.size(12.dp))
-        Text(
-            text = stringResource(
-                R.string.total_votes,
-                widgetWithOptionsAndVotesForTargetAudience.widgetTotalVotes
-            ),
-            color = MaterialTheme.colorScheme.outline,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.W400
-        )
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(
+                    R.string.total_votes,
+                    widgetWithOptionsAndVotesForTargetAudience.votesCountFormat
+                ),
+                color = MaterialTheme.colorScheme.outline,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.W400
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = stringResource(R.string.comments, "2k"),
+                color = MaterialTheme.colorScheme.outline,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.W400
+            )
+        }
     }
 }
 
@@ -384,7 +405,7 @@ fun WidgetUserView(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun WidgetView(
-    widget: WidgetWithOptionsAndVotesForTargetAudience,
+    widget: WidgetWithOptionsAndVoteCountAndCommentCount,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     onOptionClick: (String, String) -> Unit = { _, _ -> },
@@ -407,9 +428,10 @@ fun WidgetView(
             ImageOption(
                 index = index,
                 totalOptions = widget.options.size,
-                optionWithVotes = widgetOption,
+                option = widgetOption.option,
+                votesPercentFormat = widgetOption.votesPercentFormat,
                 showVotes = widget.showVotes,
-                didUserVoted = widgetOption.didUserVoted,
+                didUserVoted = widgetOption.didUserVote,
                 onOptionClick = {
                     onOptionClick(widget.widget.id, it)
                 },
@@ -425,8 +447,9 @@ fun WidgetView(
             widget.options.forEachIndexed { index, widgetOption ->
                 TextOption(
                     index = index,
-                    widgetOption = widgetOption,
-                    didUserVoted = widgetOption.didUserVoted,
+                    option = widgetOption.option,
+                    votesPercentFormat = widgetOption.votesPercentFormat,
+                    didUserVoted = widgetOption.didUserVote,
                     showVotes = widget.showVotes,
                     onOptionClick = {
                         onOptionClick(widget.widget.id, it)
@@ -441,7 +464,8 @@ fun WidgetView(
 @Composable
 fun TextOption(
     index: Int,
-    widgetOption: WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
+    option: Widget.Option,
+    votesPercentFormat: String,
     didUserVoted: Boolean,
     isInput: Boolean = false,
     showVotes: Boolean = false,
@@ -451,7 +475,7 @@ fun TextOption(
     onOptionClick: (String) -> Unit = {},
     onDeleteIconClick: (Int) -> Unit = {}
 ) {
-    val (option, _) = widgetOption
+
     TextButton(modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(all = 5.dp),
         shape = RoundedCornerShape(28.dp),
@@ -511,7 +535,7 @@ fun TextOption(
             )
             if (showVotes)
                 Text(
-                    text = "${widgetOption.votesPercentFormat}%",
+                    text = "${votesPercentFormat}%",
                     color = if (didUserVoted) {
                         if (isSystemInDarkTheme()) Color.Black else Color.White
                     } else {
@@ -543,7 +567,8 @@ fun ImageOption(
     modifier: Modifier = Modifier,
     index: Int,
     totalOptions: Int,
-    optionWithVotes: WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
+    option: Widget.Option,
+    votesPercentFormat: String,
     didUserVoted: Boolean,
     isInput: Boolean = false,
     showVotes: Boolean = false,
@@ -560,7 +585,7 @@ fun ImageOption(
         startY = sizeImage.height.toFloat() / 3.8f,  // 1/3
         endY = sizeImage.height.toFloat()
     )
-    val (option, _) = optionWithVotes
+
     val roundedCornerShape = RoundedCornerShape(
         topStart = when (index) {
             0 -> 10.dp
@@ -685,7 +710,7 @@ fun ImageOption(
             }
             if (showVotes) {
                 Text(
-                    text = "${optionWithVotes.votesPercentFormat}%",
+                    text = "${votesPercentFormat}%",
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.SemiBold,
                     modifier = Modifier.align(Alignment.BottomEnd),

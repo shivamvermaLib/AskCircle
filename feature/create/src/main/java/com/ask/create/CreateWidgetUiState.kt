@@ -53,6 +53,7 @@ data class CreateWidgetUiState(
             User(),
             widgetCategories,
             false,
+            emptyList()
         )
 }
 

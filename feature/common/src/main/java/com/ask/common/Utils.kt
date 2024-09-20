@@ -10,6 +10,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import java.text.DecimalFormat
+import kotlin.math.floor
+import kotlin.math.log10
+import kotlin.math.pow
 
 
 suspend fun Context.preLoadImages(urls: List<String>): Unit = coroutineScope {

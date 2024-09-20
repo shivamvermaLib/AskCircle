@@ -80,6 +80,7 @@ import com.ask.common.connectivityState
 import com.ask.core.EMPTY
 import com.ask.user.User
 import com.ask.widget.Filter
+import com.ask.widget.WidgetWithOptionsAndVoteCountAndCommentCount
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.workmanager.CreateWidgetWorker
 import com.ask.workmanager.WorkerStatus
@@ -156,7 +157,7 @@ fun HomeScreen(
 @Composable
 private fun HomeScreen(
     homeUiState: HomeUiState = HomeUiState(),
-    widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
+    widgets: LazyPagingItems<WidgetWithOptionsAndVoteCountAndCommentCount>,
     widgetId: String? = null,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     sharedTransitionScope: SharedTransitionScope,
@@ -299,7 +300,7 @@ fun CreatingCard(modifier: Modifier = Modifier, visible: Boolean = true) {
 )
 @Composable
 private fun DashBoardScreen(
-    widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
+    widgets: LazyPagingItems<WidgetWithOptionsAndVoteCountAndCommentCount>,
     sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize(DpSize.Zero),
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
@@ -471,7 +472,7 @@ fun EmptyDashboardList(title: String, subTitle: String) {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardList(
-    widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
+    widgets: LazyPagingItems<WidgetWithOptionsAndVoteCountAndCommentCount>,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     onOptionClick: (String, String) -> Unit,
@@ -516,7 +517,7 @@ fun DashboardList(
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DashboardGrid(
-    widgets: LazyPagingItems<WidgetWithOptionsAndVotesForTargetAudience>,
+    widgets: LazyPagingItems<WidgetWithOptionsAndVoteCountAndCommentCount>,
     columnCount: Int,
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
