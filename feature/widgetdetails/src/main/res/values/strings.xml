@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="male">Male</string>
+    <string name="female">Female</string>
+    <string name="unspecified">Unspecified</string>
+    <string name="view_all">View All</string>
+    <string name="hide_all">Hide All</string>
+    <string name="result">Result</string>
+
+</resources>

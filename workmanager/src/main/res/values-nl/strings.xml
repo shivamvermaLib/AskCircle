@@ -1,0 +1,26 @@
+<resources>
+    <string name="new_widget_added">Nieuwe widget toegevoegd</string>
+    <string name="a_new_widget_has_been_created_and_added_to_your_collection_check_it_out_now">Er is een nieuwe widget gemaakt en toegevoegd aan uw verzameling. Bekijk het nu!</string>
+    <string name="your_widget_collection_just_got_bigger">Uw widgetcollectie is zojuist groter geworden!</string>
+    <string name="explore_the_latest_widget_in_your_collection_open_the_app_to_see_it">Ontdek de nieuwste widget in je verzameling. Open de app om het te zien!</string>
+    <string name="exciting_news_new_widget_created">Opwindend nieuws! Nieuwe widget gemaakt</string>
+    <string name="a_brand_new_widget_is_available_don_t_miss_out_see_it_now_in_your_collection">Er is een gloednieuwe widget beschikbaar. Mis het niet en bekijk het nu in uw collectie!</string>
+    <string name="new_interaction_on_your_widget">Nieuwe interactie op uw widget!</string>
+    <string name="a_user_has_just_engaged_with_your_widget_check_the_updated_results_now">Een gebruiker heeft zojuist uw widget gebruikt. Bekijk nu de bijgewerkte resultaten!</string>
+    <string name="your_widget_just_got_an_interaction">Uw widget heeft zojuist een interactie gekregen!</string>
+    <string name="someone_has_participated_with_your_widget_view_the_latest_results_and_insights">Iemand heeft deelgenomen met uw widget. Bekijk de laatste resultaten en inzichten.</string>
+    <string name="widget_update_new_interaction_received">Widgetupdate: nieuwe interactie ontvangen</string>
+    <string name="your_widget_has_received_a_new_interaction_head_over_to_see_the_current_standings">Uw widget heeft een nieuwe interactie ontvangen. Ga naar om de huidige ranglijst te bekijken.</string>
+    <string name="interaction_alert_your_widget_was_engaged_with">Interactiewaarschuwing: er is gebruik gemaakt van uw widget!</string>
+    <string name="a_new_interaction_has_been_registered_on_your_widget_check_out_the_updated_responses">Er is een nieuwe interactie geregistreerd op uw widget. Bekijk de bijgewerkte reacties.</string>
+    <string name="don_t_miss_out">Mis het niet!</string>
+    <string name="your_vote_is_needed">Uw stem is nodig!</string>
+    <string name="we_value_your_opinion">Wij waarderen uw mening</string>
+    <string name="reminder_vote_now">Herinnering: stem nu</string>
+    <string name="your_opinion_counts">Uw mening telt</string>
+    <string name="your_input_matters_vote_on_the_widget_now_and_let_your_voice_be_heard">Jouw inbreng is belangrijk. Stem nu op de widget en laat je stem horen!</string>
+    <string name="take_a_moment_to_vote_on_the_widget_your_opinion_can_make_a_difference">Neem even de tijd om op de widget te stemmen. Jouw mening kan een verschil maken.</string>
+    <string name="haven_t_voted_yet_cast_your_vote_and_help_shape_the_outcome">Nog niet gestemd\? Breng uw stem uit en help mee de uitkomst vorm te geven.</string>
+    <string name="don_t_forget_to_vote_on_the_widget_your_participation_is_important">Vergeet niet op de widget te stemmen. Uw deelname is belangrijk!</string>
+    <string name="make_sure_your_voice_is_heard_vote_on_the_widget_today">Zorg ervoor dat jouw stem gehoord wordt. Stem vandaag nog op de widget!</string>
+</resources>

@@ -1,0 +1,26 @@
+<resources>
+    <string name="new_widget_added">नया विजेट जोड़ा गया</string>
+    <string name="a_new_widget_has_been_created_and_added_to_your_collection_check_it_out_now">एक नया विजेट बनाया गया है और आपके संग्रह में जोड़ा गया है। अब इसे जांचें!</string>
+    <string name="your_widget_collection_just_got_bigger">आपका विजेट संग्रह अब और बड़ा हो गया है!</string>
+    <string name="explore_the_latest_widget_in_your_collection_open_the_app_to_see_it">अपने संग्रह में नवीनतम विजेट का अन्वेषण करें। इसे देखने के लिए ऐप खोलें!</string>
+    <string name="exciting_news_new_widget_created">उत्तेजित समाचार! नया विजेट बनाया गया</string>
+    <string name="a_brand_new_widget_is_available_don_t_miss_out_see_it_now_in_your_collection">एक बिल्कुल नया विजेट उपलब्ध है. चूकें नहीं, इसे अभी अपने संग्रह में देखें!</string>
+    <string name="new_interaction_on_your_widget">आपके विजेट पर नया इंटरेक्शन!</string>
+    <string name="a_user_has_just_engaged_with_your_widget_check_the_updated_results_now">एक उपयोगकर्ता अभी-अभी आपके विजेट से जुड़ा है। अभी अद्यतन परिणाम देखें!</string>
+    <string name="your_widget_just_got_an_interaction">आपके विजेट को अभी-अभी इंटरेक्शन मिला है!</string>
+    <string name="someone_has_participated_with_your_widget_view_the_latest_results_and_insights">किसी ने आपके विजेट के साथ भाग लिया है. नवीनतम परिणाम और अंतर्दृष्टि देखें.</string>
+    <string name="widget_update_new_interaction_received">विजेट अद्यतन: नया इंटरेक्शन प्राप्त हुआ</string>
+    <string name="your_widget_has_received_a_new_interaction_head_over_to_see_the_current_standings">आपके विजेट को एक नया इंटरैक्शन प्राप्त हुआ है. वर्तमान स्थिति देखने के लिए आगे बढ़ें।</string>
+    <string name="interaction_alert_your_widget_was_engaged_with">इंटरेक्शन अलर्ट: आपका विजेट व्यस्त था!</string>
+    <string name="a_new_interaction_has_been_registered_on_your_widget_check_out_the_updated_responses">आपके विजेट पर एक नया इंटरैक्शन पंजीकृत किया गया है। अद्यतन प्रतिक्रियाएँ देखें.</string>
+    <string name="don_t_miss_out">मत चूको!</string>
+    <string name="your_vote_is_needed">आपके वोट की आवश्यकता है!</string>
+    <string name="we_value_your_opinion">हम आपकी राय को महत्व देते हैं</string>
+    <string name="reminder_vote_now">अनुस्मारक: अभी वोट करें</string>
+    <string name="your_opinion_counts">आपकी राय मायने रखती है</string>
+    <string name="your_input_matters_vote_on_the_widget_now_and_let_your_voice_be_heard">आपका इनपुट मायने रखता है. अभी विजेट पर वोट करें और अपनी आवाज सुनें!</string>
+    <string name="take_a_moment_to_vote_on_the_widget_your_opinion_can_make_a_difference">विजेट पर वोट करने के लिए कुछ समय निकालें। आपकी राय फर्क ला सकती है.</string>
+    <string name="haven_t_voted_yet_cast_your_vote_and_help_shape_the_outcome">अभी तक वोट नहीं दिया\? अपना वोट डालें और परिणाम को आकार देने में मदद करें।</string>
+    <string name="don_t_forget_to_vote_on_the_widget_your_participation_is_important">विजेट पर वोट करना न भूलें। आपकी भागीदारी महत्वपूर्ण है!</string>
+    <string name="make_sure_your_voice_is_heard_vote_on_the_widget_today">सुनिश्चित करें कि आपकी आवाज़ सुनी जाए. विजेट पर आज ही वोट करें!</string>
+</resources>

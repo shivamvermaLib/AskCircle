@@ -1,0 +1,26 @@
+<resources>
+    <string name="new_widget_added">Nouveau widget ajouté</string>
+    <string name="a_new_widget_has_been_created_and_added_to_your_collection_check_it_out_now"><![CDATA[Un nouveau widget a été créé et ajouté à votre collection. Vérifiez-le maintenant !]]></string>
+    <string name="your_widget_collection_just_got_bigger"><![CDATA[Votre collection de widgets s\'est encore agrandie !]]></string>
+    <string name="explore_the_latest_widget_in_your_collection_open_the_app_to_see_it"><![CDATA[Explorez le dernier widget de votre collection. Ouvrez l\'application pour le voir !]]></string>
+    <string name="exciting_news_new_widget_created">Nouvelles excitantes! Nouveau widget créé</string>
+    <string name="a_brand_new_widget_is_available_don_t_miss_out_see_it_now_in_your_collection"><![CDATA[Un tout nouveau widget est disponible. Ne le manquez pas, voyez-le maintenant dans votre collection !]]></string>
+    <string name="new_interaction_on_your_widget"><![CDATA[Nouvelle interaction sur votre widget !]]></string>
+    <string name="a_user_has_just_engaged_with_your_widget_check_the_updated_results_now"><![CDATA[Un utilisateur vient d\'interagir avec votre widget. Vérifiez les résultats mis à jour maintenant !]]></string>
+    <string name="your_widget_just_got_an_interaction"><![CDATA[Votre widget vient de recevoir une interaction !]]></string>
+    <string name="someone_has_participated_with_your_widget_view_the_latest_results_and_insights">Quelqu\'un a participé avec votre widget. Consultez les derniers résultats et informations.</string>
+    <string name="widget_update_new_interaction_received"><![CDATA[Mise à jour du widget : nouvelle interaction reçue]]></string>
+    <string name="your_widget_has_received_a_new_interaction_head_over_to_see_the_current_standings">Votre widget a reçu une nouvelle interaction. Rendez-vous pour voir le classement actuel.</string>
+    <string name="interaction_alert_your_widget_was_engaged_with"><![CDATA[Alerte d\'interaction : votre widget a été utilisé !]]></string>
+    <string name="a_new_interaction_has_been_registered_on_your_widget_check_out_the_updated_responses">Une nouvelle interaction a été enregistrée sur votre widget. Consultez les réponses mises à jour.</string>
+    <string name="don_t_miss_out"><![CDATA[Ne manquez pas cette occasion !]]></string>
+    <string name="your_vote_is_needed"><![CDATA[Votre vote est nécessaire !]]></string>
+    <string name="we_value_your_opinion">Nous tenons compte de votre point de vue</string>
+    <string name="reminder_vote_now"><![CDATA[Rappel : Votez maintenant]]></string>
+    <string name="your_opinion_counts">Votre avis compte</string>
+    <string name="your_input_matters_vote_on_the_widget_now_and_let_your_voice_be_heard">Votre contribution compte. Votez sur le widget maintenant et faites entendre votre voix !</string>
+    <string name="take_a_moment_to_vote_on_the_widget_your_opinion_can_make_a_difference">Prenez un moment pour voter sur le widget. Votre opinion peut faire la différence.</string>
+    <string name="haven_t_voted_yet_cast_your_vote_and_help_shape_the_outcome">Vous n\'avez pas encore voté \? Votez et contribuez à façonner le résultat.</string>
+    <string name="don_t_forget_to_vote_on_the_widget_your_participation_is_important">N\'oubliez pas de voter sur le widget. Votre participation est importante !</string>
+    <string name="make_sure_your_voice_is_heard_vote_on_the_widget_today"><![CDATA[Assurez-vous que votre voix soit entendue. Votez sur le widget aujourd\'hui !]]></string>
+</resources>

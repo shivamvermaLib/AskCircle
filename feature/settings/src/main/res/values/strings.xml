@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="account_settings">Account Settings</string>
+    <string name="age_years">Age: %1$s years</string>
+    <string name="gender">Gender: %1$s</string>
+    <string name="notification_settings">Notification Settings</string>
+    <string name="new_widget">New Widget</string>
+    <string name="when_a_new_widget_is_created">When a new widget is created</string>
+    <string name="vote_on_your_widget">Vote on your Widget</string>
+    <string name="when_someone_vote_on_your_widget">When someone vote on your widget</string>
+    <string name="widget_result">Widget Result</string>
+    <string name="when_the_widget_you_vote_is_done">When the widget you vote is done</string>
+    <string name="widget_time_end">Widget Time End</string>
+    <string name="when_your_widget_time_ends">When your widget time ends</string>
+    <string name="voting_reminder">Voting Reminder</string>
+    <string name="when_you_get_a_reminder_to_vote">When you get a reminder to vote</string>
+    <string name="feedback">Feedback</string>
+    <string name="version">Version</string>
+    <string name="tell_us_about_your_experience_or_any_feedback">Tell us about your experience or any feedback</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="click_to_view">Click to View</string>
+    <string name="about_us">About Us</string>
+    <string name="back">Back</string>
+    <string name="settings">Settings</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="view_and_edit_your_profile_information">View and edit your Profile Information</string>
+</resources>

@@ -1,0 +1,26 @@
+<resources>
+    <string name="new_widget_added">添加了新的小部件</string>
+    <string name="a_new_widget_has_been_created_and_added_to_your_collection_check_it_out_now">一个新的小部件已创建并添加到您的收藏中。立即查看！</string>
+    <string name="your_widget_collection_just_got_bigger">您的小部件集合变得更大了！</string>
+    <string name="explore_the_latest_widget_in_your_collection_open_the_app_to_see_it">探索您收藏中的最新小部件。打开应用程序即可查看！</string>
+    <string name="exciting_news_new_widget_created">令人兴奋的消息！已创建新小部件</string>
+    <string name="a_brand_new_widget_is_available_don_t_miss_out_see_it_now_in_your_collection">一个全新的小部件可用。不要错过，现在就在您的收藏中看到它吧！</string>
+    <string name="new_interaction_on_your_widget">您的小部件上有新的交互！</string>
+    <string name="a_user_has_just_engaged_with_your_widget_check_the_updated_results_now">用户刚刚使用了您的小部件。立即查看更新结果！</string>
+    <string name="your_widget_just_got_an_interaction">您的小部件刚刚进行了交互！</string>
+    <string name="someone_has_participated_with_your_widget_view_the_latest_results_and_insights">有人参与了您的小部件。查看最新结果和见解。</string>
+    <string name="widget_update_new_interaction_received">小部件更新：收到新的互动</string>
+    <string name="your_widget_has_received_a_new_interaction_head_over_to_see_the_current_standings">您的小部件已收到新的交互。前往查看当前积分榜。</string>
+    <string name="interaction_alert_your_widget_was_engaged_with">互动提醒：您的小部件已被使用！</string>
+    <string name="a_new_interaction_has_been_registered_on_your_widget_check_out_the_updated_responses">您的小部件上已注册新的交互。查看更新后的回复。</string>
+    <string name="don_t_miss_out">不要错过！</string>
+    <string name="your_vote_is_needed">需要您的投票！</string>
+    <string name="we_value_your_opinion">我们重视您的意见</string>
+    <string name="reminder_vote_now">提醒：立即投票</string>
+    <string name="your_opinion_counts">您的意见很重要</string>
+    <string name="your_input_matters_vote_on_the_widget_now_and_let_your_voice_be_heard">您的意见很重要。立即对该小部件进行投票，让人们听到您的声音！</string>
+    <string name="take_a_moment_to_vote_on_the_widget_your_opinion_can_make_a_difference">花点时间对该小部件进行投票。您的意见会有所作为。</string>
+    <string name="haven_t_voted_yet_cast_your_vote_and_help_shape_the_outcome">还没有投票吗？投票并帮助塑造结果。</string>
+    <string name="don_t_forget_to_vote_on_the_widget_your_participation_is_important">不要忘记对小部件投票。您的参与很重要！</string>
+    <string name="make_sure_your_voice_is_heard_vote_on_the_widget_today">确保您的声音被听到。今天就对小部件进行投票！</string>
+</resources>
