@@ -28,12 +28,13 @@ fun Context.getByteArray(path: String): ByteArray? {
 
 suspend fun Context.getResizedImageByteArray(
     imageUrl: String,
-    quality: Int = 100 // Optional parameter to set image quality, default is 100
+    quality: Int = 80,
+    listOfSizes: List<ImageSizeType> = ImageSizeType.entries
 ): Map<ImageSizeType, ByteArray> {
     // Initialize Coil's ImageLoader
     val imageLoader = ImageLoader(this)
 
-    return ImageSizeType.entries.associateWith {
+    return listOfSizes.associateWith {
         val height = it.height
         val width = it.width
         // Create an ImageRequest with desired size

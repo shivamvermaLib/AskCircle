@@ -5,13 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
 import com.ask.common.BaseViewModel
-import com.ask.common.CheckModerationUseCase
+import com.ask.common.GetAllBadWordsUseCase
 import com.ask.common.GetCreateWidgetRemoteConfigUseCase
 import com.ask.common.combine
 import com.ask.common.googleLogin
 import com.ask.core.EMPTY
 import com.ask.country.GetCountryUseCase
-import com.ask.user.Gender
 import com.ask.user.GetCurrentProfileUseCase
 import com.ask.user.GoogleLoginUseCase
 import com.ask.user.User
@@ -20,7 +19,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -31,9 +32,11 @@ class ProfileViewModel @Inject constructor(
     getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
     getCategoryUseCase: GetCategoryUseCase,
     private val googleLoginUseCase: GoogleLoginUseCase,
-    private val checkModerationUseCase: CheckModerationUseCase,
+    getAllBadWordsUseCase: GetAllBadWordsUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
+    private val _badWordsListFlow =
+        getAllBadWordsUseCase().map { it.map { badWord -> badWord.english } }
 
     private val _currentUserFlow = getCurrentProfileUseCase()
         .catch {
@@ -41,16 +44,12 @@ class ProfileViewModel @Inject constructor(
             FirebaseCrashlytics.getInstance().recordException(it)
             _errorFlow.value = it.message
         }
+    private val _userFlow = MutableStateFlow(User())
     private val _countriesFlow = getCountryUseCase()
     private val _ageRange = getCreateWidgetRemoteConfigUseCase()
     private val _categories = getCategoryUseCase()
 
-    private val _userNameFlow = MutableStateFlow(EMPTY)
-    private val _userEmailFlow = MutableStateFlow(EMPTY)
-    private val _userGenderFlow = MutableStateFlow<Gender?>(null)
-    private val _userAgeFlow = MutableStateFlow<Int?>(null)
     private val _userLocationCountryFlow = MutableStateFlow(EMPTY)
-    private val _userPicFlow = MutableStateFlow<String?>(null)
     private val _profileLoadingFlow = MutableStateFlow(false)
     private val _userCategoriesFlow = MutableStateFlow(listOf<User.UserCategory>())
     private val _googleLoginLoading = MutableStateFlow(false)
@@ -58,37 +57,32 @@ class ProfileViewModel @Inject constructor(
 
     val uiStateFlow = combine(
         _countriesFlow,
-        _userNameFlow,
-        _userEmailFlow,
-        _userGenderFlow,
-        _userAgeFlow,
+        _userFlow,
         _userLocationCountryFlow,
-        _userPicFlow,
         _profileLoadingFlow,
         _errorFlow,
         _userCategoriesFlow,
         _categories,
-        _googleLoginLoading
-    ) { countries, name, email, gender, age, country, profilePic, profileLoading, error, userCategories, categories, googleLoginLoading ->
+        _googleLoginLoading,
+        _badWordsListFlow
+    ) { countries, user, country, profileLoading, error, userCategories, categories, googleLoginLoading, badWords ->
         val nameError =
-            if (name.isBlank())
+            if (user.name.isBlank())
                 R.string.name_is_required
-            else if (checkModerationUseCase(name))
+            else if (badWords.any { user.name.lowercase().contains(it.lowercase()) })
                 R.string.name_cannot_contain_bad_words
             else -1
         val emailError =
-            if (email.isNotBlank() && isValidEmail(email).not()) R.string.email_is_not_valid
+            if (user.email.isNullOrBlank()
+                    .not() && isValidEmail(user.email!!).not()
+            ) R.string.email_is_not_valid
             else -1
         val allowUpdate = nameError == -1 && emailError == -1
         ProfileUiState(
-            name = name,
+            user = user,
             nameError = nameError,
-            email = email,
             emailError = emailError,
-            gender = gender,
-            age = age,
             country = country,
-            profilePic = profilePic,
             countries = countries,
             allowUpdate = allowUpdate,
             profileLoading = profileLoading,
@@ -108,51 +102,19 @@ class ProfileViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             _currentUserFlow.collect { userWithLocationCategory ->
-                _userNameFlow.value = userWithLocationCategory.user.name
-                _userGenderFlow.value = userWithLocationCategory.user.gender
-                _userAgeFlow.value = userWithLocationCategory.user.age
+                _userFlow.value = userWithLocationCategory.user
                 _userLocationCountryFlow.value =
                     userWithLocationCategory.userLocation.country ?: EMPTY
-                _userPicFlow.value = userWithLocationCategory.user.profilePic
-                _userEmailFlow.value = userWithLocationCategory.user.email ?: EMPTY
                 _userCategoriesFlow.value = userWithLocationCategory.userCategories
             }
         }
-    }
-
-    fun setName(name: String) {
-        _userNameFlow.value = name
-    }
-
-    fun setEmail(email: String) {
-        _userEmailFlow.value = email
-    }
-
-    fun setGender(gender: Gender) {
-        _userGenderFlow.value = gender
-    }
-
-    fun setAge(age: Int) {
-        _userAgeFlow.value = age
-    }
-
-    fun setCountry(country: String) {
-        _userLocationCountryFlow.value = country
     }
 
     fun setError(error: String?) {
         _errorFlow.value = error
     }
 
-    fun onImageClick(path: String) {
-        _userPicFlow.value = path
-    }
-
-    fun onCategorySelect(userCategories: List<User.UserCategory>) {
-        _userCategoriesFlow.value = userCategories
-    }
-
-    fun connectWithGoogle(context: Context) {
+    private fun connectWithGoogle(context: Context) {
         safeApiCall({
             _googleLoginLoading.value = true
         }, {
@@ -164,6 +126,22 @@ class ProfileViewModel @Inject constructor(
             setError(it)
             _googleLoginLoading.value = false
         })
+    }
+
+    fun onEvent(event: ProfileUiEvent) {
+        when (event) {
+            is ProfileUiEvent.UpdateMaritalStatus -> _userFlow.update { it.copy(marriageStatus = event.status) }
+            is ProfileUiEvent.UpdateName -> _userFlow.update { it.copy(name = event.name) }
+            is ProfileUiEvent.ConnectWithGoogle -> connectWithGoogle(event.context)
+            is ProfileUiEvent.UpdateAge -> _userFlow.update { it.copy(age = event.age) }
+            is ProfileUiEvent.UpdateCategories -> _userCategoriesFlow.value = event.categories
+            is ProfileUiEvent.UpdateCountry -> _userLocationCountryFlow.value = event.country
+            is ProfileUiEvent.UpdateEmail -> _userFlow.update { it.copy(email = event.email) }
+            is ProfileUiEvent.UpdateGender -> _userFlow.update { it.copy(gender = event.gender) }
+            is ProfileUiEvent.UpdateProfilePic -> _userFlow.update { it.copy(profilePic = event.path) }
+            is ProfileUiEvent.UpdateEducation -> _userFlow.update { it.copy(education = event.education) }
+            is ProfileUiEvent.UpdateOccupation -> _userFlow.update { it.copy(occupation = event.occupation) }
+        }
     }
 
 }

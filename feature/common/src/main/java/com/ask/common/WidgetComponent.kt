@@ -334,7 +334,7 @@ fun WidgetUserView(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (user.profilePic.isNullOrBlank()) {
-            AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_100),
+            AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
                 contentDescription = user.name,
                 contentScale = ContentScale.Crop,
                 placeholder = R.drawable.baseline_account_circle_24,
@@ -349,7 +349,7 @@ fun WidgetUserView(
                     })
         } else {
             with(sharedTransitionScope) {
-                AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_100),
+                AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
                     contentDescription = user.name,
                     contentScale = ContentScale.Crop,
                     placeholder = R.drawable.baseline_account_circle_24,
@@ -408,7 +408,7 @@ fun WidgetView(
                 index = index,
                 totalOptions = widget.options.size,
                 optionWithVotes = widgetOption,
-                hasVotes = widget.hasVotes,
+                showVotes = widget.showVotes,
                 didUserVoted = widgetOption.didUserVoted,
                 onOptionClick = {
                     onOptionClick(widget.widget.id, it)
@@ -419,13 +419,15 @@ fun WidgetView(
             )
         }
     } else if (widget.isTextOnly) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
             widget.options.forEachIndexed { index, widgetOption ->
                 TextOption(
                     index = index,
                     widgetOption = widgetOption,
                     didUserVoted = widgetOption.didUserVoted,
-                    hasVotes = widget.hasVotes,
+                    showVotes = widget.showVotes,
                     onOptionClick = {
                         onOptionClick(widget.widget.id, it)
                     },
@@ -442,7 +444,7 @@ fun TextOption(
     widgetOption: WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
     didUserVoted: Boolean,
     isInput: Boolean = false,
-    hasVotes: Boolean = false,
+    showVotes: Boolean = false,
     hasError: Boolean = false,
     onValueChange: (String) -> Unit = {},
     onClearIconClick: () -> Unit = {},
@@ -507,14 +509,15 @@ fun TextOption(
                 maxLines = 1,
                 fontSize = 16.sp
             )
-            if (hasVotes) Text(
-                text = "${widgetOption.votesPercentFormat}%",
-                color = if (didUserVoted) {
-                    if (isSystemInDarkTheme()) Color.Black else Color.White
-                } else {
-                    if (isSystemInDarkTheme()) Color.White else Color.Black
-                },
-            )
+            if (showVotes)
+                Text(
+                    text = "${widgetOption.votesPercentFormat}%",
+                    color = if (didUserVoted) {
+                        if (isSystemInDarkTheme()) Color.Black else Color.White
+                    } else {
+                        if (isSystemInDarkTheme()) Color.White else Color.Black
+                    },
+                )
         }
         Spacer(modifier = Modifier.size(5.dp))
         if (isInput) {
@@ -543,7 +546,7 @@ fun ImageOption(
     optionWithVotes: WidgetWithOptionsAndVotesForTargetAudience.OptionWithVotes,
     didUserVoted: Boolean,
     isInput: Boolean = false,
-    hasVotes: Boolean = false,
+    showVotes: Boolean = false,
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedContentScope: AnimatedContentScope? = null,
     onDeleteIconClick: (Int) -> Unit = {},
@@ -607,7 +610,7 @@ fun ImageOption(
     ) {
         if (sharedTransitionScope != null && animatedContentScope != null) {
             with(sharedTransitionScope) {
-                AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
+                AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY,
                     contentDescription = option.id,
                     contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                     placeholder = R.drawable.baseline_image_24,
@@ -624,7 +627,7 @@ fun ImageOption(
                         .onGloballyPositioned { sizeImage = it.size })
             }
         } else {
-            AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_300) ?: EMPTY,
+            AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY,
                 contentDescription = option.id,
                 contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                 placeholder = R.drawable.baseline_image_24,
@@ -665,11 +668,9 @@ fun ImageOption(
             if (isInput) {
                 Box(
                     modifier = Modifier
-                        .background(
-                            color = Color.White.copy(alpha = 0.8f), shape = CircleShape
-                        )
-                        .padding(bottom = 6.dp, end = 6.dp)
-                        .align(Alignment.Center)
+                        .padding(all = 6.dp)
+                        .align(Alignment.BottomEnd),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         ImageVector.vectorResource(id = R.drawable.baseline_delete_24),
@@ -682,7 +683,7 @@ fun ImageOption(
                     )
                 }
             }
-            if (hasVotes) {
+            if (showVotes) {
                 Text(
                     text = "${optionWithVotes.votesPercentFormat}%",
                     textAlign = TextAlign.Center,

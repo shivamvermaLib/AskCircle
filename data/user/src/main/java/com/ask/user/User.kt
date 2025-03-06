@@ -11,7 +11,6 @@ import androidx.room.TypeConverters
 import com.ask.core.ALL
 import com.ask.core.EMPTY
 import com.ask.core.ID
-import com.ask.core.UNDERSCORE
 import com.ask.core.toSearchNeededField
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -29,6 +28,9 @@ data class User(
     val profilePic: String? = null,
     val age: Int? = null,
     val gender: Gender? = null,
+    val marriageStatus: MarriageStatus? = null,
+    val education: Education? = null,
+    val occupation: Occupation? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -119,96 +121,220 @@ data class UserWithLocationCategory(
         entity = User.UserWidgetBookmarks::class
     )
     val userWidgetBookmarks: List<User.UserWidgetBookmarks>
-)
+) {
+    fun generateCombinationsForUsers(): Set<String> {
+        val country = userLocation.country.toSearchNeededField()
+        val state = userLocation.state.toSearchNeededField()
+        val city = userLocation.city.toSearchNeededField()
+        val genderName = user.gender?.name.toSearchNeededField()
+        val marriageStatusName = user.marriageStatus?.name.toSearchNeededField()
+        val educationName = user.education?.name.toSearchNeededField()
+        val occupationName = user.occupation?.name.toSearchNeededField()
 
-fun generateCombinationsForUsers(
-    gender: Gender?,
-    age: Int?,
-    location: User.UserLocation,
-    userId: String,
-    userCategories: List<User.UserCategory>,
-): Set<String> {
-    val country = location.country.toSearchNeededField()
-    val state = location.state.toSearchNeededField()
-    val city = location.city.toSearchNeededField()
-    val genderName = gender?.name.toSearchNeededField()
-
-    // Generate location-based combinations
-    val locationCombinations = mutableListOf<String>()
-    if (country != null) {
-        if (state != null) {
-            if (city != null) {
-                locationCombinations.add("${country}$UNDERSCORE${state}$UNDERSCORE${city}")
+        // Generate location-based combinations
+        val locationCombinations = mutableListOf<String>()
+        if (country != null) {
+            if (state != null) {
+                if (city != null) {
+                    locationCombinations.add(buildString {
+                        append("country:$country")
+                        append(",")
+                        append("state:$state")
+                        append(",")
+                        append("city:$city")
+                    })
+                }
+                locationCombinations.add(buildString {
+                    append("country:$country")
+                    append(",")
+                    append("state:$state")
+                    append(",")
+                    append("city:$ALL")
+                })
             }
-            locationCombinations.add("${country}$UNDERSCORE${state}")
+            locationCombinations.add(buildString {
+                append("country:$country")
+                append(",")
+                append("state:$ALL")
+                append(",")
+                append("city:$ALL")
+            })
         }
-        locationCombinations.add(country)
+
+        locationCombinations.add(buildString {
+            append("country:$ALL")
+            append(",")
+            append("state:$ALL")
+            append(",")
+            append("city:$ALL")
+        })
+        locationCombinations.removeAll { it.isEmpty() }
+
+
+        val ageCombinations = mutableListOf<String>()
+        locationCombinations.forEach { locationCombination ->
+            if (user.age != null && user.age > 0) {
+                val ageStr = user.age.toString()
+                ageCombinations.add(buildString {
+                    append(locationCombination)
+                    append(",")
+                    append("age:$ageStr")
+                })
+            }
+            ageCombinations.add(buildString {
+                append(locationCombination)
+                append(",")
+                append("age:$ALL")
+            })
+
+
+        }
+
+        ageCombinations.removeAll { it.isEmpty() }
+
+        // Generate gender-based combinations
+        val genderCombination = mutableSetOf<String>()
+
+        ageCombinations.forEach { locationCombination ->
+            genderName?.let {
+                genderCombination.add(buildString {
+                    append(locationCombination)
+                    append(",")
+                    append("gender:$genderName")
+                })
+            }
+            genderCombination.add(buildString {
+                append(locationCombination)
+                append(",")
+                append("gender:$ALL")
+            })
+        }
+
+
+        genderCombination.removeAll { it.isEmpty() }
+
+        val marriageCombination = mutableSetOf<String>()
+
+        genderCombination.forEach { locationCombination ->
+            marriageStatusName?.let {
+                marriageCombination.add(buildString {
+                    append(locationCombination)
+                    append(",")
+                    append("marriage:$marriageStatusName")
+                }
+                )
+            }
+            marriageCombination.add(buildString {
+
+                append(locationCombination)
+                append(",")
+                append("marriage:$ALL")
+
+            })
+        }
+
+
+        val educationCombination = mutableSetOf<String>()
+        marriageCombination.forEach { locationCombination ->
+            educationName?.let {
+                educationCombination.add(buildString {
+                    append(locationCombination)
+                    append(",")
+                    append("education:$educationName")
+                })
+            }
+            educationCombination.add(buildString {
+
+                append(locationCombination)
+                append(",")
+                append("education:$ALL")
+            })
+        }
+
+
+        val occupationCombination = mutableSetOf<String>()
+
+        marriageCombination.forEach { locationCombination ->
+            occupationName?.let {
+                occupationCombination.add(buildString {
+                    append(locationCombination)
+                    append(",")
+                    append("occupation:$occupationName")
+                })
+            }
+            occupationCombination.add(buildString {
+
+                append(locationCombination)
+                append(",")
+                append("occupation:$ALL")
+            })
+        }
+
+
+        val categoriesCombination = mutableSetOf<String>()
+
+        occupationCombination.forEach {
+            userCategories.forEach { userCategory ->
+                val category = userCategory.category.toSearchNeededField()
+                val subCategory = userCategory.subCategory.toSearchNeededField()
+
+                if (subCategory != null && category != null) {
+                    categoriesCombination.add(buildString {
+                        append(it)
+                        append(",")
+                        append("category:$category")
+                        append(",")
+                        append("subCategory:$subCategory")
+                    })
+                    categoriesCombination.add(buildString {
+                        append(it)
+                        append(",")
+                        append("category:$category")
+                    })
+                } else if (category != null) {
+                    categoriesCombination.add(buildString {
+                        append(it)
+                        append(",")
+                        append("category:$category")
+                    })
+                }
+            }
+            categoriesCombination.add(buildString {
+                append(it)
+                append(",")
+                append("category:$ALL")
+                append(",")
+                append("subCategory:$ALL")
+            })
+        }
+
+
+        val hasEmailCombination = mutableSetOf<String>()
+        categoriesCombination.forEach {
+            if (user.email.isNullOrBlank()) {
+                hasEmailCombination.add(buildString {
+                    append(it)
+                    append(",")
+                    append("anonymous:${user.email.isNullOrBlank()}")
+                })
+            } else {
+                hasEmailCombination.add(buildString {
+                    append(it)
+                    append(",")
+                    append("anonymous:${user.email.isBlank()}")
+                })
+                hasEmailCombination.add(buildString {
+                    append(it)
+                    append(",")
+                    append("anonymous:${user.email.isBlank().not()}")
+                })
+            }
+
+        }
+        hasEmailCombination.add(user.id)
+
+        return hasEmailCombination
     }
-
-    // Generate combinations for each age in the range
-    val ageCombinations = mutableListOf<String>()
-    if (age != null && age > 0) {
-        val ageStr = age.toString()
-        if (locationCombinations.isEmpty()) {
-            ageCombinations.add(ageStr)
-        } else {
-            locationCombinations.forEach { locationCombination ->
-                ageCombinations.add("${locationCombination}$UNDERSCORE$ageStr")
-
-            }
-        }
-    } else {
-        ageCombinations.addAll(locationCombinations)
-    }
-
-    // Generate gender-based combinations
-    val genderCombination = mutableSetOf<String>()
-    if (genderName != null) {
-        if (ageCombinations.isEmpty()) {
-            genderCombination.add(genderName)
-            genderCombination.add(ALL)
-        } else {
-            ageCombinations.forEach { locationCombination ->
-                genderCombination.add("${locationCombination}$UNDERSCORE$genderName")
-                genderCombination.add("${locationCombination}$UNDERSCORE$ALL")
-            }
-
-        }
-    } else {
-        if (ageCombinations.isEmpty()) {
-            genderCombination.add(ALL)
-        } else {
-            ageCombinations.forEach { locationCombination ->
-                genderCombination.add("${locationCombination}$UNDERSCORE$ALL")
-            }
-
-        }
-    }
-
-    val categoriesCombination = mutableSetOf<String>()
-    userCategories.forEach { userCategory ->
-        val category = userCategory.category.toSearchNeededField()
-        val subCategory = userCategory.subCategory.toSearchNeededField()
-        genderCombination.forEach {
-            if (subCategory != null && category != null) {
-                categoriesCombination.add("$it$UNDERSCORE${category}$UNDERSCORE${subCategory}")
-                categoriesCombination.add("$it$UNDERSCORE${category}")
-            } else if (category != null) {
-                categoriesCombination.add("$it$UNDERSCORE${category}")
-            }
-        }
-        if (subCategory != null && category != null) {
-            categoriesCombination.add("$ALL$UNDERSCORE${category}$UNDERSCORE${subCategory}")
-            categoriesCombination.add("$ALL$UNDERSCORE${category}")
-        } else if (category != null) {
-            categoriesCombination.add("$ALL$UNDERSCORE${category}")
-        }
-    }
-
-    categoriesCombination.add(ALL)
-    categoriesCombination.add(userId)
-
-    return categoriesCombination
 }
 
 class StringListConverter {

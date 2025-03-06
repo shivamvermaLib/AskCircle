@@ -109,6 +109,7 @@ dependencies {
     implementation(project(":feature:profile"))
     implementation(project(":feature:imageview"))
     implementation(project(":feature:widgetdetails"))
+    implementation(project(":feature:maintenancemode"))
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.paging)
 

@@ -13,6 +13,7 @@ const val TABLE_UPDATED_TIME = "updated_time"
 const val FIREBASE_DB = "FirebaseDB"
 const val MAIN_DB = "Prod"
 const val TEST_DB = "QA"
+const val HAS_EMAIL ="has_email"
 
 const val CONFIGURATIONS = "configurations"
 const val SQLITE_HELPER = "sqlite_helper"

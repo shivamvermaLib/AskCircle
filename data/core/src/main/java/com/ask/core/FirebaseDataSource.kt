@@ -31,6 +31,7 @@ interface IFirebaseDataSource<T> {
         getPaginatedQuery: (DatabaseReference) -> Query
     ): List<T>
 
+    suspend fun getAllItems(): List<T>
     suspend fun clear()
 }
 
@@ -48,6 +49,20 @@ abstract class FirebaseDataSource<T>(private val databaseReference: DatabaseRefe
     private fun getReferenceForItem(t: T): DatabaseReference {
         val key = getIdForItem(t)
         return databaseReference.child(key)
+    }
+
+    override suspend fun getAllItems(): List<T> = suspendCoroutine { cont ->
+        databaseReference.get()
+            .addOnFailureListener {
+                cont.resumeWithException(it)
+            }.addOnSuccessListener { dataSnapshot ->
+                if (dataSnapshot.hasChildren()) {
+                    cont.resume(dataSnapshot.children.mapNotNull { getItemFromDataSnapshot(it) })
+                } else {
+                    cont.resumeWithException(Throwable("All Items not found"))
+                }
+            }
+
     }
 
     override suspend fun addItem(t: T): T = suspendCoroutine { cont ->

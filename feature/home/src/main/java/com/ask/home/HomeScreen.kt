@@ -142,8 +142,8 @@ fun HomeScreen(
             startActivity(context, shareIntent, null)
         },
         homeViewModel::onBookmarkClick,
-        homeViewModel::onStopVoteClick,
         homeViewModel::onStartVoteClick,
+        homeViewModel::onStopVoteClick,
         homeViewModel::setSearch
     )
 }
@@ -260,10 +260,10 @@ private fun HomeScreen(
                 onStopVoteClick = onStopVoteClick,
                 onStartVoteClick = onStartVoteClick
             )
-            CreatingCard(
+            /*CreatingCard(
                 modifier = Modifier.align(Alignment.BottomCenter),
                 homeUiState.createWidgetStatus == WorkerStatus.Loading
-            )
+            )*/
         }
     }
 }

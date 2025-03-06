@@ -29,14 +29,8 @@ fun String?.toSearchNeededField(predicate: ((String) -> Boolean)? = null): Strin
 }
 
 
-fun String?.getAllImages(avoidOriginal: Boolean = true): List<String> {
-    return (this?.split(IMAGE_SPLIT_FACTOR) ?: emptyList()).filter {
-        if (avoidOriginal)
-            it.contains(ImageSizeType.SIZE_ORIGINAL.name)
-                .not() && it.contains(ImageSizeType.SIZE_500.name).not()
-        else
-            true
-    }
+fun String?.getAllImages(): List<String> {
+    return (this?.split(IMAGE_SPLIT_FACTOR) ?: emptyList())
 }
 
 fun String?.getImage(imageSizeType: ImageSizeType): String? {
@@ -45,11 +39,7 @@ fun String?.getImage(imageSizeType: ImageSizeType): String? {
     if (images.size == 1) {
         return images[0]
     }
-    return images.find { it.contains(imageSizeType.name) } ?: images.find {
-        it.contains(
-            ImageSizeType.SIZE_ORIGINAL.name
-        )
-    } ?: images[0]
+    return images.find { it.contains(imageSizeType.name) } ?: images[0]
 }
 
 fun Long.toTimeAgo() = DateUtils.getRelativeTimeSpanString(

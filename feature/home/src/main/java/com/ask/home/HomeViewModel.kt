@@ -33,10 +33,9 @@ class HomeViewModel @Inject constructor(
     getWidgetsUseCase: GetWidgetsUseCase,
     private val bookmarkWidgetUseCase: BookmarkWidgetUseCase,
     private val startStopWidgetAcceptingVoteUseCase: StartStopWidgetAcceptingVoteUseCase,
-    private val currentProfileUseCase: GetCurrentProfileUseCase,
+    currentProfileUseCase: GetCurrentProfileUseCase,
     private val analyticsLogger: AnalyticsLogger
-) :
-    BaseViewModel(analyticsLogger) {
+) : BaseViewModel(analyticsLogger) {
 
     private val _workerStatusFlow = MutableStateFlow(WorkerStatus.None)
     private val _errorFlow = MutableStateFlow<String?>(null)

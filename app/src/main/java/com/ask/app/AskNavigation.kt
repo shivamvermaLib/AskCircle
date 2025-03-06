@@ -7,10 +7,12 @@ import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSiz
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.DpSize
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -28,6 +30,8 @@ import com.ask.splash.SplashScreen
 import com.ask.widget.Widget
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import com.ask.widgetdetails.WidgetDetailScreen
+import com.shivam.maintenancemode.MaintenanceModeScreen
+import com.shivam.maintenancemode.MaintenanceModeViewModel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -47,8 +51,26 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
         context.getString(R.string.let_s_shape_the_future_vote_now),
         context.getString(R.string.vote_for_your_favorite_option)
     )
+    val viewModel = hiltViewModel<MaintenanceModeViewModel>()
+    val isMaintenanceMode by viewModel.maintenanceModeFlow.collectAsStateWithLifecycle()
+
+    // Automatically navigate to the Maintenance screen if isMaintenanceMode is true
+    LaunchedEffect(isMaintenanceMode) {
+        if (isMaintenanceMode) {
+            navController.navigate(MaintenanceModeScreen) {
+                popUpTo(0) // Clear back stack to prevent navigating back
+            }
+        } else {
+            navController.navigate(SplashScreen) {
+                popUpTo(0) // Clear back stack to prevent navigating back
+            }
+        }
+    }
     SharedTransitionLayout {
-        NavHost(navController = navController, startDestination = SplashScreen) {
+        NavHost(
+            navController = navController,
+            startDestination = if (isMaintenanceMode) MaintenanceModeScreen else SplashScreen
+        ) {
             composable<SplashScreen>(deepLinks = listOf(navDeepLink {
                 uriPattern = "https://ask-app-36527.web.app/widget/{widgetId}"
             }, navDeepLink {
@@ -80,8 +102,8 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                     {
                         navController.navigate(CreateScreen(Json.encodeToString(it)))
                     },
-                    { index, widgetId ->
-                        navController.navigate(WidgetDetailsScreen(index, widgetId))
+                    { index, id ->
+                        navController.navigate(WidgetDetailsScreen(index, id))
                     },
                     {
                         navController.navigate(AdminScreen)
@@ -116,7 +138,7 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                     this@SharedTransitionLayout,
                     this@composable,
                     { msg, onDismiss ->
-                        Toast.makeText(context,msg,Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                         onDismiss()
                     },
                     {
@@ -184,6 +206,9 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                     { navController.popBackStack() }
                 )
             }
+            composable<MaintenanceModeScreen> {
+                MaintenanceModeScreen()
+            }
         }
     }
 }
@@ -212,6 +237,9 @@ data object AdminScreen
 
 @Serializable
 data object SettingsScreen
+
+@Serializable
+data object MaintenanceModeScreen
 
 
 class WidgetWithOptionAndVotesForTargetAudiencePreviewParameters :

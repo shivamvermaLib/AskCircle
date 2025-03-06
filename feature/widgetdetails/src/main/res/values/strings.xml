@@ -5,5 +5,6 @@
     <string name="unspecified">Unspecified</string>
     <string name="view_all">View All</string>
     <string name="hide_all">Hide All</string>
+    <string name="result">Result</string>
 
 </resources>
