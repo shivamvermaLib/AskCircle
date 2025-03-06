@@ -17,6 +17,7 @@ import com.ask.common.getResizedImageByteArray
 import com.ask.common.preLoadImages
 import com.ask.core.getAllImages
 import com.ask.widget.CreateWidgetUseCase
+import com.ask.widget.NotificationType
 import com.ask.widget.WIDGET
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.assisted.Assisted
@@ -34,6 +35,11 @@ class CreateWidgetWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         return try {
+            NotificationUtils.showNotification(
+                applicationContext,
+                NotificationType.CREATE_WIDGET,
+                -1f
+            )
             setProgress(workDataOf(STATUS to WorkerStatus.Loading.name))
             val widgetString = inputData.getString(WIDGET)
             widgetString?.let {
@@ -49,11 +55,13 @@ class CreateWidgetWorker @AssistedInject constructor(
                         .flatten())
                 }
             }
+            NotificationUtils.cancelNotification(applicationContext, NotificationType.CREATE_WIDGET)
             setProgress(workDataOf(STATUS to WorkerStatus.Success.name))
             Result.success(workDataOf(STATUS to WorkerStatus.Success.name))
         } catch (e: Exception) {
             setProgress(workDataOf(STATUS to WorkerStatus.Failed.name))
             e.printStackTrace()
+            NotificationUtils.cancelNotification(applicationContext, NotificationType.CREATE_WIDGET)
             Result.failure()
         }
     }

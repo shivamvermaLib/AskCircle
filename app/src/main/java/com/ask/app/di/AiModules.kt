@@ -6,6 +6,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -19,5 +20,12 @@ object AiModules {
             modelName = "gemini-1.5-flash",
             apiKey = BuildConfig.GEMINI_KEY
         )
+    }
+
+    @Singleton
+    @Provides
+    @Named("appVersion")
+    fun provideAppVersion(): String {
+        return BuildConfig.VERSION_NAME
     }
 }

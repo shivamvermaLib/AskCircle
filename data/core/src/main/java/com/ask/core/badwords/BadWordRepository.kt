@@ -25,7 +25,9 @@ class BadWordRepository @Inject constructor(
         badWordDao.insertAll(badWordList)
     }
 
-    fun getAllBadWords() = badWordDao.getAllBadWords().flowOn(dispatcher)
+    fun getAllBadWordsFlow() = badWordDao.getAllBadWordsFlow().flowOn(dispatcher)
+
+    suspend fun getAllBadWords() = withContext(dispatcher) { badWordDao.getAllBadWords() }
 
     fun checkIfBadWordExists(sentence: String) = badWordDao.containsBadWord(sentence)
 }

@@ -16,13 +16,12 @@ class UpdateVoteUseCase @Inject constructor(
     private val sharedPreference: AppSharedPreference,
     @Named(DISPATCHER_DEFAULT) private val dispatcher: CoroutineDispatcher
 ) {
-    suspend operator fun invoke(widgetId: String, optionId: String, screenName: String) =
+    suspend operator fun invoke(widgetId: String, optionId: String) =
         withContext(dispatcher) {
             analyticsLogger.voteWidgetEvent(
                 widgetId,
                 optionId,
                 userRepository.getCurrentUserId(),
-                screenName
             )
             widgetRepository.vote(widgetId, optionId, userRepository.getCurrentUserId())
                 .also {
@@ -36,7 +35,6 @@ class UpdateVoteUseCase @Inject constructor(
                         widgetId,
                         optionId,
                         userRepository.getCurrentUserId(),
-                        screenName
                     )
                 }
         }

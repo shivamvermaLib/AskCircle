@@ -57,6 +57,16 @@
                     android:host="widget"
                     android:scheme="ask-circle" />
             </intent-filter>
+            <intent-filter android:label="@string/filter_view_ask_circle2">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "ask-circle://widget” -->
+                <data
+                    android:host="user"
+                    android:scheme="ask-circle" />
+            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

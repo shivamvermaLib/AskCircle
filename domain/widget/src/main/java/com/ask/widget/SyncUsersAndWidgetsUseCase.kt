@@ -31,6 +31,7 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(
+        isSplash: Boolean = false,
         isConnected: Boolean = true,
         preloadImages: suspend (List<String>) -> Unit,
         onProgress: (Float) -> Unit,
@@ -82,11 +83,16 @@ class SyncUsersAndWidgetsUseCase @Inject constructor(
                         userRepository.getCurrentUserId(),
                         lastUpdatedTime,
                         list,
+                        sharedPreference.getWidgetIdTimerEndNotification(),
                         {
                             userRepository.getUserDetailList(it, true, preloadImages)
                         },
                         preloadImages,
-                        onNotification
+                        onNotification,
+                        {
+                            if (isSplash.not())
+                                sharedPreference.setWidgetIdTimerEndsNotification(it)
+                        }
                     ).also {
                         onProgress(0.8f)
                         listOf(

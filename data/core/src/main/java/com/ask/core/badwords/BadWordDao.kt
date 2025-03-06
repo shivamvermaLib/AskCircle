@@ -13,7 +13,10 @@ interface BadWordDao {
     suspend fun insertAll(badWords: List<BadWord>)
 
     @Query("SELECT * FROM $TABLE_BAD_WORDS")
-    fun getAllBadWords(): Flow<List<BadWord>>
+    fun getAllBadWordsFlow(): Flow<List<BadWord>>
+
+    @Query("SELECT * FROM $TABLE_BAD_WORDS")
+    fun getAllBadWords(): List<BadWord>
 
     @Query("SELECT EXISTS (SELECT 1 FROM bad_words WHERE :providedString LIKE '%' || english || '%')")
     fun containsBadWord(providedString: String): Boolean

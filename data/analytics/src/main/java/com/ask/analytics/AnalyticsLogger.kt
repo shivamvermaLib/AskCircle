@@ -63,21 +63,19 @@ class AnalyticsLogger @Inject constructor(
         })
     }
 
-    fun voteWidgetEvent(widgetId: String, optionId: String, userId: String, screenName: String) {
+    fun voteWidgetEvent(widgetId: String, optionId: String, userId: String) {
         firebaseAnalytics.logEvent(VOTE_WIDGET, Bundle().apply {
             putString(WIDGET_ID, widgetId)
             putString(OPTION_ID, optionId)
             putString(USER_ID, userId)
-            putString(SCREEN_NAME, screenName)
         })
     }
 
-    fun votedWidgetEvent(widgetId: String, optionId: String, userId: String, screenName: String) {
+    fun votedWidgetEvent(widgetId: String, optionId: String, userId: String) {
         firebaseAnalytics.logEvent(VOTED_WIDGET, Bundle().apply {
             putString(WIDGET_ID, widgetId)
             putString(OPTION_ID, optionId)
             putString(USER_ID, userId)
-            putString(SCREEN_NAME, screenName)
         })
     }
 
