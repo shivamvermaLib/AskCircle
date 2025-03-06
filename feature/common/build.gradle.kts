@@ -62,6 +62,10 @@ dependencies {
     implementation(libs.firebase.crashlytics)
     implementation(libs.coil.compose)
     implementation(libs.play.services.ads.lite)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+
 
     implementation(project(":data:analytics"))
     implementation(project(":data:core"))

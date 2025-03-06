@@ -1,5 +1,6 @@
 package com.ask.app
 
+import android.widget.Toast
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionLayout
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -115,7 +116,8 @@ fun AskNavigation(sizeClass: WindowSizeClass = WindowSizeClass.calculateFromSize
                     this@SharedTransitionLayout,
                     this@composable,
                     { msg, onDismiss ->
-                        //TODO: message snackbar
+                        Toast.makeText(context,msg,Toast.LENGTH_SHORT).show()
+                        onDismiss()
                     },
                     {
                         navController.navigate(ImageViewScreen(it))

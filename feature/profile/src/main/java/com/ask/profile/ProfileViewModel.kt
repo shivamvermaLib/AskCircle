@@ -1,5 +1,6 @@
 package com.ask.profile
 
+import android.content.Context
 import androidx.lifecycle.viewModelScope
 import com.ask.analytics.AnalyticsLogger
 import com.ask.category.GetCategoryUseCase
@@ -7,10 +8,12 @@ import com.ask.common.BaseViewModel
 import com.ask.common.CheckModerationUseCase
 import com.ask.common.GetCreateWidgetRemoteConfigUseCase
 import com.ask.common.combine
+import com.ask.common.googleLogin
 import com.ask.core.EMPTY
 import com.ask.country.GetCountryUseCase
 import com.ask.user.Gender
 import com.ask.user.GetCurrentProfileUseCase
+import com.ask.user.GoogleLoginUseCase
 import com.ask.user.User
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +30,7 @@ class ProfileViewModel @Inject constructor(
     getCountryUseCase: GetCountryUseCase,
     getCreateWidgetRemoteConfigUseCase: GetCreateWidgetRemoteConfigUseCase,
     getCategoryUseCase: GetCategoryUseCase,
+    private val googleLoginUseCase: GoogleLoginUseCase,
     private val checkModerationUseCase: CheckModerationUseCase,
     analyticsLogger: AnalyticsLogger
 ) : BaseViewModel(analyticsLogger) {
@@ -49,7 +53,7 @@ class ProfileViewModel @Inject constructor(
     private val _userPicFlow = MutableStateFlow<String?>(null)
     private val _profileLoadingFlow = MutableStateFlow(false)
     private val _userCategoriesFlow = MutableStateFlow(listOf<User.UserCategory>())
-
+    private val _googleLoginLoading = MutableStateFlow(false)
     private val _errorFlow = MutableStateFlow<String?>(null)
 
     val uiStateFlow = combine(
@@ -63,8 +67,9 @@ class ProfileViewModel @Inject constructor(
         _profileLoadingFlow,
         _errorFlow,
         _userCategoriesFlow,
-        _categories
-    ) { countries, name, email, gender, age, country, profilePic, profileLoading, error, userCategories, categories ->
+        _categories,
+        _googleLoginLoading
+    ) { countries, name, email, gender, age, country, profilePic, profileLoading, error, userCategories, categories, googleLoginLoading ->
         val nameError =
             if (name.isBlank())
                 R.string.name_is_required
@@ -91,7 +96,8 @@ class ProfileViewModel @Inject constructor(
             minAgeRange = _ageRange.minAge,
             maxAgeRange = _ageRange.maxAge,
             userCategories = userCategories,
-            categories = categories
+            categories = categories,
+            googleLoginLoading = googleLoginLoading
         )
     }.catch {
         it.printStackTrace()
@@ -144,6 +150,20 @@ class ProfileViewModel @Inject constructor(
 
     fun onCategorySelect(userCategories: List<User.UserCategory>) {
         _userCategoriesFlow.value = userCategories
+    }
+
+    fun connectWithGoogle(context: Context) {
+        safeApiCall({
+            _googleLoginLoading.value = true
+        }, {
+            googleLogin(context)?.let { credential ->
+                googleLoginUseCase(credential.idToken, false)
+            }
+            _googleLoginLoading.value = false
+        }, {
+            setError(it)
+            _googleLoginLoading.value = false
+        })
     }
 
 }

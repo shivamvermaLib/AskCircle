@@ -206,6 +206,7 @@ fun AppTextField(
     maxLines: Int = 1,
     minLines: Int = 1,
     hasMaxLength: Boolean = false,
+    enabled:Boolean = true,
     keyboardType: KeyboardType = KeyboardType.Text,
     trailingIcon: @Composable (() -> Unit)? = null
 ) {
@@ -222,6 +223,7 @@ fun AppTextField(
                 onValueChange(it)
             }
         },
+        enabled = enabled,
         modifier = modifier
             .fillMaxWidth()
             .onGloballyPositioned {

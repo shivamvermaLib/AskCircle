@@ -1,7 +1,7 @@
 package com.ask.user
 
-import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import javax.inject.Inject
 import kotlin.coroutines.resume
@@ -19,19 +19,38 @@ class FirebaseAuthSource @Inject constructor(private val firebaseAuth: FirebaseA
             }
     }
 
-    suspend fun assignEmailToAccount(email: String) = suspendCoroutine { cont ->
-        val userId = getCurrentUserId()
-        val settings = ActionCodeSettings.newBuilder()
-            .setUrl("https://ask-app-36527.web.app/user/$userId")
-            .setAndroidPackageName("com.ask.app", true, "1.0")
-            .setHandleCodeInApp(true)
-            .build()
-        firebaseAuth.sendSignInLinkToEmail(email, settings)
-            .addOnFailureListener { cont.resumeWithException(it) }
-            .addOnSuccessListener { cont.resume(Unit) }
-    }
-
     fun getCurrentUserId(): String? {
         return firebaseAuth.currentUser?.uid
+    }
+
+    suspend fun signOut() = suspendCoroutine { cont ->
+        firebaseAuth.signOut()
+        cont.resume(Unit)
+    }
+
+
+    suspend fun connectWithGoogle(idToken: String) = suspendCoroutine { cont ->
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        (firebaseAuth.currentUser
+            ?: throw Exception("User Not Logged In or Current User Not Found")).linkWithCredential(
+            credential
+        )
+            .addOnFailureListener { cont.resumeWithException(it) }
+            .addOnSuccessListener {
+                cont.resume(
+                    it.user ?: throw Exception("Firebase Unable to create user")
+                )
+            }
+    }
+
+    suspend fun signInWithGoogle(idToken: String): FirebaseUser? = suspendCoroutine { cont ->
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        firebaseAuth.signInWithCredential(credential)
+            .addOnFailureListener { cont.resumeWithException(it) }
+            .addOnSuccessListener {
+                cont.resume(
+                    it.user ?: throw Exception("Firebase Unable to create user")
+                )
+            }
     }
 }

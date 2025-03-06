@@ -16,5 +16,6 @@
     <string name="location">Location</string>
     <string name="profile">Profile</string>
     <string name="back">Back</string>
+    <string name="google_sign_in_failed">Google sign in failed</string>
 
 </resources>

@@ -49,7 +49,9 @@ dependencies {
     implementation(libs.bundles.androidx.ui.navigation)
     implementation(libs.bundles.hilt.navigation.work)
     implementation(libs.kotlinx.serialization.json)
+    implementation(project(":domain:user"))
     ksp(libs.hilt.compiler)
+    implementation(libs.googleid)
 
     implementation(project(":domain:widget"))
     implementation(project(":feature:common"))

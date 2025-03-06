@@ -52,6 +52,8 @@ dependencies {
     implementation(libs.androidx.paging.runtime.ktx)
     implementation(libs.androidx.paging.compose)
 
+    implementation(libs.googleid)
+
     implementation(project(":feature:admin"))
     implementation(project(":domain:common"))
     implementation(project(":domain:user"))

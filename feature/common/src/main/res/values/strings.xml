@@ -17,4 +17,5 @@
     <string name="end">END</string>
     <string name="share">Share</string>
     <string name="bookmark">Bookmark</string>
+    <string name="client_id" translatable="false">1047951754429-5j0pv72436mid0fitaf0obgrq92hqbvf.apps.googleusercontent.com</string>
 </resources>
