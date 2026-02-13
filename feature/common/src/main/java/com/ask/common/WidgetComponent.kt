@@ -69,6 +69,7 @@ import com.ask.core.getImage
 import com.ask.user.User
 import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 
+
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun WidgetWithUserView(
@@ -93,14 +94,15 @@ fun WidgetWithUserView(
     Column(modifier = Modifier.fillMaxWidth()) {
         with(sharedTransitionScope) {
             if (onWidgetDetails != null) {
-                ElevatedCard(modifier = Modifier
-                    .sharedElement(
-                        sharedTransitionScope.rememberSharedContentState(
-                            key = "$index-card-${widgetWithOptionsAndVotesForTargetAudience.widget.id}"
-                        ), animatedVisibilityScope = animatedContentScope
-                    )
-                    .fillMaxWidth()
-                    .padding(all = 16.dp),
+                ElevatedCard(
+                    modifier = Modifier
+                        .sharedElement(
+                            sharedTransitionScope.rememberSharedContentState(
+                                key = "$index-card-${widgetWithOptionsAndVotesForTargetAudience.widget.id}"
+                            ), animatedVisibilityScope = animatedContentScope
+                        )
+                        .fillMaxWidth()
+                        .padding(all = 16.dp),
                     onClick = {
                         onWidgetDetails.invoke(
                             index, widgetWithOptionsAndVotesForTargetAudience.widget.id
@@ -334,7 +336,8 @@ fun WidgetUserView(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (user.profilePic.isNullOrBlank()) {
-            AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
+            AppImage(
+                url = user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
                 contentDescription = user.name,
                 contentScale = ContentScale.Crop,
                 placeholder = R.drawable.baseline_account_circle_24,
@@ -349,7 +352,8 @@ fun WidgetUserView(
                     })
         } else {
             with(sharedTransitionScope) {
-                AppImage(url = user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
+                AppImage(
+                    url = user.profilePic.getImage(ImageSizeType.SIZE_ORIGINAL),
                     contentDescription = user.name,
                     contentScale = ContentScale.Crop,
                     placeholder = R.drawable.baseline_account_circle_24,
@@ -452,7 +456,8 @@ fun TextOption(
     onDeleteIconClick: (Int) -> Unit = {}
 ) {
     val (option, _) = widgetOption
-    TextButton(modifier = Modifier.fillMaxWidth(),
+    TextButton(
+        modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(all = 5.dp),
         shape = RoundedCornerShape(28.dp),
         colors = ButtonDefaults.textButtonColors(
@@ -521,13 +526,15 @@ fun TextOption(
         }
         Spacer(modifier = Modifier.size(5.dp))
         if (isInput) {
-            Icon(Icons.Rounded.Close,
+            Icon(
+                Icons.Rounded.Close,
                 stringResource(R.string.clear, option.text ?: EMPTY),
                 modifier = Modifier
                     .size(20.dp)
                     .clickable { onClearIconClick() })
             Spacer(modifier = Modifier.size(6.dp))
-            Icon(Icons.Rounded.Delete,
+            Icon(
+                Icons.Rounded.Delete,
                 stringResource(R.string.delete, option.text ?: EMPTY),
                 modifier = Modifier
                     .size(20.dp)
@@ -605,12 +612,14 @@ fun ImageOption(
                 },
                 shape = roundedCornerShape,
             )
-            .combinedClickable(onClick = { onOptionClick(option.id) },
+            .combinedClickable(
+                onClick = { onOptionClick(option.id) },
                 onLongClick = { onOpenImage(option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL)) }),
     ) {
         if (sharedTransitionScope != null && animatedContentScope != null) {
             with(sharedTransitionScope) {
-                AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY,
+                AppImage(
+                    url = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY,
                     contentDescription = option.id,
                     contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                     placeholder = R.drawable.baseline_image_24,
@@ -627,7 +636,8 @@ fun ImageOption(
                         .onGloballyPositioned { sizeImage = it.size })
             }
         } else {
-            AppImage(url = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY,
+            AppImage(
+                url = option.imageUrl.getImage(ImageSizeType.SIZE_ORIGINAL) ?: EMPTY,
                 contentDescription = option.id,
                 contentScale = if (option.imageUrl.isNullOrBlank()) ContentScale.Inside else ContentScale.Crop,
                 placeholder = R.drawable.baseline_image_24,

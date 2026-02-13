@@ -106,7 +106,7 @@ fun CreateWidgetScreen(
     LaunchedEffect(Unit) {
         viewModel.screenOpenEvent(route)
         widgetWithOptionsAndVotesForTargetAudience?.let {
-            viewModel.setWidget(it)
+            viewModel.onEvent(CreateWidgetUiEvent.UpdateWidgetEvent(it))
         }
     }
     CreateWidgetScreen(sizeClass, uiState) {

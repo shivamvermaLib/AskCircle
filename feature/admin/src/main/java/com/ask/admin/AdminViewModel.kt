@@ -74,66 +74,44 @@ class AdminViewModel @Inject constructor(
 
 
     init {
-        fetchCategories()
-        fetchCountries()
+        handleIntent(AdminUiIntent.FetchCountries)
+        handleIntent(AdminUiIntent.FetchCategories)
         viewModelScope.launch {
             _lastSearchedPrompts.value = getLastSearchDataUseCase.invoke()
         }
     }
 
-    fun fetchCountries() {
-        viewModelScope.launch {
-            _countries.firstOrNull()?.let {
-                _selectedCountries.value = it.shuffled().take(Random.nextInt(1, 5))
-            }
-        }
-    }
-
-    fun fetchCategories() {
-        viewModelScope.launch {
-            _categories.firstOrNull()?.let {
-                val stringCategories =
-                    it.map { categoryWithSubCategory -> listOf(categoryWithSubCategory.category.name) + categoryWithSubCategory.subCategories.map { it.title } }
-                        .flatten()
-                _selectedCategories.value = stringCategories.shuffled().take(Random.nextInt(1, 5))
-            }
-        }
-    }
-
-    fun askAI(text: String, number: Int) {
+    fun handleIntent(adminUiIntent: AdminUiIntent) {
         safeApiCall({
-            _aiLoading.value = true
-        }, {
-            if (text.isNotEmpty()) {
-                _widgetsFromAiFlow.value = getWidgetWithAiUseCase.invoke(number, text)
+            if (adminUiIntent is AdminUiIntent.AskAI) {
+                _aiLoading.value = true
             }
-            _aiLoading.value = false
-            _aiErrorFlow.value = null
         }, {
-            _aiLoading.value = false
-            _aiErrorFlow.value = it
-            _widgetsFromAiFlow.value = emptyList()
-        })
-    }
+            when (adminUiIntent) {
+                is AdminUiIntent.AskAI -> {
+                    if (adminUiIntent.text.isNotEmpty()) {
+                        _widgetsFromAiFlow.value =
+                            getWidgetWithAiUseCase.invoke(adminUiIntent.number, adminUiIntent.text)
+                    }
+                    _aiLoading.value = false
+                    _aiErrorFlow.value = null
+                }
 
-    fun removeWidget(widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience) {
-        viewModelScope.launch {
-            _widgetsFromAiFlow.value = _widgetsFromAiFlow.value.filter {
-                it != widgetWithOptionsAndVotesForTargetAudience
-            }
-        }
-    }
+                AdminUiIntent.FetchCategories -> _categories.firstOrNull()?.let {
+                    val stringCategories =
+                        it.map { categoryWithSubCategory -> listOf(categoryWithSubCategory.category.name) + categoryWithSubCategory.subCategories.map { it.title } }
+                            .flatten()
+                    _selectedCategories.value =
+                        stringCategories.shuffled().take(Random.nextInt(1, 5))
+                }
 
-    fun selectWidgetForTextToImageOption(
-        widget: WidgetWithOptionsAndVotesForTargetAudience?
-    ) {
-        _selectedWidgetForTextToImageOption.value = widget
-    }
+                AdminUiIntent.FetchCountries -> _countries.firstOrNull()?.let {
+                    _selectedCountries.value = it.shuffled().take(Random.nextInt(1, 5))
+                }
 
-    fun onFetchImage(json: String) {
-        safeApiCall({}, {
-            _selectedImages.value +=
-                Json.decodeFromString<List<String>>(json).also {
+                is AdminUiIntent.OnFetchImage -> _selectedImages.value += Json.decodeFromString<List<String>>(
+                    adminUiIntent.json
+                ).also {
                     println("find image: ${it.size}")
                 }.onEach {
                     println("imga>$it")
@@ -146,22 +124,35 @@ class AdminViewModel @Inject constructor(
                     }
                     queryParams["imgurl"]
                 }.distinct()
+
+                is AdminUiIntent.OnOptionSelected -> {
+                    _selectedOption.value = adminUiIntent.option
+                }
+
+                is AdminUiIntent.RemoveWidget -> _widgetsFromAiFlow.value =
+                    _widgetsFromAiFlow.value.filter {
+                        it != adminUiIntent.widgetWithOptionsAndVotesForTargetAudience
+                    }
+
+                is AdminUiIntent.SelectWidgetForTextToImageOption -> _selectedWidgetForTextToImageOption.value =
+                    adminUiIntent.widgetWithOptionsAndVotesForTargetAudience
+
+                is AdminUiIntent.UpdateWidget -> {
+                    _widgetsFromAiFlow.value = _widgetsFromAiFlow.value.map {
+                        if (it.widget.id == adminUiIntent.widgetWithOptionsAndVotesForTargetAudience.widget.id) {
+                            adminUiIntent.widgetWithOptionsAndVotesForTargetAudience
+                        } else {
+                            it
+                        }
+                    }
+                }
+            }
         }, {
+            if (adminUiIntent is AdminUiIntent.AskAI) {
+                _aiLoading.value = false
+                _widgetsFromAiFlow.value = emptyList()
+            }
             _aiErrorFlow.value = it
         })
-    }
-
-    fun updateWidget(widgetWithOptionsAndVotesForTargetAudience: WidgetWithOptionsAndVotesForTargetAudience) {
-        _widgetsFromAiFlow.value = _widgetsFromAiFlow.value.map {
-            if (it.widget.id == widgetWithOptionsAndVotesForTargetAudience.widget.id) {
-                widgetWithOptionsAndVotesForTargetAudience
-            } else {
-                it
-            }
-        }
-    }
-
-    fun onOptionSelected(option: Widget.Option) {
-        _selectedOption.value = option
     }
 }

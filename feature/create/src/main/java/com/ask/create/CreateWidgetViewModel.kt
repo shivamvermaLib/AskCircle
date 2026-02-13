@@ -10,7 +10,6 @@ import com.ask.common.combine
 import com.ask.core.EMPTY
 import com.ask.country.GetCountryUseCase
 import com.ask.widget.Widget
-import com.ask.widget.WidgetWithOptionsAndVotesForTargetAudience
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -38,61 +37,61 @@ class CreateWidgetViewModel @Inject constructor(
     private val _uiStateFlow = MutableStateFlow(CreateWidgetUiState())
 
     fun onEvent(event: CreateWidgetUiEvent) {
-        _uiStateFlow.update {
+        _uiStateFlow.update { state ->
             when (event) {
-                CreateWidgetUiEvent.AddOptionEvent -> addOption(it)
-                is CreateWidgetUiEvent.DescChangedEvent -> it.copy(
-                    widget = it.widget.copy(
+                CreateWidgetUiEvent.AddOptionEvent -> addOption(state)
+                is CreateWidgetUiEvent.DescChangedEvent -> state.copy(
+                    widget = state.widget.copy(
                         description = event.desc
                     )
                 )
 
                 is CreateWidgetUiEvent.EndTimeChangedEvent -> if (event.endTime == null) {
-                    it.copy(widget = it.widget.copy(endAt = null))
-                } else if (event.endTime >= it.widget.startAt) {
-                    it.copy(widget = it.widget.copy(endAt = event.endTime))
+                    state.copy(widget = state.widget.copy(endAt = null))
+                } else if (event.endTime >= state.widget.startAt) {
+                    state.copy(widget = state.widget.copy(endAt = event.endTime))
                 } else {
-                    it
+                    state
                 }
 
-                is CreateWidgetUiEvent.ErrorEvent -> it.copy(error = event.error)
-                is CreateWidgetUiEvent.GenderChangedEvent -> it.copy(
-                    targetAudienceGender = it.targetAudienceGender.copy(
+                is CreateWidgetUiEvent.ErrorEvent -> state.copy(error = event.error)
+                is CreateWidgetUiEvent.GenderChangedEvent -> state.copy(
+                    targetAudienceGender = state.targetAudienceGender.copy(
                         gender = event.gender
                     )
                 )
 
-                is CreateWidgetUiEvent.MaxAgeChangedEvent -> it.copy(
-                    targetAudienceAgeRange = it.targetAudienceAgeRange.copy(
+                is CreateWidgetUiEvent.MaxAgeChangedEvent -> state.copy(
+                    targetAudienceAgeRange = state.targetAudienceAgeRange.copy(
                         max = event.maxAge,
-                        min = if (it.targetAudienceAgeRange.min > event.maxAge) {
+                        min = if (state.targetAudienceAgeRange.min > event.maxAge) {
                             event.maxAge
                         } else {
-                            it.targetAudienceAgeRange.min
+                            state.targetAudienceAgeRange.min
                         }
                     )
                 )
 
-                is CreateWidgetUiEvent.MinAgeChangedEvent -> it.copy(
-                    targetAudienceAgeRange = it.targetAudienceAgeRange.copy(
+                is CreateWidgetUiEvent.MinAgeChangedEvent -> state.copy(
+                    targetAudienceAgeRange = state.targetAudienceAgeRange.copy(
                         min = event.minAge,
-                        max = if (it.targetAudienceAgeRange.max < event.minAge) {
+                        max = if (state.targetAudienceAgeRange.max < event.minAge) {
                             event.minAge
                         } else {
-                            it.targetAudienceAgeRange.max
+                            state.targetAudienceAgeRange.max
                         }
                     )
                 )
 
-                is CreateWidgetUiEvent.OptionChangedEvent -> it.copy(
-                    options = it.options.toMutableList().apply {
+                is CreateWidgetUiEvent.OptionChangedEvent -> state.copy(
+                    options = state.options.toMutableList().apply {
                         this[event.index] = event.option
                     }.toList()
                 )
 
                 is CreateWidgetUiEvent.OptionTypeChangedEvent -> when (event.optionType) {
                     CreateWidgetUiState.WidgetOptionType.Text -> {
-                        it.copy(
+                        state.copy(
                             options = listOf(
                                 Widget.Option(text = EMPTY), Widget.Option(text = EMPTY)
                             )
@@ -100,7 +99,7 @@ class CreateWidgetViewModel @Inject constructor(
                     }
 
                     CreateWidgetUiState.WidgetOptionType.Image -> {
-                        it.copy(
+                        state.copy(
                             options = listOf(
                                 Widget.Option(imageUrl = EMPTY), Widget.Option(imageUrl = EMPTY)
                             )
@@ -108,67 +107,78 @@ class CreateWidgetViewModel @Inject constructor(
                     }
                 }
 
-                is CreateWidgetUiEvent.RemoveCountryEvent -> it.copy(
-                    targetAudienceLocations = it.targetAudienceLocations.toMutableList().apply {
+                is CreateWidgetUiEvent.RemoveCountryEvent -> state.copy(
+                    targetAudienceLocations = state.targetAudienceLocations.toMutableList().apply {
                         removeIf { it.country == event.country.name }
                     }.toList()
                 )
 
-                is CreateWidgetUiEvent.RemoveOptionEvent -> it.copy(
-                    options = if (it.options.size in (minOptions + 1)..maxOptions) {
-                        it.options.toMutableList().apply {
+                is CreateWidgetUiEvent.RemoveOptionEvent -> state.copy(
+                    options = if (state.options.size in (minOptions + 1)..maxOptions) {
+                        state.options.toMutableList().apply {
                             removeAt(event.index)
                         }.toList()
-                    } else it.options
+                    } else state.options
                 )
 
-                is CreateWidgetUiEvent.SelectCategoryWidgetEvent -> it.copy(widgetCategories = event.categories)
-                is CreateWidgetUiEvent.SelectCountryEvent -> it.copy(
-                    targetAudienceLocations = it.targetAudienceLocations + Widget.TargetAudienceLocation(
+                is CreateWidgetUiEvent.SelectCategoryWidgetEvent -> state.copy(widgetCategories = event.categories)
+                is CreateWidgetUiEvent.SelectCountryEvent -> state.copy(
+                    targetAudienceLocations = state.targetAudienceLocations + Widget.TargetAudienceLocation(
                         country = event.country.name
                     )
                 )
 
-                is CreateWidgetUiEvent.StartTimeChangedEvent -> onStartTimeChange(event, it)
-                is CreateWidgetUiEvent.TitleChangedEvent -> it.copy(widget = it.widget.copy(title = event.title))
-                is CreateWidgetUiEvent.AllowAnonymousEvent -> it.copy(
-                    widget = it.widget.copy(
+                is CreateWidgetUiEvent.StartTimeChangedEvent -> onStartTimeChange(event, state)
+                is CreateWidgetUiEvent.TitleChangedEvent -> state.copy(widget = state.widget.copy(title = event.title))
+                is CreateWidgetUiEvent.AllowAnonymousEvent -> state.copy(
+                    widget = state.widget.copy(
                         allowAnonymous = event.allowAnonymous
                     )
                 )
 
-                is CreateWidgetUiEvent.WidgetResultChangedEvent -> it.copy(
-                    widget = it.widget.copy(
+                is CreateWidgetUiEvent.WidgetResultChangedEvent -> state.copy(
+                    widget = state.widget.copy(
                         widgetResult = event.result
                     )
                 )
 
-                is CreateWidgetUiEvent.AllowMultipleSelection -> it.copy(
-                    widget = it.widget.copy(
+                is CreateWidgetUiEvent.AllowMultipleSelection -> state.copy(
+                    widget = state.widget.copy(
                         allowMultipleSelection = event.allow
                     )
                 )
 
-                is CreateWidgetUiEvent.UpdateMarriageStatusFilterEvent -> it.copy(
-                    targetAudienceGender = it.targetAudienceGender.copy(
+                is CreateWidgetUiEvent.UpdateMarriageStatusFilterEvent -> state.copy(
+                    targetAudienceGender = state.targetAudienceGender.copy(
                         marriageStatusFilter = event.marriageStatusFilterEvent
                     )
                 )
 
-                is CreateWidgetUiEvent.UpdateEducationFilterEvent -> it.copy(
-                    targetAudienceGender = it.targetAudienceGender.copy(
+                is CreateWidgetUiEvent.UpdateEducationFilterEvent -> state.copy(
+                    targetAudienceGender = state.targetAudienceGender.copy(
                         educationFilter = event.filter
                     )
                 )
 
-                is CreateWidgetUiEvent.UpdateOccupationFilterEvent -> it.copy(
-                    targetAudienceGender = it.targetAudienceGender.copy(
+                is CreateWidgetUiEvent.UpdateOccupationFilterEvent -> state.copy(
+                    targetAudienceGender = state.targetAudienceGender.copy(
                         occupationFilter = event.occupationFilter
                     )
                 )
 
+                is CreateWidgetUiEvent.UpdateWidgetEvent -> state.copy(
+                    widget = event.widget.widget,
+                    optionType = if (event.widget.options.any { it.option.text == null && it.option.imageUrl != null }) CreateWidgetUiState.WidgetOptionType.Image else CreateWidgetUiState.WidgetOptionType.Text,
+                    options = event.widget.options.map { it.option },
+                    targetAudienceGender = event.widget.targetAudienceGender,
+                    targetAudienceAgeRange = event.widget.targetAudienceAgeRange,
+                    targetAudienceLocations = event.widget.targetAudienceLocations,
+                    widgetCategories = event.widget.categories,
+                    error = -1,
+                )
+
                 else -> {
-                    it
+                    state
                 }
             }
         }
@@ -220,21 +230,6 @@ class CreateWidgetViewModel @Inject constructor(
         }
     }
 
-    fun setWidget(widget: WidgetWithOptionsAndVotesForTargetAudience) {
-        _uiStateFlow.update { widgetUiState ->
-            widgetUiState.copy(
-                widget = widget.widget,
-                optionType = if (widget.options.any { it.option.text == null && it.option.imageUrl != null }) CreateWidgetUiState.WidgetOptionType.Image else CreateWidgetUiState.WidgetOptionType.Text,
-                options = widget.options.map { it.option },
-                targetAudienceGender = widget.targetAudienceGender,
-                targetAudienceAgeRange = widget.targetAudienceAgeRange,
-                targetAudienceLocations = widget.targetAudienceLocations,
-                widgetCategories = widget.categories,
-                error = -1,
-            )
-        }
-    }
-
     val uiStateFlow = combine(
         _uiStateFlow,
         _countriesFlow,
@@ -274,5 +269,6 @@ class CreateWidgetViewModel @Inject constructor(
             minAge = getCreateWidgetRemoteConfigUseCase().minAge,
             maxAge = getCreateWidgetRemoteConfigUseCase().maxAge,
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
+    }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000L), CreateWidgetUiState())
 }

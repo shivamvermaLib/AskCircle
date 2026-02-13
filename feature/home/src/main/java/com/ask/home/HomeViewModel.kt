@@ -102,44 +102,25 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun setSearch(search: String) {
-        _searchFlow.value = search
-    }
-
-    fun setLastVotedEmptyOptions(list: List<String>) {
-        _lastVotedEmptyOptionsFlow.value = list
-    }
-
-    fun setFilterType(filter: Filter) {
-        _filterFlow.value = filter
-        analyticsLogger.widgetFilterTypeEvent(filter.name)
-    }
-
-    fun vote(widgetId: String, optionId: String) {
+    fun onEvent(homeUiEvent: HomeUiEvent) {
         safeApiCall({}, {
-            updateVoteUseCase(widgetId, optionId)
-        }, {
-//            _errorFlow.value = it
-        })
-    }
+            when (homeUiEvent) {
+                is HomeUiEvent.Bookmark -> bookmarkWidgetUseCase.invoke(homeUiEvent.widgetId)
+                is HomeUiEvent.StartStopWidgetAcceptingVote -> startStopWidgetAcceptingVoteUseCase.invoke(
+                    homeUiEvent.widgetId,
+                    homeUiEvent.start
+                )
+                is HomeUiEvent.UpdateFilter -> {
+                    _filterFlow.value = homeUiEvent.filter
+                    analyticsLogger.widgetFilterTypeEvent(homeUiEvent.filter.name)
+                }
 
-    fun onBookmarkClick(widgetId: String) {
-        safeApiCall({}, {
-            bookmarkWidgetUseCase.invoke(widgetId)
-        }, {
-            println("Error: $it")
-        })
-    }
+                is HomeUiEvent.UpdateLastVotedOptions -> _lastVotedEmptyOptionsFlow.value =
+                    homeUiEvent.lastVotedOptions
 
-    fun onStopVoteClick(widgetId: String) {
-        safeApiCall({}, {
-            startStopWidgetAcceptingVoteUseCase.invoke(widgetId, false)
-        }, {})
-    }
-
-    fun onStartVoteClick(widgetId: String) {
-        safeApiCall({}, {
-            startStopWidgetAcceptingVoteUseCase.invoke(widgetId, true)
+                is HomeUiEvent.UpdateSearch -> _searchFlow.value = homeUiEvent.search
+                is HomeUiEvent.Vote -> updateVoteUseCase(homeUiEvent.widgetId, homeUiEvent.optionId)
+            }
         }, {})
     }
 

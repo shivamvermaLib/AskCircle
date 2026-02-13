@@ -90,4 +90,6 @@ sealed interface CreateWidgetUiEvent {
 
     data class UpdateOccupationFilterEvent(val occupationFilter: Widget.OccupationFilter) :
         CreateWidgetUiEvent
+
+    data class UpdateWidgetEvent(val widget: WidgetWithOptionsAndVotesForTargetAudience) : CreateWidgetUiEvent
 }

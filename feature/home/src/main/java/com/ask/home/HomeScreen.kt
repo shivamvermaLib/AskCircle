@@ -108,7 +108,7 @@ fun HomeScreen(
     LaunchedEffect(workerFlow) {
         homeViewModel.setWorkerFlow(workerFlow)
         homeViewModel.screenOpenEvent(route)
-        homeViewModel.setLastVotedEmptyOptions(lastVotedEmptyOptions)
+        homeViewModel.onEvent(HomeUiEvent.UpdateLastVotedOptions(lastVotedEmptyOptions))
     }
     var permissionGranted by remember { mutableStateOf(false) }
     val launcher = rememberLauncherForActivityResult(
@@ -130,9 +130,9 @@ fun HomeScreen(
         sharedTransitionScope, animatedContentScope,
         navigateToCreate, onWidgetDetails,
         onAdminClick,
-        onSettingsClick, onOpenImage, onOpenIndexImage,
-        homeViewModel::setFilterType,
-        homeViewModel::vote,
+        onSettingsClick,
+        onOpenImage,
+        onOpenIndexImage,
         {
             val sendIntent = Intent(Intent.ACTION_SEND).apply {
                 putExtra(Intent.EXTRA_TEXT, context.getString(R.string.widget_share_url, it))
@@ -141,10 +141,7 @@ fun HomeScreen(
             val shareIntent = Intent.createChooser(sendIntent, null)
             startActivity(context, shareIntent, null)
         },
-        homeViewModel::onBookmarkClick,
-        homeViewModel::onStartVoteClick,
-        homeViewModel::onStopVoteClick,
-        homeViewModel::setSearch
+        homeViewModel::onEvent
     )
 }
 
@@ -167,13 +164,8 @@ private fun HomeScreen(
     onSettingsClick: () -> Unit = {},
     onOpenImage: (imagePath: String?) -> Unit = {},
     onOpenIndexImage: (index: Int, imagePath: String?) -> Unit = { _, _ -> },
-    onFilterChange: (Filter) -> Unit = {},
-    onVoteClick: (String, String) -> Unit = { _, _ -> },
     onShareClick: (String) -> Unit,
-    onBookmarkClick: (String) -> Unit,
-    onStartVoteClick: (String) -> Unit,
-    onStopVoteClick: (String) -> Unit,
-    onSearch: (String) -> Unit
+    onEvent: (HomeUiEvent) -> Unit
 ) {
     val isConnected by connectivityState()
     val snackBarHostState: SnackbarHostState = remember { SnackbarHostState() }
@@ -186,7 +178,7 @@ private fun HomeScreen(
         }
     }
     LaunchedEffect(selectedFilter) {
-        onFilterChange(selectedFilter)
+        onEvent(HomeUiEvent.UpdateFilter(selectedFilter))
     }
     Scaffold(
         topBar = {
@@ -202,7 +194,7 @@ private fun HomeScreen(
                     homeUiState.search,
                     homeUiState.user,
                     onSettingsClick,
-                    onSearch,
+                    { onEvent(HomeUiEvent.UpdateSearch(it)) },
                     onAdminClick
                 )
                 Spacer(modifier = Modifier.size(5.dp))
@@ -251,14 +243,14 @@ private fun HomeScreen(
                 sizeClass,
                 sharedTransitionScope,
                 animatedContentScope,
-                onVoteClick,
+                { widgetId, optionId -> onEvent(HomeUiEvent.Vote(widgetId, optionId)) },
                 onOpenImage = onOpenImage,
                 onOpenIndexImage = onOpenIndexImage,
                 onWidgetDetails = onWidgetDetails,
                 onShareClick = onShareClick,
-                onBookmarkClick = onBookmarkClick,
-                onStopVoteClick = onStopVoteClick,
-                onStartVoteClick = onStartVoteClick
+                onBookmarkClick = { onEvent(HomeUiEvent.Bookmark(it)) },
+                onStopVoteClick = { onEvent(HomeUiEvent.StartStopWidgetAcceptingVote(it, false)) },
+                onStartVoteClick = { onEvent(HomeUiEvent.StartStopWidgetAcceptingVote(it, true)) },
             )
             /*CreatingCard(
                 modifier = Modifier.align(Alignment.BottomCenter),

@@ -38,7 +38,8 @@ class WidgetRepository @Inject constructor(
 
     fun getWidgets(currentUserId: String, currentTime: Long, limit: Int) =
         Pager(config = PagingConfig(pageSize = limit),
-            pagingSourceFactory = { widgetDao.getWidgets(currentUserId, currentTime) }).flow
+            pagingSourceFactory = { widgetDao.getWidgets(currentUserId, currentTime) })
+            .flow
 
     fun getMostVotedWidgets(currentUserId: String, limit: Int) =
         Pager(config = PagingConfig(pageSize = limit),

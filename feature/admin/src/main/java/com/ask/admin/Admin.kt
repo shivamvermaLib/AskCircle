@@ -84,22 +84,15 @@ fun AdminScreen(
         sharedTransitionScope = sharedTransitionScope,
         animatedContentScope = animatedContentScope,
         state = state,
-        onAskAI = viewModel::askAI,
+        onHandleUiIntent = viewModel::handleIntent,
         onCreateWidget = {
             CreateWidgetWorker.sendRequest(context, it)
-            viewModel.removeWidget(it)
+            viewModel.handleIntent(AdminUiIntent.RemoveWidget(it))
         },
-        onRemoveWidget = viewModel::removeWidget,
-        fetchCategories = viewModel::fetchCategories,
-        fetchCountries = viewModel::fetchCountries,
         onAdminMoveToCreate = {
             onAdminMoveToCreate(it)
-            viewModel.removeWidget(it)
+            viewModel.handleIntent(AdminUiIntent.RemoveWidget(it))
         },
-        onWidgetSelectForImage = viewModel::selectWidgetForTextToImageOption,
-        onFetchImage = viewModel::onFetchImage,
-        onUpdateWidget = viewModel::updateWidget,
-        onOptionSelected = viewModel::onOptionSelected,
         onBack = onBack
     )
 }
@@ -114,16 +107,9 @@ fun AdminContent(
     sharedTransitionScope: SharedTransitionScope,
     animatedContentScope: AnimatedContentScope,
     state: AdminUiState,
-    onAskAI: (text: String, number: Int) -> Unit,
-    fetchCategories: () -> Unit,
-    fetchCountries: () -> Unit,
+    onHandleUiIntent: (AdminUiIntent) -> Unit,
     onCreateWidget: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
-    onRemoveWidget: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
     onAdminMoveToCreate: (widget: WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
-    onWidgetSelectForImage: (widget: WidgetWithOptionsAndVotesForTargetAudience?) -> Unit,
-    onFetchImage: (String) -> Unit,
-    onUpdateWidget: (WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
-    onOptionSelected: (Widget.Option) -> Unit,
     onBack: () -> Unit
 ) {
     var text by remember { mutableStateOf("") }
@@ -133,13 +119,8 @@ fun AdminContent(
         state.selectedWidget,
         state.selectedOption,
         state.webViewSelectedImages,
-        onFetchImage,
-        onUpdateWidget,
-        onOptionSelected,
-        onWidgetSelectForImage
-    ) {
-        onWidgetSelectForImage(null)
-    }
+        onHandleUiIntent
+    )
 
     Scaffold(topBar = {
         TopAppBar(
@@ -198,7 +179,8 @@ fun AdminContent(
                         style = MaterialTheme.typography.titleSmall
                     )
                     Spacer(modifier = Modifier.weight(1f))
-                    DropDownWithSelect(list = (10..50).map { it },
+                    DropDownWithSelect(
+                        list = (10..50).map { it },
                         title = number.toString(),
                         onItemSelect = { number = it },
                         itemString = { it.toString() })
@@ -217,13 +199,14 @@ fun AdminContent(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             state.selectedCountries.fastForEach {
-                                FilterChip(selected = true,
+                                FilterChip(
+                                    selected = true,
                                     onClick = { text = it.name },
                                     label = { Text(text = "${it.emoji} ${it.name}") })
                             }
                         }
                     }
-                    Button(onClick = fetchCountries) {
+                    Button(onClick = { onHandleUiIntent(AdminUiIntent.FetchCountries) }) {
                         Text(text = "Refresh")
                     }
                 }
@@ -241,13 +224,14 @@ fun AdminContent(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             state.selectedCategories.fastForEach {
-                                FilterChip(selected = true,
+                                FilterChip(
+                                    selected = true,
                                     onClick = { text = it },
                                     label = { Text(text = it) })
                             }
                         }
                     }
-                    Button(onClick = fetchCategories) {
+                    Button(onClick = { onHandleUiIntent(AdminUiIntent.FetchCategories) }) {
                         Text(text = "Refresh")
                     }
                 }
@@ -259,7 +243,7 @@ fun AdminContent(
                     }
                 } else {
                     Button(
-                        onClick = { onAskAI(text, number) },
+                        onClick = { onHandleUiIntent(AdminUiIntent.AskAI(text, number)) },
                         modifier = Modifier.padding(all = 16.dp)
                     ) {
                         Text(text = "Ask AI")
@@ -275,7 +259,8 @@ fun AdminContent(
                 Spacer(modifier = Modifier.size(10.dp))
             }
             itemsIndexed(state.widgets) { index, widget ->
-                WidgetWithUserView(index = index,
+                WidgetWithUserView(
+                    index = index,
                     isAdmin = true,
                     widgetWithOptionsAndVotesForTargetAudience = widget,
                     sharedTransitionScope = sharedTransitionScope,
@@ -283,12 +268,12 @@ fun AdminContent(
                     onOpenIndexImage = { _, _ -> },
                     onOpenImage = {},
                     onAdminCreate = { onCreateWidget(widget) },
-                    onAdminRemove = { onRemoveWidget(widget) },
+                    onAdminRemove = { onHandleUiIntent(AdminUiIntent.RemoveWidget(widget)) },
                     onAdminMoveToCreate = {
                         onAdminMoveToCreate(widget)
                     },
                     onAdminUpdateTextToImage = {
-                        onWidgetSelectForImage(widget)
+                        onHandleUiIntent(AdminUiIntent.SelectWidgetForTextToImageOption(widget))
                     })
             }
         }
@@ -357,11 +342,7 @@ fun BottomSheetForTextToImage(
     widget: WidgetWithOptionsAndVotesForTargetAudience?,
     selectedOption: Widget.Option?,
     images: List<String>,
-    onFetchImage: (String) -> Unit,
-    onUpdateWidget: (WidgetWithOptionsAndVotesForTargetAudience) -> Unit,
-    onOptionSelected: (Widget.Option) -> Unit,
-    onSelectWidget: (WidgetWithOptionsAndVotesForTargetAudience?) -> Unit,
-    onDismissRequest: () -> Unit,
+    onHandleIntent: (AdminUiIntent) -> Unit,
 ) {
     if (widget != null) {
         var selectWebView by remember { mutableStateOf(false) }
@@ -373,7 +354,7 @@ fun BottomSheetForTextToImage(
         ModalBottomSheet(
             modifier = Modifier.fillMaxSize(),
             sheetState = sheetState,
-            onDismissRequest = onDismissRequest
+            onDismissRequest = { onHandleIntent(AdminUiIntent.SelectWidgetForTextToImageOption(null)) }
         ) {
             Row(
                 modifier = modifier, verticalAlignment = Alignment.CenterVertically
@@ -385,14 +366,14 @@ fun BottomSheetForTextToImage(
                 )
                 Spacer(modifier = Modifier.size(10.dp))
                 TextButton(onClick = {
-                    onUpdateWidget(widget.copy(options = widget.options.map { optionWithVotes ->
+                    onHandleIntent(AdminUiIntent.UpdateWidget(widget.copy(options = widget.options.map { optionWithVotes ->
                         optionWithVotes.copy(
                             option = optionWithVotes.option.copy(
                                 text = null
                             )
                         )
-                    }))
-                    onDismissRequest()
+                    })))
+                    onHandleIntent(AdminUiIntent.SelectWidgetForTextToImageOption(null))
                 }, enabled = (widget.isTextOnly && widget.isImageOnly).not()) {
                     Text(text = "Done")
                 }
@@ -405,10 +386,11 @@ fun BottomSheetForTextToImage(
                     text = "Options", style = MaterialTheme.typography.titleSmall
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                DropDownWithSelect(list = widget.options,
+                DropDownWithSelect(
+                    list = widget.options,
                     title = selectedOption?.text ?: "No Text",
                     onItemSelect = { t ->
-                        onOptionSelected(t.option)
+                        onHandleIntent(AdminUiIntent.OnOptionSelected(t.option))
                     },
                     itemString = { it.option.text.toString() })
 
@@ -434,7 +416,9 @@ fun BottomSheetForTextToImage(
 
             Box(modifier = modifier) {
                 if (selectWebView) {
-                    WebViewComponent(query = selectedOption?.text ?: "", images.size, onFetchImage)
+                    WebViewComponent(query = selectedOption?.text ?: "", images.size) {
+                        onHandleIntent(AdminUiIntent.OnFetchImage(it))
+                    }
                 } else {
                     LazyVerticalGrid(columns = GridCells.Fixed(3)) {
                         if (images.isEmpty()) {
@@ -446,15 +430,19 @@ fun BottomSheetForTextToImage(
                             Box(modifier = Modifier) {
                                 AppImage(
                                     modifier = Modifier.clickable {
-                                        onSelectWidget(widget.copy(options = widget.options.map {
-                                            if (it.option.id == selectedOption?.id) {
-                                                it.copy(
-                                                    option = it.option.copy(imageUrl = item)
-                                                )
-                                            } else {
-                                                it
-                                            }
-                                        }))
+                                        onHandleIntent(
+                                            AdminUiIntent.SelectWidgetForTextToImageOption(
+                                                widget.copy(options = widget.options.map {
+                                                    if (it.option.id == selectedOption?.id) {
+                                                        it.copy(
+                                                            option = it.option.copy(imageUrl = item)
+                                                        )
+                                                    } else {
+                                                        it
+                                                    }
+                                                })
+                                            )
+                                        )
                                     },
                                     url = item,
                                     contentDescription = item,
